@@ -1,0 +1,34 @@
+export type ViewMode = '2d' | '3d';
+
+export interface RobotPose {
+  readonly xM: number;
+  readonly yM: number;
+  readonly yawDeg: number;
+}
+
+export interface RobotTelemetry extends RobotPose {
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly heat: number;
+  readonly maxHeat: number;
+  readonly connected: boolean;
+}
+
+export interface CameraState {
+  readonly targetXM: number;
+  readonly targetYM: number;
+  readonly zoom: number;
+  readonly followRobot: boolean;
+}
+
+export interface ReplayFrame {
+  readonly timeS: number;
+  readonly robot: RobotTelemetry;
+}
+
+export interface ReplayState {
+  readonly durationS: number;
+  readonly currentTimeS: number;
+  readonly playing: boolean;
+  readonly speed: number;
+}
