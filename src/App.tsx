@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Inspector } from './components/Inspector';
+import { Sidebar } from './components/Sidebar';
 import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
 import { ARCC_2026_FIELD } from './field/fieldSpec';
@@ -12,6 +12,7 @@ const clamp = (value: number, min: number, max: number): number => Math.max(min,
 
 export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [camera, setCamera] = useState<CameraState>({
     targetXM: ARCC_2026_FIELD.size.lengthM / 2,
     targetYM: ARCC_2026_FIELD.size.widthM / 2,
@@ -60,40 +61,46 @@ export function App() {
   }, [camera.followRobot, robot.xM, robot.yM]);
 
   return (
-    <div className="app-shell">
-      <TopBar activeView={activeView} onViewChange={setActiveView} />
-      <main className="workspace">
-        <section className="viewport-panel">
-          <div className="viewport-titlebar">
-            <div>
-              <span className="eyebrow">BATTLEFIELD / 3V3</span>
-              <h1>{activeView === '2d' ? 'Orthographic overview' : 'Spatial overview'}</h1>
+    <div className={sidebarCollapsed ? 'app-shell sidebar-is-collapsed' : 'app-shell'}>
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        robot={robot}
+        onToggle={() => setSidebarCollapsed((collapsed) => !collapsed)}
+      />
+      <div className="app-main">
+        <TopBar activeView={activeView} onViewChange={setActiveView} />
+        <main className="workspace">
+          <section className="viewport-panel">
+            <div className="viewport-titlebar">
+              <div>
+                <span className="eyebrow">BATTLEFIELD / 3V3</span>
+                <h1>{activeView === '2d' ? 'Orthographic overview' : 'Spatial overview'}</h1>
+              </div>
+              <label className="follow-toggle">
+                <input
+                  type="checkbox"
+                  checked={camera.followRobot}
+                  onChange={(event) => setCamera((current) => ({
+                    ...current,
+                    followRobot: event.currentTarget.checked,
+                    targetXM: event.currentTarget.checked ? robot.xM : current.targetXM,
+                    targetYM: event.currentTarget.checked ? robot.yM : current.targetYM,
+                  }))}
+                />
+                <span /> Follow robot
+              </label>
             </div>
-            <label className="follow-toggle">
-              <input
-                type="checkbox"
-                checked={camera.followRobot}
-                onChange={(event) => setCamera((current) => ({
-                  ...current,
-                  followRobot: event.currentTarget.checked,
-                  targetXM: event.currentTarget.checked ? robot.xM : current.targetXM,
-                  targetYM: event.currentTarget.checked ? robot.yM : current.targetYM,
-                }))}
-              />
-              <span /> Follow robot
-            </label>
-          </div>
-          <div className="viewport-content">
-            {activeView === '2d' ? (
-              <Field2D robot={robot} camera={camera} onCameraChange={setCamera} onRobotMove={updateRobot} />
-            ) : (
-              <Field3D robot={robot} camera={camera} onRobotMove={updateRobot} />
-            )}
-          </div>
-        </section>
-        <Inspector robot={robot} />
-      </main>
-      <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
+            <div className="viewport-content">
+              {activeView === '2d' ? (
+                <Field2D robot={robot} camera={camera} onCameraChange={setCamera} onRobotMove={updateRobot} />
+              ) : (
+                <Field3D robot={robot} camera={camera} onRobotMove={updateRobot} />
+              )}
+            </div>
+          </section>
+        </main>
+        <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
+      </div>
     </div>
   );
 }

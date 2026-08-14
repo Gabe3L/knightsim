@@ -3,6 +3,7 @@ import type { RobotTelemetry } from '../types';
 
 interface InspectorProps {
   readonly robot: RobotTelemetry;
+  readonly collapsed?: boolean;
 }
 
 function MetricRow({
@@ -37,9 +38,26 @@ function Bar({ value, max, color }: { readonly value: number; readonly max: numb
   );
 }
 
-export function Inspector({ robot }: InspectorProps) {
+export function Inspector({ robot, collapsed = false }: InspectorProps) {
+  if (collapsed) {
+    return (
+      <div className="inspector inspector-collapsed" aria-label="Robot inspector">
+        <button className="rail-tool rail-tool-active" type="button" aria-label="Selected robot" title="Selected robot">
+          <Gauge size={19} />
+          <span className={robot.connected ? 'rail-status online' : 'rail-status offline'} />
+        </button>
+        <button className="rail-tool" type="button" aria-label="Pose telemetry" title="Pose telemetry">
+          <Activity size={18} />
+        </button>
+        <button className="rail-tool" type="button" aria-label="Referee state" title="Referee state">
+          <Radio size={18} />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <aside className="inspector">
+    <div className="inspector">
       <div className="panel-heading">
         <div>
           <span className="eyebrow">SELECTED ASSET</span>
@@ -91,6 +109,6 @@ export function Inspector({ robot }: InspectorProps) {
         <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
         <span>Rotate</span><kbd>Q</kbd><kbd>E</kbd>
       </div>
-    </aside>
+    </div>
   );
 }

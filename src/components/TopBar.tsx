@@ -1,4 +1,4 @@
-import { Box, CircleDot, Radio, Settings2 } from 'lucide-react';
+import { Box, CircleDot, Radio } from 'lucide-react';
 import type { ViewMode } from '../types';
 
 interface TopBarProps {
@@ -9,13 +9,10 @@ interface TopBarProps {
 export function TopBar({ activeView, onViewChange }: TopBarProps) {
   return (
     <header className="topbar">
-      <div className="brand-block">
-        <div className="brand-mark" aria-hidden="true">
-          <Box size={16} strokeWidth={2.4} />
-        </div>
+      <div className="document-title">
         <div>
-          <div className="brand-title">KnightSim</div>
-          <div className="brand-subtitle">ARCC telemetry workbench</div>
+          <div className="document-name">ARCC 2026 Simulation</div>
+          <div className="document-context">KnightSim replay workspace</div>
         </div>
       </div>
 
@@ -40,9 +37,6 @@ export function TopBar({ activeView, onViewChange }: TopBarProps) {
 
       <div className="topbar-actions">
         <div className="live-pill"><Radio size={12} /> MOCK LIVE</div>
-        <button className="icon-button" type="button" aria-label="Settings">
-          <Settings2 size={17} />
-        </button>
       </div>
     </header>
   );
