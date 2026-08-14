@@ -22,15 +22,15 @@ button { color: inherit; }
 
 .app-shell {
   display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width, 292px) minmax(0, 1fr);
   width: 100%;
   height: 100%;
   background:
     radial-gradient(circle at 55% -25%, rgba(53, 80, 101, .14), transparent 42%),
     #090b10;
-  transition: grid-template-columns .22s cubic-bezier(.2, .75, .25, 1);
 }
-.app-shell.sidebar-is-collapsed { grid-template-columns: 58px minmax(0, 1fr); }
+.app-shell.sidebar-is-resizing,
+.app-shell.sidebar-is-resizing * { cursor: col-resize !important; }
 .app-main {
   display: grid;
   grid-template-rows: 64px minmax(0, 1fr) 82px;
@@ -45,7 +45,7 @@ button { color: inherit; }
   grid-template-rows: 42px 62px minmax(0, 1fr) 58px;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
   border-right: 1px solid #252d38;
   background: linear-gradient(180deg, #11161e 0%, #0d1118 100%);
   box-shadow: 8px 0 28px rgba(0, 0, 0, .16);
@@ -58,7 +58,7 @@ button { color: inherit; }
 }
 .sidebar-brand-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 30px;
+  grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 0 11px 0 13px;
@@ -66,18 +66,6 @@ button { color: inherit; }
   background: linear-gradient(180deg, #151b24, #10151d);
 }
 .sidebar-brand-copy { min-width: 0; overflow: hidden; white-space: nowrap; }
-.sidebar-toggle {
-  display: grid;
-  width: 29px;
-  height: 29px;
-  place-items: center;
-  border: 1px solid #2a3441;
-  border-radius: 7px;
-  color: #838e9c;
-  background: #10151d;
-  cursor: pointer;
-}
-.sidebar-toggle:hover { color: #edf2f7; border-color: #414d5c; background: #18202b; }
 .sidebar-body { min-height: 0; overflow: hidden; }
 .sidebar-footer {
   display: flex;
@@ -104,13 +92,39 @@ button { color: inherit; }
   cursor: pointer;
 }
 .sidebar-settings:hover { color: #eef3f8; border-color: #2a3440; background: #171e28; }
-.sidebar-collapsed .sidebar-brand-row { grid-template-columns: 34px; justify-content: center; padding-inline: 12px; }
-.sidebar-collapsed .brand-mark { display: none; }
-.sidebar-collapsed .sidebar-brand-copy { display: none; }
-.sidebar-collapsed .sidebar-toggle { width: 32px; height: 32px; border-color: #34404e; }
-.sidebar-collapsed .sidebar-footer { padding-inline: 8px; }
-.sidebar-collapsed .sidebar-settings { justify-content: center; padding: 0; }
-.sidebar-collapsed .sidebar-settings span { display: none; }
+.sidebar-compact .sidebar-brand-row { grid-template-columns: 34px; justify-content: center; padding-inline: 12px; }
+.sidebar-compact .sidebar-brand-copy { display: none; }
+.sidebar-compact .sidebar-footer { padding-inline: 8px; }
+.sidebar-compact .sidebar-settings { justify-content: center; padding: 0; }
+.sidebar-compact .sidebar-settings span { display: none; }
+.sidebar-resize-handle {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  outline: none;
+  cursor: col-resize;
+  touch-action: none;
+  -webkit-app-region: no-drag;
+}
+.sidebar-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background-color .14s ease, box-shadow .14s ease;
+}
+.sidebar-resize-handle:hover::after,
+.sidebar-resize-handle:focus-visible::after,
+.sidebar-is-resizing .sidebar-resize-handle::after {
+  background: var(--accent);
+  box-shadow: 0 0 9px rgba(98, 231, 188, .42);
+}
 
 .topbar {
   position: relative;
@@ -256,14 +270,12 @@ kbd { display: inline-grid; min-width: 18px; height: 18px; place-items: center; 
 .speed-control select { width: 48px; padding: 5px 3px; border: 1px solid #2a3440; border-radius: 5px; color: #cbd2db; outline: 0; background: #0d1218; font: 650 9px/1 ui-monospace; cursor: pointer; }
 
 @media (max-width: 1160px) {
-  .app-shell { grid-template-columns: 268px minmax(0, 1fr); }
   .brand-subtitle { display: none; }
   .timeline { grid-template-columns: auto 112px minmax(150px, 1fr) 76px; gap: 9px; }
   .field-overlay-center { display: none; }
 }
 
 @media (max-width: 980px) {
-  .app-shell { grid-template-columns: 244px minmax(0, 1fr); }
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding-inline: 10px; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 9px; }
   .view-tab svg { display: none; }
