@@ -23,9 +23,6 @@ export function App() {
 
   const updateRobot = useCallback((pose: Pick<RobotTelemetry, 'xM' | 'yM' | 'yawDeg'>) => {
     moveRobot(pose);
-    setCamera((current) => current.followRobot
-      ? { ...current, targetXM: pose.xM, targetYM: pose.yM }
-      : current);
   }, [moveRobot]);
 
   useEffect(() => {
@@ -55,11 +52,6 @@ export function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [robot, updateRobot]);
 
-  useEffect(() => {
-    if (!camera.followRobot) return;
-    setCamera((current) => ({ ...current, targetXM: robot.xM, targetYM: robot.yM }));
-  }, [camera.followRobot, robot.xM, robot.yM]);
-
   return (
     <div className={sidebarCollapsed ? 'app-shell sidebar-is-collapsed' : 'app-shell'}>
       <Sidebar
@@ -68,36 +60,21 @@ export function App() {
         onToggle={() => setSidebarCollapsed((collapsed) => !collapsed)}
       />
       <div className="app-main">
-        <TopBar activeView={activeView} onViewChange={setActiveView} />
+        <TopBar
+          activeView={activeView}
+          connections={[
+            { name: 'Sentry', connected: false },
+            { name: 'Infantry', connected: robot.connected },
+            { name: 'Hero', connected: false },
+          ]}
+          onViewChange={setActiveView}
+        />
         <main className="workspace">
-          <section className="viewport-panel">
-            <div className="viewport-titlebar">
-              <div>
-                <span className="eyebrow">BATTLEFIELD / 3V3</span>
-                <h1>{activeView === '2d' ? 'Orthographic overview' : 'Spatial overview'}</h1>
-              </div>
-              <label className="follow-toggle">
-                <input
-                  type="checkbox"
-                  checked={camera.followRobot}
-                  onChange={(event) => setCamera((current) => ({
-                    ...current,
-                    followRobot: event.currentTarget.checked,
-                    targetXM: event.currentTarget.checked ? robot.xM : current.targetXM,
-                    targetYM: event.currentTarget.checked ? robot.yM : current.targetYM,
-                  }))}
-                />
-                <span /> Follow robot
-              </label>
-            </div>
-            <div className="viewport-content">
-              {activeView === '2d' ? (
-                <Field2D robot={robot} camera={camera} onCameraChange={setCamera} onRobotMove={updateRobot} />
-              ) : (
-                <Field3D robot={robot} camera={camera} onRobotMove={updateRobot} />
-              )}
-            </div>
-          </section>
+          {activeView === '2d' ? (
+            <Field2D robot={robot} camera={camera} onCameraChange={setCamera} onRobotMove={updateRobot} />
+          ) : (
+            <Field3D robot={robot} camera={camera} onRobotMove={updateRobot} />
+          )}
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
