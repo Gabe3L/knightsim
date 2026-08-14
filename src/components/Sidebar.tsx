@@ -1,5 +1,6 @@
 import type { KeyboardEvent, PointerEvent } from 'react';
-import { Box, Settings2 } from 'lucide-react';
+import { Settings2 } from 'lucide-react';
+import logo from '../assets/logo.png';
 import type { RobotTelemetry } from '../types';
 import { Inspector } from './Inspector';
 
@@ -59,12 +60,9 @@ export function Sidebar({
       <div className="window-controls-bar" aria-hidden="true" />
 
       <div className="sidebar-brand-row">
-        <div className="brand-mark" aria-hidden="true">
-          <Box size={16} strokeWidth={2.4} />
-        </div>
+        <img className="brand-logo" src={logo} alt="" aria-hidden="true" />
         <div className="sidebar-brand-copy">
           <div className="brand-title">KnightSim</div>
-          <div className="brand-subtitle">ARCC telemetry workbench</div>
         </div>
       </div>
 
