@@ -185,6 +185,64 @@ button { color: inherit; }
 .inspector { display: flex; height: 100%; flex-direction: column; overflow: hidden; border: 0; background: transparent; box-shadow: none; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 14px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #121720, #0f141c); }
 .panel-heading h2 { margin: 4px 0 0; font-size: 14px; font-weight: 660; }
+.telemetry-heading { min-height: 45px; flex: 0 0 auto; padding-inline: 14px 12px; background: #10151c; }
+.telemetry-heading h2 { margin-top: 2px; font-size: 13px; }
+.asset-count { color: #65717e; font: 600 9px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
+.telemetry-tree { min-height: 0; padding: 5px 0 14px; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #293440 transparent; }
+.robot-node { overflow: hidden; border: 0; background: transparent; }
+.robot-node-toggle,
+.topic-node-toggle {
+  width: 100%;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.robot-node-toggle {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 14px;
+  color: #ccd3dc;
+  background: transparent;
+}
+.robot-node-toggle:hover { background: #171e27; }
+.tree-chevron { color: #8b96a3; transition: transform .12s ease, color .12s ease; }
+.expanded > .robot-node-toggle > .tree-chevron,
+.expanded > .topic-node-toggle > .tree-chevron { color: #a9b4c1; transform: rotate(90deg); }
+.robot-node-copy { display: flex; min-width: 0; align-items: baseline; gap: 7px; }
+.robot-node-copy strong { overflow: hidden; color: #e0e5eb; font-size: 12px; font-weight: 610; text-overflow: ellipsis; white-space: nowrap; }
+.robot-node-copy small { overflow: hidden; color: #596573; font: 550 9px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
+.tree-status { display: flex; align-items: center; gap: 5px; color: #75818e; font: 650 8px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
+.tree-status i { width: 5px; height: 5px; border-radius: 50%; }
+.tree-status.online { color: #58cba6; }
+.tree-status.online i { background: var(--accent); box-shadow: 0 0 6px rgba(70,231,178,.62); }
+.tree-status.offline { color: #d96871; }
+.tree-status.offline i { background: #ff5b67; box-shadow: 0 0 5px rgba(255,91,103,.45); }
+.topic-list { padding: 0; }
+.topic-node { position: relative; }
+.topic-node-toggle {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  min-height: 31px;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 12px 2px 35px;
+  color: #a8b1bc;
+  background: transparent;
+  font-size: 11.5px;
+  font-style: italic;
+  font-weight: 560;
+}
+.topic-node-toggle:hover { color: #e0e5eb; background: #171e27; }
+.topic-node.expanded > .topic-node-toggle { color: #d5dbe3; }
+.telemetry-fields { margin: 0; padding: 1px 0 4px; }
+.telemetry-field { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; min-height: 28px; align-items: center; gap: 5px; padding: 0 15px 0 58px; }
+.telemetry-field:hover { background: #151c24; }
+.field-branch { color: #5f6a77; font-size: 11px; }
+.telemetry-field dt { overflow: hidden; color: #7d8895; font: italic 550 10px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
+.telemetry-field dd { margin: 0; color: #d4dae1; font: 580 10px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .connection-dot { width: 7px; height: 7px; border-radius: 50%; }
 .connection-dot.online { background: var(--accent); box-shadow: 0 0 9px rgba(70,231,178,.66); }
 .connection-dot.offline { background: #ff5b67; box-shadow: 0 0 9px rgba(255,91,103,.6); }
@@ -267,9 +325,7 @@ kbd { display: inline-grid; min-width: 20px; height: 20px; place-items: center; 
   .view-tab { gap: 0; padding-inline: 7px; font-size: 11px; }
   .view-tab svg { display: none; }
   .robot-connection { gap: 4px; padding-inline: 4px; font-size: 10px; }
-  .robot-card { grid-template-columns: 34px 1fr; }
-  .robot-avatar { width: 34px; height: 34px; }
-  .status-chip { grid-column: 1 / -1; justify-self: start; }
+  .tree-status { padding-inline: 4px; }
   .timeline { grid-template-columns: auto 108px minmax(120px, 1fr) 96px; }
 }
 

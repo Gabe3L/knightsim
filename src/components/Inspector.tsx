@@ -1,4 +1,9 @@
-import { Activity, Flame, Gauge, HeartPulse, Radio, RotateCw } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  Bot,
+  ChevronRight,
+  Gauge,
+} from 'lucide-react';
 import type { RobotTelemetry } from '../types';
 
 interface InspectorProps {
@@ -6,103 +11,229 @@ interface InspectorProps {
   readonly collapsed?: boolean;
 }
 
-function MetricRow({
-  icon,
-  label,
-  value,
-  subvalue,
-}: {
-  readonly icon: React.ReactNode;
+interface TelemetryField {
   readonly label: string;
   readonly value: string;
-  readonly subvalue?: string;
-}) {
-  return (
-    <div className="metric-row">
-      <div className="metric-icon">{icon}</div>
-      <div className="min-w-0">
-        <div className="metric-label">{label}</div>
-        <div className="metric-value">{value}</div>
-      </div>
-      {subvalue ? <span className="metric-subvalue">{subvalue}</span> : null}
-    </div>
-  );
 }
 
-function Bar({ value, max, color }: { readonly value: number; readonly max: number; readonly color: string }) {
-  const width = `${Math.max(0, Math.min(100, (value / max) * 100))}%`;
-  return (
-    <div className="value-bar">
-      <span style={{ width, backgroundColor: color }} />
-    </div>
-  );
+interface TelemetryTopic {
+  readonly id: string;
+  readonly label: string;
+  readonly fields: readonly TelemetryField[];
+}
+
+interface RobotNode {
+  readonly id: string;
+  readonly name: string;
+  readonly role: string;
+  readonly connected: boolean;
+  readonly topics: readonly TelemetryTopic[];
+}
+
+interface RobotSnapshot {
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
+  readonly yaw: number;
+  readonly pitch: number;
+  readonly roll: number;
+  readonly hp: number;
+  readonly maxHp: number;
+  readonly heat: number;
+  readonly maxHeat: number;
+  readonly battery: string;
+  readonly signal: string;
+  readonly mode: string;
+  readonly cpu: string;
+  readonly aimTarget: string;
+  readonly yawError: string;
+  readonly pitchError: string;
+  readonly aimLocked: boolean;
+}
+
+const formatMeters = (value: number): string => `${value.toFixed(3)} m`;
+const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
+
+function topicsFor(snapshot: RobotSnapshot): readonly TelemetryTopic[] {
+  return [
+    {
+      id: 'pose',
+      label: 'Pose',
+      fields: [
+        { label: 'X', value: formatMeters(snapshot.x) },
+        { label: 'Y', value: formatMeters(snapshot.y) },
+        { label: 'Z', value: formatMeters(snapshot.z) },
+        { label: 'Yaw', value: formatDegrees(snapshot.yaw) },
+        { label: 'Pitch', value: formatDegrees(snapshot.pitch) },
+        { label: 'Roll', value: formatDegrees(snapshot.roll) },
+      ],
+    },
+    {
+      id: 'referee',
+      label: 'Referee state',
+      fields: [
+        { label: 'Hit points', value: `${snapshot.hp} / ${snapshot.maxHp}` },
+        { label: 'Barrel heat', value: `${snapshot.heat} / ${snapshot.maxHeat}` },
+        { label: 'Team', value: 'Red' },
+        { label: 'Match stage', value: 'Battle' },
+      ],
+    },
+    {
+      id: 'systems',
+      label: 'Systems',
+      fields: [
+        { label: 'Battery', value: snapshot.battery },
+        { label: 'Signal', value: snapshot.signal },
+        { label: 'Drive mode', value: snapshot.mode },
+        { label: 'CPU load', value: snapshot.cpu },
+      ],
+    },
+    {
+      id: 'aim',
+      label: 'Aim',
+      fields: [
+        { label: 'Target', value: snapshot.aimTarget },
+        { label: 'Yaw error', value: snapshot.yawError },
+        { label: 'Pitch error', value: snapshot.pitchError },
+        { label: 'Locked', value: snapshot.aimLocked ? 'Yes' : 'No' },
+      ],
+    },
+  ];
+}
+
+function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
+  const next = new Set(current);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  return next;
 }
 
 export function Inspector({ robot, collapsed = false }: InspectorProps) {
+  const [expandedRobots, setExpandedRobots] = useState<ReadonlySet<string>>(() => new Set(['infantry']));
+  const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set(['infantry:pose']));
+
+  const robots = useMemo<readonly RobotNode[]>(() => [
+    {
+      id: 'sentry',
+      name: 'Sentry',
+      role: 'RED-07',
+      connected: false,
+      topics: topicsFor({
+        x: 2.184, y: 6.932, z: 0, yaw: -90, pitch: 0, roll: 0,
+        hp: 600, maxHp: 600, heat: 0, maxHeat: 400,
+        battery: '—', signal: 'No link', mode: 'Idle', cpu: '—',
+        aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
+      }),
+    },
+    {
+      id: 'infantry',
+      name: 'Infantry',
+      role: 'RED-01',
+      connected: robot.connected,
+      topics: topicsFor({
+        x: robot.xM, y: robot.yM, z: 0, yaw: robot.yawDeg, pitch: -1.4, roll: 0.2,
+        hp: robot.hp, maxHp: robot.maxHp, heat: robot.heat, maxHeat: robot.maxHeat,
+        battery: '23.8 V', signal: '-47 dBm', mode: 'Chassis follow', cpu: '38%',
+        aimTarget: 'Blue-03', yawError: '0.8°', pitchError: '-0.3°', aimLocked: true,
+      }),
+    },
+    {
+      id: 'hero',
+      name: 'Hero',
+      role: 'RED-01H',
+      connected: false,
+      topics: topicsFor({
+        x: 8.642, y: 1.207, z: 0, yaw: 176.4, pitch: 0, roll: -0.1,
+        hp: 300, maxHp: 300, heat: 18, maxHeat: 200,
+        battery: '—', signal: 'No link', mode: 'Safe', cpu: '—',
+        aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
+      }),
+    },
+  ], [robot]);
+
   if (collapsed) {
     return (
-      <div className="inspector inspector-collapsed" aria-label="Robot inspector">
-        <button className="rail-tool rail-tool-active" type="button" aria-label="Selected robot" title="Selected robot">
-          <Gauge size={19} />
-          <span className={robot.connected ? 'rail-status online' : 'rail-status offline'} />
-        </button>
-        <button className="rail-tool" type="button" aria-label="Pose telemetry" title="Pose telemetry">
-          <Activity size={18} />
-        </button>
-        <button className="rail-tool" type="button" aria-label="Referee state" title="Referee state">
-          <Radio size={18} />
-        </button>
+      <div className="inspector inspector-collapsed" aria-label="Robots">
+        {robots.map((item) => (
+          <button className="rail-tool" type="button" aria-label={`${item.name}, ${item.connected ? 'online' : 'offline'}`} title={`${item.name} · ${item.connected ? 'Online' : 'Offline'}`} key={item.id}>
+            {item.id === 'infantry' ? <Gauge size={19} /> : <Bot size={18} />}
+            <span className={item.connected ? 'rail-status online' : 'rail-status offline'} />
+          </button>
+        ))}
       </div>
     );
   }
 
   return (
     <div className="inspector">
-      <div className="panel-heading">
+      <div className="panel-heading telemetry-heading">
         <div>
-          <span className="eyebrow">SELECTED ASSET</span>
-          <h2>RED-01 · Infantry</h2>
+          <span className="eyebrow">TELEMETRY</span>
+          <h2>Robots</h2>
         </div>
-        <div className={robot.connected ? 'connection-dot online' : 'connection-dot offline'} />
+        <span className="asset-count">3 assets</span>
       </div>
 
-      <div className="robot-card">
-        <div className="robot-avatar"><Gauge size={24} /></div>
-        <div>
-          <div className="robot-name">Mock robot</div>
-          <div className="robot-id">NT:/robots/red-01</div>
-        </div>
-        <span className={robot.connected ? 'status-chip connected' : 'status-chip disconnected'}>
-          {robot.connected ? 'CONNECTED' : 'DROPPED'}
-        </span>
+      <div className="telemetry-tree">
+        {robots.map((item) => {
+          const robotExpanded = expandedRobots.has(item.id);
+          return (
+            <section className={robotExpanded ? 'robot-node expanded' : 'robot-node'} key={item.id}>
+              <button
+                className="robot-node-toggle"
+                type="button"
+                aria-expanded={robotExpanded}
+                aria-controls={`${item.id}-topics`}
+                onClick={() => setExpandedRobots((current) => toggleKey(current, item.id))}
+              >
+                <ChevronRight className="tree-chevron" size={15} />
+                <span className="robot-node-copy">
+                  <strong>{item.name}</strong>
+                  <small>{item.role}</small>
+                </span>
+                <span className={item.connected ? 'tree-status online' : 'tree-status offline'}>
+                  <i />{item.connected ? 'Online' : 'Offline'}
+                </span>
+              </button>
+
+              {robotExpanded ? (
+                <div className="topic-list" id={`${item.id}-topics`}>
+                  {item.topics.map((topic) => {
+                    const topicKey = `${item.id}:${topic.id}`;
+                    const topicExpanded = expandedTopics.has(topicKey);
+                    return (
+                      <div className={topicExpanded ? 'topic-node expanded' : 'topic-node'} key={topic.id}>
+                        <button
+                          className="topic-node-toggle"
+                          type="button"
+                          aria-expanded={topicExpanded}
+                          aria-controls={`${item.id}-${topic.id}-fields`}
+                          onClick={() => setExpandedTopics((current) => toggleKey(current, topicKey))}
+                        >
+                          <ChevronRight className="tree-chevron" size={14} />
+                          <span>{topic.label}</span>
+                        </button>
+
+                        {topicExpanded ? (
+                          <dl className="telemetry-fields" id={`${item.id}-${topic.id}-fields`}>
+                            {topic.fields.map((field) => (
+                              <div className="telemetry-field" key={field.label}>
+                                <span className="field-branch">—</span>
+                                <dt>{field.label}</dt>
+                                <dd>{field.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
-
-      <section className="inspector-section">
-        <h3><Activity size={14} /> Pose</h3>
-        <div className="metric-stack">
-          <MetricRow icon={<span className="axis axis-x">X</span>} label="FIELD X" value={`${robot.xM.toFixed(3)} m`} />
-          <MetricRow icon={<span className="axis axis-y">Y</span>} label="FIELD Y" value={`${robot.yM.toFixed(3)} m`} />
-          <MetricRow icon={<RotateCw size={15} />} label="YAW" value={`${robot.yawDeg.toFixed(1)}°`} subvalue="CCW+" />
-        </div>
-      </section>
-
-      <section className="inspector-section">
-        <h3><Radio size={14} /> Referee state</h3>
-        <div className="vital-card">
-          <div className="vital-header">
-            <span><HeartPulse size={14} /> HIT POINTS</span>
-            <strong>{robot.hp} <small>/ {robot.maxHp}</small></strong>
-          </div>
-          <Bar value={robot.hp} max={robot.maxHp} color="#46e7b2" />
-        </div>
-        <div className="vital-card">
-          <div className="vital-header">
-            <span><Flame size={14} /> BARREL HEAT</span>
-            <strong>{robot.heat} <small>/ {robot.maxHeat}</small></strong>
-          </div>
-          <Bar value={robot.heat} max={robot.maxHeat} color="#ffb34d" />
-        </div>
-      </section>
     </div>
   );
 }
