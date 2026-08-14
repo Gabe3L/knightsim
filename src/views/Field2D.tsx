@@ -1,4 +1,4 @@
-import { Crosshair, LocateFixed, ZoomIn, ZoomOut } from 'lucide-react';
+import { LocateFixed, ZoomIn, ZoomOut } from 'lucide-react';
 import { useMemo } from 'react';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
 import type { CameraState, RobotTelemetry } from '../types';
@@ -7,14 +7,13 @@ interface Field2DProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
   readonly onCameraChange: (camera: CameraState) => void;
-  readonly onRobotMove: (pose: Pick<RobotTelemetry, 'xM' | 'yM' | 'yawDeg'>) => void;
 }
 
 const fieldY = (yM: number): number => ARCC_2026_FIELD.size.widthM - yM;
 const rectY = (yM: number, depthM: number): number => fieldY(yM + depthM);
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
-export function Field2D({ robot, camera, onCameraChange, onRobotMove }: Field2DProps) {
+export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
   const viewBox = useMemo(() => {
     const width = 12.7 / camera.zoom;
     const height = 8.7 / camera.zoom;
@@ -22,22 +21,6 @@ export function Field2D({ robot, camera, onCameraChange, onRobotMove }: Field2DP
     const centerY = clamp(fieldY(camera.targetYM), height / 2 - 0.35, 8.35 - height / 2);
     return `${centerX - width / 2} ${centerY - height / 2} ${width} ${height}`;
   }, [camera]);
-
-  const moveFromPointer = (event: React.PointerEvent<SVGSVGElement>): void => {
-    if (event.button !== 0) return;
-    const matrix = event.currentTarget.getScreenCTM();
-    if (!matrix) return;
-    const point = event.currentTarget.createSVGPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
-    const local = point.matrixTransform(matrix.inverse());
-    onRobotMove({
-      xM: clamp(local.x, 0.25, 11.75),
-      yM: clamp(fieldY(local.y), 0.25, 7.75),
-      yawDeg: robot.yawDeg,
-    });
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
 
   const setZoom = (zoom: number): void => onCameraChange({ ...camera, zoom: clamp(zoom, 1, 2.8) });
 
@@ -48,11 +31,6 @@ export function Field2D({ robot, camera, onCameraChange, onRobotMove }: Field2DP
         viewBox={viewBox}
         role="img"
         aria-label="Top-down ARCC 2026 3v3 battlefield"
-        onPointerDown={moveFromPointer}
-        onPointerMove={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) moveFromPointer(event);
-        }}
-        onPointerUp={(event) => event.currentTarget.releasePointerCapture(event.pointerId)}
         onWheel={(event) => setZoom(camera.zoom * (event.deltaY > 0 ? 0.9 : 1.1))}
       >
         <defs>
@@ -193,7 +171,6 @@ export function Field2D({ robot, camera, onCameraChange, onRobotMove }: Field2DP
         <span className="eyebrow">FIELD COORDINATES</span>
         <strong>X {robot.xM.toFixed(2)} · Y {robot.yM.toFixed(2)} m</strong>
       </div>
-      <div className="field-overlay field-overlay-center"><Crosshair size={13} /> Click or drag to reposition</div>
       <div className="zoom-controls">
         <button type="button" onClick={() => setZoom(camera.zoom * 1.2)} aria-label="Zoom in"><ZoomIn size={16} /></button>
         <button type="button" onClick={() => setZoom(camera.zoom / 1.2)} aria-label="Zoom out"><ZoomOut size={16} /></button>

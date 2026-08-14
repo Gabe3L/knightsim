@@ -4,7 +4,7 @@ import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
 import { ARCC_2026_FIELD } from './field/fieldSpec';
 import { useReplay } from './hooks/useReplay';
-import type { CameraState, RobotTelemetry, ViewMode } from './types';
+import type { CameraState, ViewMode } from './types';
 import { Field2D } from './views/Field2D';
 import { Field3D } from './views/Field3D';
 
@@ -28,38 +28,7 @@ export function App() {
     zoom: 1,
     followRobot: false,
   });
-  const { replay, robot, seek, togglePlaying, setSpeed, moveRobot } = useReplay();
-
-  const updateRobot = useCallback((pose: Pick<RobotTelemetry, 'xM' | 'yM' | 'yawDeg'>) => {
-    moveRobot(pose);
-  }, [moveRobot]);
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
-      if (target?.matches('input, select, textarea, button')) return;
-      const stepM = event.shiftKey ? 0.5 : 0.16;
-      const next = { xM: robot.xM, yM: robot.yM, yawDeg: robot.yawDeg };
-
-      if (event.key.toLowerCase() === 'w') next.yM += stepM;
-      else if (event.key.toLowerCase() === 's') next.yM -= stepM;
-      else if (event.key.toLowerCase() === 'a') next.xM -= stepM;
-      else if (event.key.toLowerCase() === 'd') next.xM += stepM;
-      else if (event.key.toLowerCase() === 'q') next.yawDeg += 5;
-      else if (event.key.toLowerCase() === 'e') next.yawDeg -= 5;
-      else return;
-
-      event.preventDefault();
-      updateRobot({
-        xM: clamp(next.xM, 0.25, 11.75),
-        yM: clamp(next.yM, 0.25, 7.75),
-        yawDeg: ((next.yawDeg + 540) % 360) - 180,
-      });
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [robot, updateRobot]);
+  const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
 
   const startSidebarResize = useCallback((pointerX: number) => {
     sidebarDragStart.current = { pointerX, width: sidebarWidth };
@@ -122,9 +91,9 @@ export function App() {
         />
         <main className="workspace">
           {activeView === '2d' ? (
-            <Field2D robot={robot} camera={camera} onCameraChange={setCamera} onRobotMove={updateRobot} />
+            <Field2D robot={robot} camera={camera} onCameraChange={setCamera} />
           ) : (
-            <Field3D robot={robot} camera={camera} onRobotMove={updateRobot} />
+            <Field3D robot={robot} camera={camera} />
           )}
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />

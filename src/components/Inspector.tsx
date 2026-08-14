@@ -104,11 +104,7 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
         </div>
       </section>
 
-      <div className="inspector-footer">
-        <span>Move with</span>
-        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-        <span>Rotate</span><kbd>Q</kbd><kbd>E</kbd>
-      </div>
+      <div className="inspector-footer">Pose reflects robot telemetry</div>
     </div>
   );
 }

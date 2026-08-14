@@ -5,10 +5,9 @@ KnightSim is an initial desktop replay and field-visualization MVP inspired by t
 ## Included in the MVP
 
 - Synchronized 2D SVG and 3D React Three Fiber battlefield views
-- Shared robot pose and camera focus state across tabs
+- Read-only robot pose telemetry and shared camera focus state across tabs
 - Mock replay with play/pause, seek, five-second rewind, speed, and timestamp
 - Robot inspector for field pose, yaw, HP, heat, and connection status
-- Click/drag field placement plus `WASD` movement and `Q`/`E` rotation
 - Electron context isolation, renderer sandboxing, disabled Node integration, navigation restrictions, and a minimal preload bridge
 - One reusable typed ARCC field spec consumed by both renderers
 

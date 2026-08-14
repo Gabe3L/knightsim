@@ -1,6 +1,6 @@
 import { Box, OrbitControls, PerspectiveCamera } from '@react-three/drei';
-import { Canvas, type ThreeEvent } from '@react-three/fiber';
-import { Crosshair, MousePointer2 } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { Crosshair } from 'lucide-react';
 import { useMemo } from 'react';
 import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
@@ -9,7 +9,6 @@ import type { CameraState, RobotTelemetry } from '../types';
 interface Field3DProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
-  readonly onRobotMove: (pose: Pick<RobotTelemetry, 'xM' | 'yM' | 'yawDeg'>) => void;
 }
 
 const worldX = (xM: number): number => xM - 6;
@@ -74,23 +73,14 @@ function Ramp({
   );
 }
 
-function Arena({ robot, onRobotMove }: Pick<Field3DProps, 'robot' | 'onRobotMove'>) {
-  const moveOnField = (event: ThreeEvent<PointerEvent>): void => {
-    event.stopPropagation();
-    onRobotMove({
-      xM: Math.max(0.25, Math.min(11.75, event.point.x + 6)),
-      yM: Math.max(0.25, Math.min(7.75, event.point.z + 4)),
-      yawDeg: robot.yawDeg,
-    });
-  };
-
+function Arena({ robot }: Pick<Field3DProps, 'robot'>) {
   return (
     <>
       <ambientLight intensity={1.25} />
       <directionalLight position={[-3, 12, 6]} intensity={2.7} castShadow shadow-mapSize={[2048, 2048]} />
       <hemisphereLight args={['#b7d4ff', '#15181d', 0.8]} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow onPointerDown={moveOnField}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[12, 8]} />
         <meshStandardMaterial color="#151a22" roughness={0.95} />
       </mesh>
@@ -102,7 +92,6 @@ function Arena({ robot, onRobotMove }: Pick<Field3DProps, 'robot' | 'onRobotMove
           position={[worldX(zone.xM + zone.widthM / 2), 0.006, worldZ(zone.yM + zone.depthM / 2)]}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
-          onPointerDown={moveOnField}
         >
           <planeGeometry args={[zone.widthM, zone.depthM]} />
           <meshStandardMaterial color={teamColor(zone.team)} transparent opacity={zone.kind === 'capture' ? 0.48 : 0.22} roughness={0.8} />
@@ -235,7 +224,7 @@ function Arena({ robot, onRobotMove }: Pick<Field3DProps, 'robot' | 'onRobotMove
   );
 }
 
-export function Field3D({ robot, camera, onRobotMove }: Field3DProps) {
+export function Field3D({ robot, camera }: Field3DProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
     <div className="field-stage field-stage-3d">
@@ -253,7 +242,7 @@ export function Field3D({ robot, camera, onRobotMove }: Field3DProps) {
             worldZ(camera.targetYM) + 8.8 * distanceScale,
           ]}
         />
-        <Arena robot={robot} onRobotMove={onRobotMove} />
+        <Arena robot={robot} />
         <OrbitControls
           makeDefault
           target={[worldX(camera.targetXM), 0, worldZ(camera.targetYM)]}
@@ -268,7 +257,6 @@ export function Field3D({ robot, camera, onRobotMove }: Field3DProps) {
         <span className="eyebrow">PERSPECTIVE CAMERA</span>
         <strong>ARCC 2026 · METRES</strong>
       </div>
-      <div className="field-overlay field-overlay-center"><MousePointer2 size={13} /> Click floor to reposition</div>
       <div className="three-hint"><Crosshair size={13} /> Orbit · scroll to zoom · right-drag to pan</div>
     </div>
   );

@@ -60,10 +60,5 @@ export const useReplay = () => {
     setReplay((current) => ({ ...current, speed }));
   }, []);
 
-  const moveRobot = useCallback((next: Pick<RobotTelemetry, 'xM' | 'yM' | 'yawDeg'>) => {
-    setReplay((current) => ({ ...current, playing: false }));
-    setRobot((current) => ({ ...current, ...next }));
-  }, []);
-
-  return { replay, robot, seek, togglePlaying, setSpeed, moveRobot };
+  return { replay, robot, seek, togglePlaying, setSpeed };
 };
