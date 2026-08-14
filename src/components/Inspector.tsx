@@ -103,8 +103,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
           <Bar value={robot.heat} max={robot.maxHeat} color="#ffb34d" />
         </div>
       </section>
-
-      <div className="inspector-footer">Pose reflects robot telemetry</div>
     </div>
   );
 }

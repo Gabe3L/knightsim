@@ -149,7 +149,7 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
         {ARCC_2026_FIELD.markers.map((marker) => (
           <g key={marker.id} transform={`translate(${marker.xM} ${fieldY(marker.yM)})`}>
             <rect x="-0.075" y="-0.075" width="0.15" height="0.15" rx=".015" fill="#05070a" stroke="#fff" strokeWidth=".018" />
-            <text x="0" y="0.025" textAnchor="middle" fill="#fff" fontSize=".075" fontFamily="ui-monospace" fontWeight="700">{marker.id}</text>
+            <text x="0" y="0.025" textAnchor="middle" fill="#fff" fontSize=".075" fontFamily="Inter, system-ui, sans-serif" fontWeight="700">{marker.id}</text>
           </g>
         ))}
 
