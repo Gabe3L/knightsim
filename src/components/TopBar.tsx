@@ -1,18 +1,12 @@
 import { Box, ChartLine, CircleDot, Gamepad2, Route } from 'lucide-react';
 import type { ViewMode } from '../types';
 
-interface RobotConnection {
-  readonly name: string;
-  readonly connected: boolean;
-}
-
 interface TopBarProps {
   readonly activeView: ViewMode;
-  readonly connections: readonly RobotConnection[];
   readonly onViewChange: (view: ViewMode) => void;
 }
 
-export function TopBar({ activeView, connections, onViewChange }: TopBarProps) {
+export function TopBar({ activeView, onViewChange }: TopBarProps) {
   return (
     <header className="topbar">
       <nav className="view-tabs" aria-label="Workspace views">
@@ -46,21 +40,6 @@ export function TopBar({ activeView, connections, onViewChange }: TopBarProps) {
         </button>
       </nav>
 
-      <div className="topbar-actions">
-        <div className="robot-connections" aria-label="Robot connections">
-          {connections.map(({ name, connected }) => (
-            <div
-              className="robot-connection"
-              key={name}
-              aria-label={`${name}: ${connected ? 'connected' : 'disconnected'}`}
-              title={`${name}: ${connected ? 'Connected' : 'Disconnected'}`}
-            >
-              <span className={connected ? 'connection-indicator connected' : 'connection-indicator disconnected'} />
-              {name}
-            </div>
-          ))}
-        </div>
-      </div>
     </header>
   );
 }

@@ -154,12 +154,6 @@ button { color: inherit; }
 .view-tab-placeholder { color: #626d7a; cursor: default; }
 .view-tab-placeholder:hover { color: #626d7a; background: transparent; }
 
-.topbar-actions { grid-column: 3; justify-self: end; display: flex; min-width: 0; align-items: center; gap: 9px; }
-.robot-connections { display: flex; align-items: center; gap: 2px; padding: 4px; border: 1px solid #242d39; border-radius: 8px; background: rgba(9,12,17,.8); }
-.robot-connection { display: flex; align-items: center; gap: 5px; padding: 5px 6px; color: #8d97a4; font: 700 10px/1 var(--font-ui); letter-spacing: .025em; white-space: nowrap; }
-.connection-indicator { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; }
-.connection-indicator.connected { background: var(--accent); box-shadow: 0 0 7px rgba(70,231,178,.64); }
-.connection-indicator.disconnected { background: #ff5b67; box-shadow: 0 0 6px rgba(255,91,103,.4); }
 @keyframes pulse { 50% { opacity: .34; } }
 
 .workspace { position: relative; z-index: 0; min-height: 0; overflow: hidden; }
@@ -324,7 +318,6 @@ kbd { display: inline-grid; min-width: 20px; height: 20px; place-items: center; 
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding-inline: 10px; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 11px; }
   .view-tab svg { display: none; }
-  .robot-connection { gap: 4px; padding-inline: 4px; font-size: 10px; }
   .tree-status { padding-inline: 4px; }
   .timeline { grid-template-columns: auto 108px minmax(120px, 1fr) 96px; }
 }

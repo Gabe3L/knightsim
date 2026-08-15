@@ -166,14 +166,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
 
   return (
     <div className="inspector">
-      <div className="panel-heading telemetry-heading">
-        <div>
-          <span className="eyebrow">TELEMETRY</span>
-          <h2>Robots</h2>
-        </div>
-        <span className="asset-count">3 assets</span>
-      </div>
-
       <div className="telemetry-tree">
         {robots.map((item) => {
           const robotExpanded = expandedRobots.has(item.id);

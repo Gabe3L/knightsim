@@ -82,11 +82,6 @@ export function App() {
       <div className="app-main">
         <TopBar
           activeView={activeView}
-          connections={[
-            { name: 'Sentry', connected: false },
-            { name: 'Infantry', connected: robot.connected },
-            { name: 'Hero', connected: false },
-          ]}
           onViewChange={setActiveView}
         />
         <main className="workspace">
