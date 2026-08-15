@@ -1,0 +1,16 @@
+.field-stage { position: absolute; inset: 0; overflow: hidden; background: #090d13; }
+.field-stage-2d { background: radial-gradient(circle at 50% 48%, #111923 0%, #090d13 70%); }
+.field-svg { display: block; width: 100%; height: 100%; padding: 18px 26px 28px; touch-action: none; }
+.field-overlay { position: absolute; z-index: 3; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #b8c0cb; background: rgba(8,11,16,.72); backdrop-filter: blur(10px); box-shadow: 0 6px 18px rgba(0,0,0,.14); pointer-events: none; }
+.field-overlay-left { left: 13px; top: 13px; padding: 8px 10px; }
+.field-overlay-left strong { display: block; margin-top: 4px; font: 650 12px/1.2 var(--font-ui); font-variant-numeric: tabular-nums; }
+.zoom-controls { position: absolute; right: 12px; top: 12px; display: grid; overflow: hidden; border: 1px solid #29323e; border-radius: 7px; background: rgba(11,15,21,.82); backdrop-filter: blur(10px); }
+.zoom-controls button { display: grid; width: 31px; height: 30px; place-items: center; border: 0; border-bottom: 1px solid #242c37; color: #8994a2; background: transparent; cursor: pointer; }
+.zoom-controls button:last-child { border-bottom: 0; }
+.zoom-controls button:hover { color: white; background: #1b2330; }
+.orientation-widget { position: absolute; right: 17px; bottom: 17px; width: 46px; height: 46px; color: #9aa5b3; font: 700 10px/1 var(--font-ui); pointer-events: none; }
+.orientation-widget::before, .orientation-widget i { content: ''; position: absolute; left: 22px; bottom: 8px; width: 1px; height: 29px; background: linear-gradient(#58e5b6, #34404e); transform-origin: bottom; }
+.orientation-widget i { transform: rotate(90deg); }
+.orientation-widget span { position: absolute; left: 19px; top: 0; color: #5ce5b8; }
+.orientation-widget b { position: absolute; right: 0; bottom: 5px; color: #ef5964; }
+.three-hint { position: absolute; right: 13px; top: 13px; display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #82909e; background: rgba(8,11,16,.72); font-size: 11px; pointer-events: none; }
