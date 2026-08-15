@@ -1,7 +1,8 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, Menu, shell } from 'electron';
 import path from 'node:path';
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
+const isWindows = process.platform === 'win32';
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -10,7 +11,14 @@ function createWindow(): void {
     minWidth: 1040,
     minHeight: 700,
     backgroundColor: '#090b10',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : isWindows ? 'hidden' : 'default',
+    ...(isWindows ? {
+      titleBarOverlay: {
+        color: '#0b0e14',
+        symbolColor: '#aeb6c1',
+        height: 42,
+      },
+    } : {}),
     ...(process.platform === 'darwin' ? { trafficLightPosition: { x: 16, y: 14 } } : {}),
     show: false,
     webPreferences: {
@@ -40,6 +48,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  if (isWindows) Menu.setApplicationMenu(null);
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

@@ -15,6 +15,7 @@ const DEFAULT_SIDEBAR_WIDTH = 292;
 const MIN_SIDEBAR_WIDTH = 96;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
+const isWindows = window.knightSim?.platform === 'win32';
 
 export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
@@ -65,7 +66,11 @@ export function App() {
 
   return (
     <div
-      className={sidebarResizing ? 'app-shell sidebar-is-resizing' : 'app-shell'}
+      className={[
+        'app-shell',
+        isWindows && 'app-shell-windows',
+        sidebarResizing && 'sidebar-is-resizing',
+      ].filter(Boolean).join(' ')}
       style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
     >
       <Sidebar

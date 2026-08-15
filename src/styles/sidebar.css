@@ -18,6 +18,15 @@
   -webkit-app-region: drag;
 }
 
+.app-shell-windows .sidebar { grid-template-rows: 72px minmax(0, 1fr) 64px; }
+.app-shell-windows .window-controls-bar { display: none; }
+.app-shell-windows .sidebar-brand-row { -webkit-app-region: drag; }
+.app-shell-windows .telemetry-tree { padding-top: 9px; padding-bottom: 18px; }
+.app-shell-windows .robot-node-toggle { min-height: 40px; }
+.app-shell-windows .topic-node-toggle { min-height: 34px; }
+.app-shell-windows .telemetry-field { min-height: 30px; }
+.app-shell-windows .sidebar-footer { padding-block: 11px; }
+
 .sidebar-brand-row {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
