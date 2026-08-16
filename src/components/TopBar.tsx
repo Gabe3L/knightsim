@@ -26,10 +26,6 @@ export function TopBar({ activeView, onViewChange }: TopBarProps) {
           <Box size={15} />
           3D
         </button>
-        <button className="view-tab view-tab-placeholder" type="button" disabled title="Odometry view coming soon">
-          <Route size={15} />
-          Odometry
-        </button>
         <button
           className={activeView === 'graph' ? 'view-tab view-tab-active' : 'view-tab'}
           type="button"
