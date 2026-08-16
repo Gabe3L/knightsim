@@ -10,18 +10,25 @@ import {
   graphSignalById,
   graphSignalValueAt,
 } from '../telemetry/graphSignals';
+import {
+  FIELD_OVERLAY_DRAG_TYPE,
+  FIELD_OVERLAY_SOURCES,
+} from '../overlays/fieldOverlays';
+import { odometryDebugAt } from '../telemetry/odometryDebug';
 import type { RobotTelemetry } from '../types';
 
 interface InspectorProps {
   readonly robot: RobotTelemetry;
   readonly currentTimeS: number;
   readonly collapsed?: boolean;
+  readonly onAddFieldOverlay: (id: string) => void;
 }
 
 interface TelemetryField {
   readonly label: string;
   readonly value: string;
   readonly graphSignalId?: string;
+  readonly fieldOverlayId?: string;
 }
 
 interface TelemetryTopic {
@@ -74,7 +81,7 @@ function graphField(
 }
 
 function topicsFor(snapshot: RobotSnapshot, robotId: string, timeS: number): readonly TelemetryTopic[] {
-  return [
+  const topics: TelemetryTopic[] = [
     {
       id: 'pose',
       label: 'Pose',
@@ -128,6 +135,25 @@ function topicsFor(snapshot: RobotSnapshot, robotId: string, timeS: number): rea
       ],
     },
   ];
+
+  if (robotId === 'infantry') {
+    const sampleById = new Map(odometryDebugAt(timeS).map((sample) => [sample.id, sample]));
+    topics.splice(1, 0, {
+      id: 'odometry-debug',
+      label: 'Odometry debug',
+      fields: FIELD_OVERLAY_SOURCES.map((source) => {
+        const sample = sampleById.get(source.id);
+        const state = !sample?.available ? 'Unavailable' : sample.status ?? 'Available';
+        return {
+          label: source.name,
+          value: state[0]!.toUpperCase() + state.slice(1),
+          fieldOverlayId: source.id,
+        };
+      }),
+    });
+  }
+
+  return topics;
 }
 
 function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
@@ -137,7 +163,7 @@ function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
   return next;
 }
 
-export function Inspector({ robot, currentTimeS, collapsed = false }: InspectorProps) {
+export function Inspector({ robot, currentTimeS, collapsed = false, onAddFieldOverlay }: InspectorProps) {
   const [expandedRobots, setExpandedRobots] = useState<ReadonlySet<string>>(() => new Set(['infantry']));
   const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set(['infantry:pose']));
 
@@ -181,6 +207,12 @@ export function Inspector({ robot, currentTimeS, collapsed = false }: InspectorP
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.setData(GRAPH_SIGNAL_DRAG_TYPE, graphSignalId);
     event.dataTransfer.setData('text/plain', graphSignalId);
+  };
+
+  const startFieldOverlayDrag = (event: DragEvent<HTMLDivElement>, fieldOverlayId: string): void => {
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData(FIELD_OVERLAY_DRAG_TYPE, fieldOverlayId);
+    event.dataTransfer.setData('text/plain', fieldOverlayId);
   };
 
   if (collapsed) {
@@ -241,14 +273,33 @@ export function Inspector({ robot, currentTimeS, collapsed = false }: InspectorP
                           <dl className="telemetry-fields" id={`${item.id}-${topic.id}-fields`}>
                             {topic.fields.map((field) => (
                               <div
-                                className={field.graphSignalId ? 'telemetry-field telemetry-field-draggable' : 'telemetry-field'}
-                                draggable={Boolean(field.graphSignalId)}
+                                className={field.graphSignalId || field.fieldOverlayId ? 'telemetry-field telemetry-field-draggable' : 'telemetry-field'}
+                                draggable={Boolean(field.graphSignalId || field.fieldOverlayId)}
                                 key={field.label}
-                                title={field.graphSignalId ? 'Drag onto Line Graph' : undefined}
-                                onDragStart={field.graphSignalId ? (event) => startSignalDrag(event, field.graphSignalId!) : undefined}
+                                title={field.graphSignalId
+                                  ? 'Drag onto Line Graph'
+                                  : field.fieldOverlayId
+                                    ? 'Drag onto Field Overlays or double-click to display'
+                                    : undefined}
+                                tabIndex={field.fieldOverlayId ? 0 : undefined}
+                                onDoubleClick={field.fieldOverlayId
+                                  ? () => onAddFieldOverlay(field.fieldOverlayId!)
+                                  : undefined}
+                                onKeyDown={field.fieldOverlayId
+                                  ? (event) => {
+                                    if (event.key !== 'Enter') return;
+                                    event.preventDefault();
+                                    onAddFieldOverlay(field.fieldOverlayId!);
+                                  }
+                                  : undefined}
+                                onDragStart={field.graphSignalId
+                                  ? (event) => startSignalDrag(event, field.graphSignalId!)
+                                  : field.fieldOverlayId
+                                    ? (event) => startFieldOverlayDrag(event, field.fieldOverlayId!)
+                                    : undefined}
                               >
                                 <span className="field-branch">
-                                  {field.graphSignalId ? <GripVertical size={11} /> : '—'}
+                                  {field.graphSignalId || field.fieldOverlayId ? <GripVertical size={11} /> : '—'}
                                 </span>
                                 <dt>{field.label}</dt>
                                 <dd>{field.value}</dd>

@@ -60,6 +60,7 @@
 .telemetry-field-draggable { cursor: grab; }
 .telemetry-field-draggable:hover { background: #18222b; }
 .telemetry-field-draggable:active { cursor: grabbing; }
+.telemetry-field-draggable:focus-visible { outline: 1px solid var(--accent); outline-offset: -2px; background: #18252a; }
 .telemetry-field-draggable .field-branch { display: grid; color: #6fdab7; place-items: center; }
 .telemetry-field-draggable:hover dt { color: #b7c2ce; }
 .telemetry-field dt { overflow: hidden; color: #7d8895; font: italic 550 10px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }

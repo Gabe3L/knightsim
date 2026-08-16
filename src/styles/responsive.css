@@ -5,11 +5,31 @@
 }
 
 @media (max-width: 980px) {
+  .app-shell {
+    grid-template-columns:
+      min(var(--sidebar-width, 292px), 240px)
+      minmax(0, 1fr)
+      min(var(--field-sidebar-width, 0px), 210px);
+  }
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding-inline: 10px; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 11px; }
   .view-tab svg { display: none; }
   .tree-status { padding-inline: 4px; }
-  .timeline { grid-template-columns: auto 108px minmax(120px, 1fr) 96px; }
+  .timeline { grid-template-columns: auto 92px minmax(70px, 1fr) 58px; gap: 6px; padding-inline: 8px; }
+  .speed-control span { display: none; }
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    grid-template-columns:
+      min(var(--sidebar-width, 292px), 210px)
+      minmax(0, 1fr)
+      min(var(--field-sidebar-width, 0px), 180px);
+  }
+  .field-overlay-sidebar-header { grid-template-columns: 27px minmax(0, 1fr) 27px; gap: 5px; padding-inline: 7px; }
+  .field-overlay-sidebar-icon { width: 26px; height: 26px; }
+  .field-overlay-row { gap: 5px; padding-right: 3px; }
+  .field-overlay-order-actions { display: none; }
 }
 
 @media (max-height: 770px) {

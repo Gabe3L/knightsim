@@ -624,6 +624,19 @@ export function SettingsDialog({
                     <kbd>B</kbd>
                   </div>
                 </div>
+                <div className="keybinding-row">
+                  <div className="keybinding-copy">
+                    <strong>Toggle field overlays</strong>
+                    <span>Open or collapse the field-overlay sidebar in 2D and 3D views.</span>
+                  </div>
+                  <div className="keybinding-keys" aria-label={`Control plus ${window.knightSim?.platform === 'darwin' ? 'Option' : 'Alt'} plus B`}>
+                    <kbd>Ctrl</kbd>
+                    <span>+</span>
+                    <kbd>{window.knightSim?.platform === 'darwin' ? 'Option' : 'Alt'}</kbd>
+                    <span>+</span>
+                    <kbd>B</kbd>
+                  </div>
+                </div>
               </section>
             </div>
           )}

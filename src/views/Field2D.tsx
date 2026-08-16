@@ -1,11 +1,13 @@
 import { LocateFixed, ZoomIn, ZoomOut } from 'lucide-react';
 import { useMemo } from 'react';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
+import type { ResolvedFieldOverlay } from '../overlays/fieldOverlays';
 import type { CameraState, RobotTelemetry } from '../types';
 
 interface Field2DProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
+  readonly overlays: readonly ResolvedFieldOverlay[];
   readonly onCameraChange: (camera: CameraState) => void;
 }
 
@@ -15,6 +17,92 @@ const clamp = (value: number, min: number, max: number): number => Math.max(min,
 
 const fieldWoodColor = '#73777a';
 const fieldSheetColor = '#111318';
+
+function FieldOverlayGlyph({ overlay }: { readonly overlay: ResolvedFieldOverlay }) {
+  if (!overlay.visible || !overlay.sample.available) return null;
+  const { descriptor, sample, color } = overlay;
+  const pose = sample.pose;
+  const rejected = sample.status === 'rejected';
+  const opacity = rejected ? 0.5 : 0.92;
+  const dash = rejected ? '.08 .055' : undefined;
+
+  return (
+    <g opacity={opacity} data-overlay-id={overlay.id}>
+      {sample.path && sample.path.length > 1 ? (
+        <polyline
+          points={sample.path.map((point) => `${point.xM},${fieldY(point.yM)}`).join(' ')}
+          fill="none"
+          stroke={color}
+          strokeWidth=".035"
+          strokeDasharray=".11 .055"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      ) : null}
+      {pose && sample.residualToFused ? (
+        <line
+          x1={pose.xM}
+          y1={fieldY(pose.yM)}
+          x2={sample.residualToFused.xM}
+          y2={fieldY(sample.residualToFused.yM)}
+          stroke={color}
+          strokeOpacity=".48"
+          strokeWidth=".018"
+          strokeDasharray=".055 .05"
+          vectorEffect="non-scaling-stroke"
+        />
+      ) : null}
+      {pose && sample.covariance ? (
+        <ellipse
+          cx={pose.xM}
+          cy={fieldY(pose.yM)}
+          rx={sample.covariance.majorM}
+          ry={sample.covariance.minorM}
+          transform={`rotate(${-sample.covariance.angleDeg} ${pose.xM} ${fieldY(pose.yM)})`}
+          fill={color}
+          fillOpacity=".055"
+          stroke={color}
+          strokeOpacity=".72"
+          strokeWidth=".018"
+          strokeDasharray={dash}
+          vectorEffect="non-scaling-stroke"
+        />
+      ) : null}
+      {pose ? (
+        <g transform={`translate(${pose.xM} ${fieldY(pose.yM)}) rotate(${-pose.yawDeg})`}>
+          {descriptor.kind === 'ground-truth' ? (
+            <path d="M 0 -.29 L .29 0 L 0 .29 L -.29 0 Z" fill="#090d13" fillOpacity=".76" stroke={color} strokeWidth=".035" vectorEffect="non-scaling-stroke" />
+          ) : descriptor.kind === 'fused' ? (
+            <>
+              <circle r=".34" fill={color} fillOpacity=".13" stroke={color} strokeWidth=".055" vectorEffect="non-scaling-stroke" />
+              <rect x="-.22" y="-.18" width=".44" height=".36" rx=".045" fill="#090d13" fillOpacity=".72" stroke={color} strokeWidth=".028" vectorEffect="non-scaling-stroke" />
+            </>
+          ) : (
+            <rect x="-.22" y="-.18" width=".44" height=".36" rx=".045" fill="#090d13" fillOpacity=".7" stroke={color} strokeWidth=".03" strokeDasharray={dash} vectorEffect="non-scaling-stroke" />
+          )}
+          <line x1="0" y1="0" x2=".42" y2="0" stroke={color} strokeWidth=".045" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <path d="M .42 0 L .31 -.075 L .31 .075 Z" fill={color} />
+          {descriptor.tagId !== undefined ? (
+            <text
+              className="field-overlay-svg-label"
+              transform={`rotate(${pose.yawDeg})`}
+              x="0"
+              y="-.31"
+              textAnchor="middle"
+              fill={color}
+              fontSize=".13"
+              fontFamily="Inter, system-ui, sans-serif"
+              fontWeight="750"
+            >
+              TAG {descriptor.tagId}
+            </text>
+          ) : null}
+        </g>
+      ) : null}
+    </g>
+  );
+}
 
 const barrierPoints = (
   barrier: (typeof ARCC_2026_FIELD.barriers)[number],
@@ -34,7 +122,7 @@ const barrierPoints = (
   return points.map(([xM, yM]) => `${xM},${fieldY(yM)}`).join(' ');
 };
 
-export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
+export function Field2D({ robot, camera, overlays, onCameraChange }: Field2DProps) {
   const viewBox = useMemo(() => {
     const width = 12.7 / camera.zoom;
     const height = 8.7 / camera.zoom;
@@ -226,6 +314,10 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
           <rect x="-0.23" y="-0.2" width="0.46" height="0.4" rx=".055" fill="#df3341" stroke="#ff9299" strokeWidth=".03" />
           <path d="M .08 -.11 L .32 0 L .08 .11 Z" fill="#fff" />
           <circle r=".055" fill="#0c1118" />
+        </g>
+
+        <g className="field-overlay-layer" aria-label="Field overlays">
+          {overlays.map((overlay) => <FieldOverlayGlyph key={overlay.id} overlay={overlay} />)}
         </g>
       </svg>
 

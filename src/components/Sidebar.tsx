@@ -11,6 +11,7 @@ interface SidebarProps {
   readonly robot: RobotTelemetry;
   readonly currentTimeS: number;
   readonly width: number;
+  readonly onAddFieldOverlay: (id: string) => void;
   readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
   readonly onResizeEnd: () => void;
@@ -25,6 +26,7 @@ export function Sidebar({
   minWidth,
   robot,
   width,
+  onAddFieldOverlay,
   onOpenSettings,
   onResize,
   onResizeEnd,
@@ -71,7 +73,12 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-body">
-        <Inspector robot={robot} currentTimeS={currentTimeS} collapsed={compact} />
+        <Inspector
+          robot={robot}
+          currentTimeS={currentTimeS}
+          collapsed={compact}
+          onAddFieldOverlay={onAddFieldOverlay}
+        />
       </div>
 
       <div className="sidebar-footer">

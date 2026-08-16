@@ -2,6 +2,7 @@ import {
   AdaptiveDpr,
   Box,
   Center,
+  Html,
   Line,
   OrbitControls,
   PerspectiveCamera,
@@ -28,12 +29,14 @@ import {
 import { ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
+import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
 import type { CameraState, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface Field3DProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
   readonly model: RobotModelRecord | null;
+  readonly overlays: readonly ResolvedFieldOverlay[];
 }
 
 // The default camera looks from the near marker box toward the far ramps.
@@ -456,6 +459,124 @@ function Robot({ robot, model }: Pick<Field3DProps, "robot" | "model">) {
   );
 }
 
+function FieldOverlayPrimitive({
+  overlay,
+  layerIndex,
+}: {
+  readonly overlay: ResolvedFieldOverlay;
+  readonly layerIndex: number;
+}) {
+  if (!overlay.visible || !overlay.sample.available) return null;
+  const { descriptor, sample, color } = overlay;
+  const pose = sample.pose;
+  const rejected = sample.status === 'rejected';
+  const opacity = rejected ? 0.45 : 0.92;
+  const layerY = 0.045 + layerIndex * 0.008;
+  const headingEnd = pose ? {
+    xM: pose.xM + Math.cos((pose.yawDeg * Math.PI) / 180) * 0.48,
+    yM: pose.yM + Math.sin((pose.yawDeg * Math.PI) / 180) * 0.48,
+  } : null;
+  const ellipsePoints: [number, number, number][] = pose && sample.covariance
+    ? Array.from({ length: 41 }, (_, index) => {
+      const theta = (index / 40) * Math.PI * 2;
+      const angle = (sample.covariance!.angleDeg * Math.PI) / 180;
+      const localX = Math.cos(theta) * sample.covariance!.majorM;
+      const localY = Math.sin(theta) * sample.covariance!.minorM;
+      const xM = pose.xM + localX * Math.cos(angle) - localY * Math.sin(angle);
+      const yM = pose.yM + localX * Math.sin(angle) + localY * Math.cos(angle);
+      return [worldX(xM), layerY, worldZ(yM)];
+    })
+    : [];
+
+  return (
+    <group>
+      {sample.path && sample.path.length > 1 ? (
+        <Line
+          points={sample.path.map((point): [number, number, number] => [
+            worldX(point.xM), layerY, worldZ(point.yM),
+          ])}
+          color={color}
+          lineWidth={2}
+          dashed
+          dashSize={0.12}
+          gapSize={0.07}
+          transparent
+          opacity={opacity}
+        />
+      ) : null}
+      {pose && sample.residualToFused ? (
+        <Line
+          points={[
+            [worldX(pose.xM), layerY, worldZ(pose.yM)],
+            [worldX(sample.residualToFused.xM), layerY, worldZ(sample.residualToFused.yM)],
+          ]}
+          color={color}
+          lineWidth={1}
+          dashed
+          dashSize={0.06}
+          gapSize={0.05}
+          transparent
+          opacity={0.45}
+        />
+      ) : null}
+      {ellipsePoints.length > 0 ? (
+        <Line points={ellipsePoints} color={color} lineWidth={1.5} transparent opacity={opacity * 0.76} />
+      ) : null}
+      {pose ? (
+        <>
+          <group position={[worldX(pose.xM), layerY, worldZ(pose.yM)]}>
+            {descriptor.kind === 'ground-truth' ? (
+              <mesh rotation={[0, Math.PI / 4, 0]}>
+                <boxGeometry args={[0.37, 0.025, 0.37]} />
+                <meshBasicMaterial color={color} wireframe transparent opacity={opacity} depthWrite={false} />
+              </mesh>
+            ) : descriptor.kind === 'fused' ? (
+              <>
+                <mesh rotation={[-Math.PI / 2, 0, 0]}>
+                  <ringGeometry args={[0.28, 0.34, 32]} />
+                  <meshBasicMaterial color={color} transparent opacity={opacity} depthWrite={false} />
+                </mesh>
+                <mesh>
+                  <boxGeometry args={[0.44, 0.04, 0.36]} />
+                  <meshBasicMaterial color={color} wireframe transparent opacity={opacity} depthWrite={false} />
+                </mesh>
+              </>
+            ) : (
+              <mesh>
+                <boxGeometry args={[0.44, 0.035, 0.36]} />
+                <meshBasicMaterial color={color} wireframe transparent opacity={opacity} depthWrite={false} />
+              </mesh>
+            )}
+          </group>
+          {headingEnd ? (
+            <Line
+              points={[
+                [worldX(pose.xM), layerY + 0.025, worldZ(pose.yM)],
+                [worldX(headingEnd.xM), layerY + 0.025, worldZ(headingEnd.yM)],
+              ]}
+              color={color}
+              lineWidth={descriptor.kind === 'fused' ? 4 : 2.5}
+              transparent
+              opacity={opacity}
+            />
+          ) : null}
+          {descriptor.tagId !== undefined ? (
+            <Html center position={[worldX(pose.xM), layerY + 0.23, worldZ(pose.yM)]}>
+              <span className="field-overlay-3d-label" style={{ color }}>TAG {descriptor.tagId}</span>
+            </Html>
+          ) : null}
+        </>
+      ) : null}
+    </group>
+  );
+}
+
+function FieldOverlays3D({ overlays }: Pick<Field3DProps, 'overlays'>) {
+  return overlays.map((overlay, index) => (
+    <FieldOverlayPrimitive key={overlay.id} overlay={overlay} layerIndex={index} />
+  ));
+}
+
 const Arena = memo(function Arena() {
   return (
     <>
@@ -713,7 +834,7 @@ function AdaptiveReplayQuality({ robot }: Pick<Field3DProps, "robot">) {
   return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
-export function Field3D({ robot, camera, model }: Field3DProps) {
+export function Field3D({ robot, camera, model, overlays }: Field3DProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
     <div className="field-stage field-stage-3d">
@@ -743,6 +864,7 @@ export function Field3D({ robot, camera, model }: Field3DProps) {
         />
         <Arena />
         <Robot robot={robot} model={model} />
+        <FieldOverlays3D overlays={overlays} />
         <AdaptiveReplayQuality robot={robot} />
         <OrbitControls
           makeDefault

@@ -54,7 +54,7 @@ export function Timeline({ replay, onSeek, onTogglePlaying, onSpeedChange }: Tim
 
       <label className="speed-control">
         <span>SPEED</span>
-        <select value={replay.speed} onChange={(event) => onSpeedChange(Number(event.currentTarget.value))}>
+        <select aria-label="Replay speed" value={replay.speed} onChange={(event) => onSpeedChange(Number(event.currentTarget.value))}>
           {[0.25, 0.5, 1, 1.5, 2].map((speed) => <option key={speed} value={speed}>{speed}×</option>)}
         </select>
       </label>

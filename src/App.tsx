@@ -1,11 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FieldOverlaySidebar } from './components/FieldOverlaySidebar';
 import { Sidebar } from './components/Sidebar';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
 import { ARCC_2026_FIELD } from './field/fieldSpec';
 import { useReplay } from './hooks/useReplay';
+import { useFieldOverlayWorkspace } from './hooks/useFieldOverlayWorkspace';
 import { useRobotModels } from './hooks/useRobotModels';
+import {
+  COLLAPSED_FIELD_SIDEBAR_WIDTH,
+  MAX_FIELD_SIDEBAR_WIDTH,
+  MIN_FIELD_SIDEBAR_WIDTH,
+  isFieldSidebarCollapsed,
+  isFieldSidebarShortcut,
+  isLeftSidebarShortcut,
+  resolveFieldOverlays,
+} from './overlays/fieldOverlays';
+import { odometryDebugAt } from './telemetry/odometryDebug';
 import type { CameraState, ViewMode } from './types';
 import { Field2D } from './views/Field2D';
 import { Field3D } from './views/Field3D';
@@ -24,10 +36,13 @@ export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [sidebarResizing, setSidebarResizing] = useState(false);
+  const [fieldSidebarResizing, setFieldSidebarResizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
+  const fieldSidebarResizingRef = useRef(false);
+  const fieldSidebarDragStart = useRef({ pointerX: 0, width: 0 });
   const [camera, setCamera] = useState<CameraState>({
     targetXM: ARCC_2026_FIELD.size.lengthM / 2,
     targetYM: ARCC_2026_FIELD.size.widthM / 2,
@@ -36,6 +51,11 @@ export function App() {
   });
   const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
   const robotModels = useRobotModels();
+  const { state: fieldOverlayWorkspace, dispatch: dispatchFieldOverlay } = useFieldOverlayWorkspace();
+  const fieldOverlays = useMemo(() => resolveFieldOverlays(
+    fieldOverlayWorkspace.items,
+    odometryDebugAt(replay.currentTimeS),
+  ), [fieldOverlayWorkspace.items, replay.currentTimeS]);
 
   const startSidebarResize = useCallback((pointerX: number) => {
     sidebarDragStart.current = { pointerX, width: sidebarWidth };
@@ -68,6 +88,27 @@ export function App() {
     });
   }, []);
 
+  const startFieldSidebarResize = useCallback((pointerX: number) => {
+    fieldSidebarDragStart.current = { pointerX, width: fieldOverlayWorkspace.sidebarWidth };
+    fieldSidebarResizingRef.current = true;
+    setFieldSidebarResizing(true);
+  }, [fieldOverlayWorkspace.sidebarWidth]);
+
+  const resizeFieldSidebar = useCallback((pointerX: number) => {
+    if (!fieldSidebarResizingRef.current) return;
+    const nextWidth = fieldSidebarDragStart.current.width
+      + fieldSidebarDragStart.current.pointerX
+      - pointerX;
+    dispatchFieldOverlay({ type: 'set-sidebar-width', width: nextWidth });
+  }, [dispatchFieldOverlay]);
+
+  const stopFieldSidebarResize = useCallback(() => {
+    if (!fieldSidebarResizingRef.current) return;
+    fieldSidebarResizingRef.current = false;
+    dispatchFieldOverlay({ type: 'finish-sidebar-resize' });
+    setFieldSidebarResizing(false);
+  }, [dispatchFieldOverlay]);
+
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent): void => resizeSidebar(event.clientX);
     window.addEventListener('pointermove', handlePointerMove);
@@ -82,17 +123,33 @@ export function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (!event.ctrlKey || event.altKey || event.metaKey || event.code !== 'KeyB' || event.repeat) return;
-      event.preventDefault();
-      toggleSidebar();
+      if (isFieldSidebarShortcut(event) && activeView !== 'graph') {
+        event.preventDefault();
+        dispatchFieldOverlay({ type: 'toggle-sidebar' });
+      } else if (isLeftSidebarShortcut(event)) {
+        event.preventDefault();
+        toggleSidebar();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleSidebar]);
+  }, [activeView, dispatchFieldOverlay, toggleSidebar]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeView, fieldOverlayWorkspace.sidebarWidth]);
 
   const resizeSidebarByKeyboard = useCallback((nextWidth: number) => {
     setSidebarWidth(clamp(nextWidth, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH));
   }, []);
+
+  const resizeFieldSidebarByKeyboard = useCallback((nextWidth: number) => {
+    dispatchFieldOverlay({ type: 'set-sidebar-width', width: nextWidth });
+    dispatchFieldOverlay({ type: 'finish-sidebar-resize' });
+  }, [dispatchFieldOverlay]);
+
+  const fieldViewActive = activeView === '2d' || activeView === '3d';
 
   return (
     <div
@@ -100,8 +157,12 @@ export function App() {
         'app-shell',
         isWindows && 'app-shell-windows',
         sidebarResizing && 'sidebar-is-resizing',
+        fieldSidebarResizing && 'field-sidebar-is-resizing',
       ].filter(Boolean).join(' ')}
-      style={{ '--sidebar-width': `${sidebarWidth}px` } as React.CSSProperties}
+      style={{
+        '--sidebar-width': `${sidebarWidth}px`,
+        '--field-sidebar-width': `${fieldViewActive ? fieldOverlayWorkspace.sidebarWidth : 0}px`,
+      } as React.CSSProperties}
     >
       <Sidebar
         compact={sidebarWidth < COMPACT_SIDEBAR_WIDTH}
@@ -110,6 +171,10 @@ export function App() {
         robot={robot}
         currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
+        onAddFieldOverlay={(id) => {
+          dispatchFieldOverlay({ type: 'add', id });
+          dispatchFieldOverlay({ type: 'expand-sidebar' });
+        }}
         onOpenSettings={() => setSettingsOpen(true)}
         onResize={resizeSidebar}
         onResizeEnd={stopSidebarResize}
@@ -126,13 +191,13 @@ export function App() {
             className={activeView === '2d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== '2d'}
           >
-            <Field2D robot={robot} camera={camera} onCameraChange={setCamera} />
+            <Field2D robot={robot} camera={camera} overlays={fieldOverlays} onCameraChange={setCamera} />
           </div>
           <div
             className={activeView === '3d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== '3d'}
           >
-            <Field3D robot={robot} camera={camera} model={robotModels.modelForRobot(robot.robotId)} />
+            <Field3D robot={robot} camera={camera} overlays={fieldOverlays} model={robotModels.modelForRobot(robot.robotId)} />
           </div>
           <div
             className={activeView === 'graph' ? 'workspace-view workspace-view-active' : 'workspace-view'}
@@ -143,6 +208,27 @@ export function App() {
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
+      {fieldViewActive ? (
+        <FieldOverlaySidebar
+          collapsed={isFieldSidebarCollapsed(fieldOverlayWorkspace.sidebarWidth)}
+          maxWidth={MAX_FIELD_SIDEBAR_WIDTH}
+          minWidth={COLLAPSED_FIELD_SIDEBAR_WIDTH}
+          overlays={fieldOverlays}
+          width={fieldOverlayWorkspace.sidebarWidth}
+          onAdd={(id) => dispatchFieldOverlay({ type: 'add', id })}
+          onClear={() => dispatchFieldOverlay({ type: 'clear-all' })}
+          onCollapse={() => dispatchFieldOverlay({ type: 'toggle-sidebar' })}
+          onExpand={() => dispatchFieldOverlay({ type: 'expand-sidebar' })}
+          onHideAll={() => dispatchFieldOverlay({ type: 'hide-all' })}
+          onMove={(id, direction) => dispatchFieldOverlay({ type: 'move', id, direction })}
+          onRemove={(id) => dispatchFieldOverlay({ type: 'remove', id })}
+          onResize={resizeFieldSidebar}
+          onResizeEnd={stopFieldSidebarResize}
+          onResizeKeyboard={resizeFieldSidebarByKeyboard}
+          onResizeStart={startFieldSidebarResize}
+          onToggleVisibility={(id) => dispatchFieldOverlay({ type: 'toggle-visibility', id })}
+        />
+      ) : null}
       {settingsOpen ? (
         <SettingsDialog
           busy={robotModels.busy}
