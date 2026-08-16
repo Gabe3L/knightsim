@@ -226,6 +226,21 @@
 .setting-row-copy span { margin-top: 5px; color: #778491; font-size: 11px; line-height: 1.4; }
 .setting-row-control { display: flex; min-width: 0; justify-content: flex-end; }
 
+.keybinding-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 78px;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 18px;
+}
+.keybinding-copy strong,
+.keybinding-copy span { display: block; }
+.keybinding-copy strong { color: #dfe5eb; font-size: 12px; font-weight: 650; }
+.keybinding-copy span { margin-top: 5px; color: #778491; font-size: 11px; line-height: 1.4; }
+.keybinding-keys { display: flex; align-items: center; gap: 6px; color: #687684; font-size: 10px; }
+.keybinding-keys kbd { min-width: 28px; height: 28px; padding: 0 8px; border-color: #3b4857; color: #dbe3ea; background: #18212b; font-size: 11px; }
+
 .settings-input,
 .settings-select,
 .input-with-icon,

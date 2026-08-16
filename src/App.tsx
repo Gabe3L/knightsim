@@ -26,6 +26,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
+  const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
   const [camera, setCamera] = useState<CameraState>({
     targetXM: ARCC_2026_FIELD.size.lengthM / 2,
     targetYM: ARCC_2026_FIELD.size.widthM / 2,
@@ -50,10 +51,20 @@ export function App() {
   const stopSidebarResize = useCallback(() => {
     if (!sidebarResizingRef.current) return;
     sidebarResizingRef.current = false;
-    setSidebarWidth((currentWidth) => (
-      currentWidth < COMPACT_SIDEBAR_WIDTH ? MIN_SIDEBAR_WIDTH : currentWidth
-    ));
+    setSidebarWidth((currentWidth) => {
+      if (currentWidth < COMPACT_SIDEBAR_WIDTH) return MIN_SIDEBAR_WIDTH;
+      expandedSidebarWidthRef.current = currentWidth;
+      return currentWidth;
+    });
     setSidebarResizing(false);
+  }, []);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarWidth((currentWidth) => {
+      if (currentWidth < COMPACT_SIDEBAR_WIDTH) return expandedSidebarWidthRef.current;
+      expandedSidebarWidthRef.current = currentWidth;
+      return MIN_SIDEBAR_WIDTH;
+    });
   }, []);
 
   useEffect(() => {
@@ -67,6 +78,16 @@ export function App() {
       window.removeEventListener('pointercancel', stopSidebarResize);
     };
   }, [resizeSidebar, stopSidebarResize]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (!event.ctrlKey || event.altKey || event.metaKey || event.code !== 'KeyB' || event.repeat) return;
+      event.preventDefault();
+      toggleSidebar();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebar]);
 
   const resizeSidebarByKeyboard = useCallback((nextWidth: number) => {
     setSidebarWidth(clamp(nextWidth, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH));

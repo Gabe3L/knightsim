@@ -3,6 +3,7 @@ import {
   Box,
   FileKey,
   Gauge,
+  Keyboard,
   KeyRound,
   Network,
   RotateCcw,
@@ -30,7 +31,7 @@ interface SettingsDialogProps {
   readonly onUpdateOrientation: (id: string, orientation: RobotModelOrientation) => void;
 }
 
-type SettingsPage = 'settings' | 'connectivity';
+type SettingsPage = 'settings' | 'connectivity' | 'keybindings';
 type AuthenticationMethod = 'key' | 'password';
 
 interface RobotOption {
@@ -313,6 +314,16 @@ export function SettingsDialog({
               <Wifi size={16} />
               Connectivity
             </button>
+            <button
+              className={page === 'keybindings' ? 'active' : ''}
+              type="button"
+              role="tab"
+              aria-selected={page === 'keybindings'}
+              onClick={() => setPage('keybindings')}
+            >
+              <Keyboard size={16} />
+              Keybindings
+            </button>
           </nav>
           <button className="settings-close-button" type="button" onClick={onClose} disabled={busy} aria-label="Close preferences">
             <X size={18} />
@@ -320,26 +331,28 @@ export function SettingsDialog({
         </header>
 
         <div className="settings-content">
-          <div className="robot-picker-shell">
-            <div className="robot-picker-label">
-              <span>Configure robot</span>
-              <small>Settings are stored separately for each profile.</small>
+          {page !== 'keybindings' ? (
+            <div className="robot-picker-shell">
+              <div className="robot-picker-label">
+                <span>Configure robot</span>
+                <small>Settings are stored separately for each profile.</small>
+              </div>
+              <div className="robot-picker" role="group" aria-label="Robot profile">
+                {ROBOTS.map((robot) => (
+                  <button
+                    className={robot.id === selectedRobotId ? 'active' : ''}
+                    type="button"
+                    key={robot.id}
+                    aria-pressed={robot.id === selectedRobotId}
+                    onClick={() => setSelectedRobotId(robot.id)}
+                  >
+                    <Bot size={15} />
+                    <span><strong>{robot.name}</strong><small>{robot.role}</small></span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="robot-picker" role="group" aria-label="Robot profile">
-              {ROBOTS.map((robot) => (
-                <button
-                  className={robot.id === selectedRobotId ? 'active' : ''}
-                  type="button"
-                  key={robot.id}
-                  aria-pressed={robot.id === selectedRobotId}
-                  onClick={() => setSelectedRobotId(robot.id)}
-                >
-                  <Bot size={15} />
-                  <span><strong>{robot.name}</strong><small>{robot.role}</small></span>
-                </button>
-              ))}
-            </div>
-          </div>
+          ) : null}
 
           {error ? (
             <div className="settings-error" role="alert">
@@ -502,7 +515,7 @@ export function SettingsDialog({
                 </SettingRow>
               </section>
             </div>
-          ) : (
+          ) : page === 'connectivity' ? (
             <div className="settings-page" role="tabpanel">
               <div className="connection-summary">
                 <span className="connection-icon"><Network size={18} /></span>
@@ -589,6 +602,29 @@ export function SettingsDialog({
                 <SettingRow label="Remote workspace" description="Working directory for future deploy and launch commands.">
                   <input className="settings-input" type="text" value={connectivity.remoteWorkspace} spellCheck={false} onChange={(event) => updateConnectivity('remoteWorkspace', event.currentTarget.value)} />
                 </SettingRow>
+              </section>
+            </div>
+          ) : (
+            <div className="settings-page" role="tabpanel">
+              <section className="settings-group">
+                <div className="settings-group-heading">
+                  <Keyboard size={16} />
+                  <div>
+                    <h3>Navigation</h3>
+                    <p>Keyboard shortcuts for moving around the KnightSim workspace.</p>
+                  </div>
+                </div>
+                <div className="keybinding-row">
+                  <div className="keybinding-copy">
+                    <strong>Toggle sidebar</strong>
+                    <span>Switch the left sidebar between its narrow rail and last expanded width.</span>
+                  </div>
+                  <div className="keybinding-keys" aria-label="Control plus B">
+                    <kbd>Ctrl</kbd>
+                    <span>+</span>
+                    <kbd>B</kbd>
+                  </div>
+                </div>
               </section>
             </div>
           )}
