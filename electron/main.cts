@@ -139,15 +139,10 @@ async function validateGlb(filePath: string): Promise<number> {
     }
     const jsonBuffer = Buffer.alloc(jsonLength);
     await file.read(jsonBuffer, 0, jsonLength, 20);
-    let document: unknown;
     try {
-      document = JSON.parse(jsonBuffer.toString('utf8').replace(/\0+$/u, '').trim());
+      JSON.parse(jsonBuffer.toString('utf8').replace(/\0+$/u, '').trim());
     } catch {
       throw new Error('The selected file has an invalid glTF data section.');
-    }
-    if (isRecord(document) && Array.isArray(document.extensionsUsed)
-      && document.extensionsUsed.includes('KHR_draco_mesh_compression')) {
-      throw new Error('This model uses Draco compression. Re-export it from Onshape with Compress turned off.');
     }
   } finally {
     await file.close();

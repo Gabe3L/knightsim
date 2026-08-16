@@ -4,6 +4,7 @@ import { Crosshair } from 'lucide-react';
 import { Component, Suspense, useMemo, type ErrorInfo, type ReactNode } from 'react';
 import { BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh } from 'three';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
+import { configureDracoLoader } from '../loaders/draco';
 import type { CameraState, RobotModelRecord, RobotTelemetry } from '../types';
 
 interface Field3DProps {
@@ -128,9 +129,7 @@ class ModelErrorBoundary extends Component<ModelErrorBoundaryProps, ModelErrorBo
 
 function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
   const url = window.knightSim?.robotModels.urlFor(model.id) ?? '';
-  // Onshape's optional compression is intentionally unsupported for now so
-  // model loading remains completely offline on every platform.
-  const { scene } = useGLTF(url, false);
+  const { scene } = useGLTF(url, false, true, configureDracoLoader);
   const instance = useMemo(() => {
     const next = scene.clone(true);
     next.traverse((child) => {
