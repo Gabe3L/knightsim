@@ -16,7 +16,7 @@ interface Field3DProps {
 
 const worldX = (xM: number): number => xM - 6;
 const worldZ = (yM: number): number => yM - 4;
-const fieldWoodColor = '#73777a';
+const fieldWoodColor = '#424242';
 const fieldSheetColor = '#111318';
 
 function PerimeterWall({ position, args }: { readonly position: [number, number, number]; readonly args: [number, number, number] }) {
@@ -24,6 +24,37 @@ function PerimeterWall({ position, args }: { readonly position: [number, number,
     <Box args={args} position={position} castShadow receiveShadow>
       <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
     </Box>
+  );
+}
+
+function ZoneOutline({ zone }: { readonly zone: (typeof ARCC_2026_FIELD.zones)[number] }) {
+  const tapeWidthM = ARCC_2026_FIELD.zoneTapeWidthM;
+  const innerDepthM = zone.depthM - 2 * tapeWidthM;
+  const color = teamColor(zone.team);
+
+  return (
+    <group>
+      {[zone.yM + tapeWidthM / 2, zone.yM + zone.depthM - tapeWidthM / 2].map((yM) => (
+        <mesh
+          key={`horizontal-${yM}`}
+          position={[worldX(zone.xM + zone.widthM / 2), 0.006, worldZ(yM)]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[zone.widthM, tapeWidthM]} />
+          <meshStandardMaterial color={color} roughness={0.9} />
+        </mesh>
+      ))}
+      {[zone.xM + tapeWidthM / 2, zone.xM + zone.widthM - tapeWidthM / 2].map((xM) => (
+        <mesh
+          key={`vertical-${xM}`}
+          position={[worldX(xM), 0.006, worldZ(zone.yM + zone.depthM / 2)]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <planeGeometry args={[tapeWidthM, innerDepthM]} />
+          <meshStandardMaterial color={color} roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
   );
 }
 
@@ -108,7 +139,7 @@ function Ramp({
 
   return (
     <mesh geometry={geometry} position={[worldX(xM), 0, worldZ(yM)]} castShadow receiveShadow>
-      <meshStandardMaterial color="#65707e" roughness={0.8} />
+      <meshStandardMaterial color="#999c9e" roughness={0.8} />
     </mesh>
   );
 }
@@ -224,17 +255,7 @@ const Arena = memo(function Arena() {
         <meshStandardMaterial color="#151a22" roughness={0.95} />
       </mesh>
 
-      {ARCC_2026_FIELD.zones.map((zone) => (
-        <mesh
-          key={zone.id}
-          position={[worldX(zone.xM + zone.widthM / 2), 0.006, worldZ(zone.yM + zone.depthM / 2)]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[zone.widthM, zone.depthM]} />
-          <meshStandardMaterial color={teamColor(zone.team)} transparent opacity={zone.kind === 'capture' ? 0.48 : 0.22} roughness={0.8} />
-        </mesh>
-      ))}
+      {ARCC_2026_FIELD.zones.map((zone) => <ZoneOutline key={zone.id} zone={zone} />)}
 
       {ARCC_2026_FIELD.highGround.lowerDecks.map((deck, index) => (
         <Box

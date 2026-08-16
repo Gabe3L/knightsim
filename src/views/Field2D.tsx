@@ -108,19 +108,10 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
         <rect x="0" y="0" width="12" height="8" rx="0.04" fill="#11161e" />
         <rect x="0" y="0" width="12" height="8" fill="url(#floor-grid)" />
 
-        {ARCC_2026_FIELD.zones.map((zone) => (
-          <g key={zone.id}>
-            <rect
-              x={zone.xM}
-              y={rectY(zone.yM, zone.depthM)}
-              width={zone.widthM}
-              height={zone.depthM}
-              fill={zone.kind === 'capture' ? '#14352f' : teamColor(zone.team)}
-              fillOpacity={zone.kind === 'capture' ? 0.72 : 0.13}
-              stroke={teamColor(zone.team)}
-              strokeWidth="0.035"
-              vectorEffect="non-scaling-stroke"
-            />
+        {ARCC_2026_FIELD.zones.map((zone) => {
+          const tapeWidthM = ARCC_2026_FIELD.zoneTapeWidthM;
+          return (
+            <g key={zone.id}>
             <rect
               x={zone.xM}
               y={rectY(zone.yM, zone.depthM)}
@@ -129,8 +120,18 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
               fill="url(#rfid-grid)"
               opacity={zone.kind === 'capture' ? 1 : 0.35}
             />
-          </g>
-        ))}
+              <rect
+                x={zone.xM + tapeWidthM / 2}
+                y={rectY(zone.yM, zone.depthM) + tapeWidthM / 2}
+                width={zone.widthM - tapeWidthM}
+                height={zone.depthM - tapeWidthM}
+                fill="none"
+                stroke={teamColor(zone.team)}
+                strokeWidth={tapeWidthM}
+              />
+            </g>
+          );
+        })}
 
         <polygon
           points={ARCC_2026_FIELD.highGround.footprint.map((point) => `${point.xM},${fieldY(point.yM)}`).join(' ')}

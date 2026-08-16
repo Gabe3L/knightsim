@@ -65,6 +65,7 @@ export interface FieldSpec {
   readonly units: 'metres';
   readonly size: { readonly lengthM: number; readonly widthM: number };
   readonly wall: { readonly heightM: number; readonly thicknessM: number };
+  readonly zoneTapeWidthM: number;
   readonly zones: readonly FieldZone[];
   readonly barriers: readonly FieldBarrier[];
   readonly barrierConstruction: {
@@ -139,6 +140,7 @@ export const ARCC_2026_FIELD = {
   units: 'metres',
   size: { lengthM: 12, widthM: 8 },
   wall: { heightM: mm(420), thicknessM: perimeterWallThicknessM },
+  zoneTapeWidthM: mm(50),
   zones: [
     {
       id: 'red-resupply',
@@ -287,5 +289,5 @@ export const ARCC_2026_FIELD = {
 export const teamColor = (team: Team): string => {
   if (team === 'red') return '#ff4d57';
   if (team === 'blue') return '#3b82f6';
-  return '#46e7b2';
+  return '#5ff586';
 };
