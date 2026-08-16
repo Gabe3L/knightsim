@@ -120,11 +120,18 @@ export function App() {
           onViewChange={setActiveView}
         />
         <main className="workspace">
-          {activeView === '2d' ? (
+          <div
+            className={activeView === '2d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
+            aria-hidden={activeView !== '2d'}
+          >
             <Field2D robot={robot} camera={camera} onCameraChange={setCamera} />
-          ) : (
+          </div>
+          <div
+            className={activeView === '3d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
+            aria-hidden={activeView !== '3d'}
+          >
             <Field3D robot={robot} camera={camera} model={robotModels.modelForRobot(robot.robotId)} />
-          )}
+          </div>
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
