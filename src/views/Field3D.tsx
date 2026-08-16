@@ -125,13 +125,13 @@ function Ramp({
       widthM, rightHeight, depthM,
       0, leftHeight, depthM,
     ]);
+    // Leave the hidden bottom open so it cannot z-fight with the arena floor.
     const indices = [
-      0, 1, 2, 0, 2, 3,
-      4, 7, 6, 4, 6, 5,
-      0, 4, 5, 0, 5, 1,
-      3, 2, 6, 3, 6, 7,
-      0, 3, 7, 0, 7, 4,
-      1, 5, 6, 1, 6, 2,
+      0, 2, 1, 0, 3, 2,
+      4, 6, 7, 4, 5, 6,
+      3, 6, 2, 3, 7, 6,
+      0, 7, 3, 0, 4, 7,
+      1, 6, 5, 1, 2, 6,
     ];
     const next = new BufferGeometry();
     next.setAttribute('position', new Float32BufferAttribute(vertices, 3));

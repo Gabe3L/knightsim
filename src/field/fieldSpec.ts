@@ -255,7 +255,7 @@ export const ARCC_2026_FIELD = {
       // Figure 3-6 shows a 19 mm wood panel on the center-facing edge. Its
       // 410 mm dimension is the total barrier height, not a raised deck.
       xM: 5,
-      yM: 7,
+      yM: 7 - 0.002,
       widthM: 2,
       depthM: mm(19),
       heightM: mm(410),
