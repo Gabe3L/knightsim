@@ -14,7 +14,10 @@ interface Field3DProps {
   readonly model: RobotModelRecord | null;
 }
 
-const worldX = (xM: number): number => xM - 6;
+// The default camera looks from the near marker box toward the far ramps.
+// Mirror field x into Three's world x so screen-left remains the red/low-x
+// side and screen-right remains the blue/high-x side from that viewpoint.
+const worldX = (xM: number): number => 6 - xM;
 const worldZ = (yM: number): number => yM - 4;
 const fieldWoodColor = '#424242';
 const fieldSheetColor = '#111318';
@@ -86,7 +89,7 @@ function MarkerFace({ marker }: { readonly marker: (typeof ARCC_2026_FIELD.marke
   return (
     <mesh
       position={[worldX(marker.xM), marker.zM, worldZ(marker.yM)]}
-      rotation={[0, (-marker.facingDeg * Math.PI) / 180, 0]}
+      rotation={[0, (marker.facingDeg * Math.PI) / 180, 0]}
     >
       <planeGeometry args={[marker.sideM, marker.sideM]} />
       <meshBasicMaterial map={texture} side={DoubleSide} toneMapped={false} />
@@ -138,7 +141,7 @@ function Ramp({
   }, [ascending, depthM, heightM, widthM]);
 
   return (
-    <mesh geometry={geometry} position={[worldX(xM), 0, worldZ(yM)]} castShadow receiveShadow>
+    <mesh geometry={geometry} position={[worldX(xM), 0, worldZ(yM)]} scale={[-1, 1, 1]} castShadow receiveShadow>
       <meshStandardMaterial color="#999c9e" roughness={0.8} />
     </mesh>
   );
@@ -230,7 +233,8 @@ function Robot({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
   return (
     <group
       position={[worldX(robot.xM), 0.035, worldZ(robot.yM)]}
-      rotation={[0, (-robot.yawDeg * Math.PI) / 180, 0]}
+      rotation={[0, (robot.yawDeg * Math.PI) / 180, 0]}
+      scale={[-1, 1, 1]}
     >
       {model && window.knightSim?.robotModels ? (
         <ModelErrorBoundary cacheKey={model.id}>
@@ -349,8 +353,8 @@ const Arena = memo(function Arena() {
       ))}
 
       {ARCC_2026_FIELD.barriers.map((barrier) => {
-        const dx = barrier.end.xM - barrier.start.xM;
-        const dy = barrier.end.yM - barrier.start.yM;
+        const dx = worldX(barrier.end.xM) - worldX(barrier.start.xM);
+        const dy = worldZ(barrier.end.yM) - worldZ(barrier.start.yM);
         const length = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
         const woodHeightM = Math.min(barrier.heightM, ARCC_2026_FIELD.barrierConstruction.woodHeightM);
@@ -434,9 +438,9 @@ export function Field3D({ robot, camera, model }: Field3DProps) {
           near={0.05}
           far={100}
           position={[
-            worldX(camera.targetXM) + 8.6 * distanceScale,
+            worldX(camera.targetXM),
             8.4 * distanceScale,
-            worldZ(camera.targetYM) + 8.8 * distanceScale,
+            worldZ(camera.targetYM) - 8.8 * distanceScale,
           ]}
         />
         <Arena />
