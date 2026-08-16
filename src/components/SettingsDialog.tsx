@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ModelAxis, RobotModelLibrary, RobotModelOrientation } from '../types';
+import '../styles/settings.css';
 
 interface SettingsDialogProps {
   readonly busy: boolean;
@@ -314,7 +315,7 @@ export function SettingsDialog({
               Connectivity
             </button>
           </nav>
-          <button className="icon-button" type="button" onClick={onClose} disabled={busy} aria-label="Close preferences">
+          <button className="settings-close-button" type="button" onClick={onClose} disabled={busy} aria-label="Close preferences">
             <X size={18} />
           </button>
         </header>
