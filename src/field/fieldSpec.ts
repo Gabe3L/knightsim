@@ -113,14 +113,14 @@ const makeRoad = (team: 'red' | 'blue'): RoadTile[] => {
 
 const perimeterWallThicknessM = mm(175);
 const barrierThicknessM = mm(178);
-const lowBarrierHeightM = mm(420);
-const tallBarrierHeightM = mm(987);
-const southBarrierStartM = mm(1701);
-const southBarrierLengthM = mm(3025.4);
+const frontBarrierHeightM = mm(420);
+const backBarrierHeightM = mm(987);
+// The five 400 mm bumpy-road rows begin at y = 250 mm, so their far edge
+// and the near edge of each back wall are both at y = 2250 mm.
+const backBarrierStartM = mm(2250);
+const backBarrierLengthM = mm(3025.4);
 const northBarrierEndM = 6;
 const northBarrierLengthM = mm(2025.4);
-const tallPanelLengthM = 1;
-const tallPanelStartM = southBarrierStartM + (southBarrierLengthM - tallPanelLengthM) / 2;
 
 const mirrorX = (xM: number): number => 12 - xM;
 
@@ -168,24 +168,17 @@ export const ARCC_2026_FIELD = {
     },
   ],
   // Figure 3-3 dimensions the red wall faces at x = 2250/3250 mm, the
-  // south and north runs at 3025.4/2025.4 mm, and the raised panel at
-  // 1000 mm. Figure 3-10 places the east face of the south wall at
+  // south and north runs at 3025.4/2025.4 mm. The back wall is uniformly
+  // 987 mm high along its full run; the front wall is uniformly 420 mm.
+  // Figure 3-10 places the east face of the south wall at
   // x = 2428 mm, establishing the 178 mm wall thickness. Blue is mirrored.
   barriers: [
     {
       id: 'red-south-barrier',
       team: 'red',
-      start: { xM: mm(2250) + barrierThicknessM / 2, yM: southBarrierStartM },
-      end: { xM: mm(2250) + barrierThicknessM / 2, yM: southBarrierStartM + southBarrierLengthM },
-      heightM: lowBarrierHeightM,
-      thicknessM: barrierThicknessM,
-    },
-    {
-      id: 'red-south-raised-panel',
-      team: 'red',
-      start: { xM: mm(2250) + barrierThicknessM / 2, yM: tallPanelStartM },
-      end: { xM: mm(2250) + barrierThicknessM / 2, yM: tallPanelStartM + tallPanelLengthM },
-      heightM: tallBarrierHeightM,
+      start: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM },
+      end: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM + backBarrierLengthM },
+      heightM: backBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
     {
@@ -193,23 +186,15 @@ export const ARCC_2026_FIELD = {
       team: 'red',
       start: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM - northBarrierLengthM },
       end: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM },
-      heightM: lowBarrierHeightM,
+      heightM: frontBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
     {
       id: 'blue-south-barrier',
       team: 'blue',
-      start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: southBarrierStartM },
-      end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: southBarrierStartM + southBarrierLengthM },
-      heightM: lowBarrierHeightM,
-      thicknessM: barrierThicknessM,
-    },
-    {
-      id: 'blue-south-raised-panel',
-      team: 'blue',
-      start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: tallPanelStartM },
-      end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: tallPanelStartM + tallPanelLengthM },
-      heightM: tallBarrierHeightM,
+      start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: backBarrierStartM },
+      end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: backBarrierStartM + backBarrierLengthM },
+      heightM: backBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
     {
@@ -217,7 +202,7 @@ export const ARCC_2026_FIELD = {
       team: 'blue',
       start: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM - northBarrierLengthM },
       end: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM },
-      heightM: lowBarrierHeightM,
+      heightM: frontBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
   ],
