@@ -16,11 +16,13 @@ interface Field3DProps {
 
 const worldX = (xM: number): number => xM - 6;
 const worldZ = (yM: number): number => yM - 4;
+const fieldWoodColor = '#73777a';
+const fieldSheetColor = '#111318';
 
 function PerimeterWall({ position, args }: { readonly position: [number, number, number]; readonly args: [number, number, number] }) {
   return (
     <Box args={args} position={position} castShadow receiveShadow>
-      <meshStandardMaterial color="#545e6b" roughness={0.76} metalness={0.18} />
+      <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
     </Box>
   );
 }
@@ -307,7 +309,7 @@ const Arena = memo(function Arena() {
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial color="#c3c9d1" roughness={0.72} />
+        <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
       </Box>
 
       {ARCC_2026_FIELD.bumpyRoad.tiles.map((tile) => (
@@ -330,21 +332,32 @@ const Arena = memo(function Arena() {
         const dy = barrier.end.yM - barrier.start.yM;
         const length = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
+        const woodHeightM = Math.min(barrier.heightM, ARCC_2026_FIELD.barrierConstruction.woodHeightM);
+        const sheetHeightM = Math.max(0, barrier.heightM - woodHeightM);
         return (
-          <Box
+          <group
             key={barrier.id}
-            args={[length, barrier.heightM, barrier.thicknessM]}
             position={[
               worldX((barrier.start.xM + barrier.end.xM) / 2),
-              barrier.heightM / 2,
+              0,
               worldZ((barrier.start.yM + barrier.end.yM) / 2),
             ]}
             rotation={[0, -angle, 0]}
-            castShadow
-            receiveShadow
           >
-            <meshStandardMaterial color={teamColor(barrier.team)} roughness={0.64} metalness={0.24} />
-          </Box>
+            <Box args={[length, woodHeightM, barrier.thicknessM]} position={[0, woodHeightM / 2, 0]} castShadow receiveShadow>
+              <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
+            </Box>
+            {sheetHeightM > 0 && (
+              <Box
+                args={[length, sheetHeightM, ARCC_2026_FIELD.barrierConstruction.sheetThicknessM]}
+                position={[0, woodHeightM + sheetHeightM / 2, 0]}
+                castShadow
+                receiveShadow
+              >
+                <meshStandardMaterial color={fieldSheetColor} roughness={0.78} metalness={0.04} />
+              </Box>
+            )}
+          </group>
         );
       })}
 

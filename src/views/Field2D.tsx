@@ -13,12 +13,18 @@ const fieldY = (yM: number): number => ARCC_2026_FIELD.size.widthM - yM;
 const rectY = (yM: number, depthM: number): number => fieldY(yM + depthM);
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
-const barrierPoints = (barrier: (typeof ARCC_2026_FIELD.barriers)[number]): string => {
+const fieldWoodColor = '#73777a';
+const fieldSheetColor = '#111318';
+
+const barrierPoints = (
+  barrier: (typeof ARCC_2026_FIELD.barriers)[number],
+  thicknessM = barrier.thicknessM,
+): string => {
   const dx = barrier.end.xM - barrier.start.xM;
   const dy = barrier.end.yM - barrier.start.yM;
   const length = Math.hypot(dx, dy);
-  const offsetX = (-dy / length) * barrier.thicknessM / 2;
-  const offsetY = (dx / length) * barrier.thicknessM / 2;
+  const offsetX = (-dy / length) * thicknessM / 2;
+  const offsetY = (dx / length) * thicknessM / 2;
   const points: ReadonlyArray<readonly [number, number]> = [
     [barrier.start.xM + offsetX, barrier.start.yM + offsetY],
     [barrier.end.xM + offsetX, barrier.end.yM + offsetY],
@@ -152,8 +158,8 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
           y={rectY(ARCC_2026_FIELD.centralPlatform.yM, ARCC_2026_FIELD.centralPlatform.depthM)}
           width={ARCC_2026_FIELD.centralPlatform.widthM}
           height={ARCC_2026_FIELD.centralPlatform.depthM}
-          fill="#c3c9d1"
-          stroke="#eef1f4"
+          fill={fieldWoodColor}
+          stroke="#92979b"
           strokeWidth=".018"
           vectorEffect="non-scaling-stroke"
         />
@@ -183,12 +189,15 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
         ))}
 
         {ARCC_2026_FIELD.barriers.map((barrier) => (
-          <polygon
-            key={barrier.id}
-            points={barrierPoints(barrier)}
-            fill={teamColor(barrier.team)}
-            opacity={barrier.heightM > 0.5 ? 1 : 0.78}
-          />
+          <g key={barrier.id}>
+            <polygon points={barrierPoints(barrier)} fill={fieldWoodColor} />
+            {barrier.heightM > ARCC_2026_FIELD.barrierConstruction.woodHeightM && (
+              <polygon
+                points={barrierPoints(barrier, ARCC_2026_FIELD.barrierConstruction.sheetThicknessM)}
+                fill={fieldSheetColor}
+              />
+            )}
+          </g>
         ))}
 
         {ARCC_2026_FIELD.markers.map((marker) => (
@@ -200,7 +209,7 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
 
         <path
           d={`M 0 0 H 12 V 8 H 0 Z M ${-ARCC_2026_FIELD.wall.thicknessM} ${-ARCC_2026_FIELD.wall.thicknessM} V ${8 + ARCC_2026_FIELD.wall.thicknessM} H ${12 + ARCC_2026_FIELD.wall.thicknessM} V ${-ARCC_2026_FIELD.wall.thicknessM} Z`}
-          fill="#66717e"
+          fill={fieldWoodColor}
           fillRule="evenodd"
         />
 

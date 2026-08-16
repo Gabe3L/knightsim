@@ -67,6 +67,10 @@ export interface FieldSpec {
   readonly wall: { readonly heightM: number; readonly thicknessM: number };
   readonly zones: readonly FieldZone[];
   readonly barriers: readonly FieldBarrier[];
+  readonly barrierConstruction: {
+    readonly woodHeightM: number;
+    readonly sheetThicknessM: number;
+  };
   readonly centralPlatform: FieldPlatform;
   readonly highGround: HighGroundSpec;
   readonly bumpyRoad: {
@@ -113,8 +117,8 @@ const makeRoad = (team: 'red' | 'blue'): RoadTile[] => {
 
 const perimeterWallThicknessM = mm(175);
 const barrierThicknessM = mm(178);
-const frontBarrierHeightM = mm(420);
-const backBarrierHeightM = mm(987);
+const frontBarrierHeightM = mm(670);
+const backBarrierHeightM = mm(1407);
 // The five 400 mm bumpy-road rows begin at y = 250 mm, so their far edge
 // and the near edge of each back wall are both at y = 2250 mm.
 const backBarrierStartM = mm(2250);
@@ -206,6 +210,10 @@ export const ARCC_2026_FIELD = {
       thicknessM: barrierThicknessM,
     },
   ],
+  barrierConstruction: {
+    woodHeightM: mm(420),
+    sheetThicknessM: mm(19),
+  },
   centralPlatform: {
     id: 'central-marker-platform',
     // Marker centres in Figure 3-10 establish the four front faces.
@@ -213,7 +221,7 @@ export const ARCC_2026_FIELD = {
     yM: mm(699),
     widthM: mm(2002),
     depthM: mm(1002),
-    heightM: mm(250),
+    heightM: mm(420),
   },
   highGround: {
     // 2.2163 m edge location, two 1 m rows, 6 m deck, 784 mm approaches.
@@ -255,14 +263,14 @@ export const ARCC_2026_FIELD = {
     verticalGapM: mm(70),
   },
   markers: [
-    { id: 0, xM: mm(2428), yM: mm(3679), zM: mm(288), facingDeg: -90, sideM: mm(150) },
-    { id: 1, xM: mm(2428), yM: mm(2666), zM: mm(288), facingDeg: -90, sideM: mm(150) },
-    { id: 2, xM: mm(4999), yM: mm(1200), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 3, xM: mm(7001), yM: mm(1200), zM: mm(288), facingDeg: -90, sideM: mm(150) },
-    { id: 4, xM: mm(9572), yM: mm(1701), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 5, xM: mm(9572), yM: mm(3679), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 0, xM: mm(2250 - 2), yM: mm(3679), zM: mm(288), facingDeg: -90, sideM: mm(150) },
+    { id: 1, xM: mm(2428 + 2), yM: mm(2666), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 2, xM: mm(4999 - 2), yM: mm(1200), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 3, xM: mm(7001 + 2), yM: mm(1200), zM: mm(288), facingDeg: -90, sideM: mm(150) },
+    { id: 4, xM: mm(9572 - 2), yM: mm(2666), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 5, xM: mm(9750 + 2), yM: mm(3679), zM: mm(288), facingDeg: -90, sideM: mm(150) },
     { id: 6, xM: 11, yM: mm(7999), zM: mm(288), facingDeg: 180, sideM: mm(150) },
-    { id: 7, xM: 6, yM: mm(1701), zM: mm(288), facingDeg: 0, sideM: mm(150) },
+    { id: 7, xM: 6, yM: mm(1701 + 2), zM: mm(288), facingDeg: 0, sideM: mm(150) },
     { id: 8, xM: 6, yM: mm(6983.9), zM: mm(288), facingDeg: 180, sideM: mm(150) },
     { id: 9, xM: 1, yM: mm(7999), zM: mm(288), facingDeg: 180, sideM: mm(150) },
   ],
