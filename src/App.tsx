@@ -12,12 +12,12 @@ import { Field3D } from './views/Field3D';
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const DEFAULT_SIDEBAR_WIDTH = 292;
+const isWindows = window.knightSim?.platform === 'win32';
 // The macOS traffic lights start at x=16 and span roughly 52px. The extra room
 // keeps them comfortably contained instead of letting the resize edge crowd them.
-const MIN_SIDEBAR_WIDTH = 96;
+const MIN_SIDEBAR_WIDTH = isWindows ? 64 : 96;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
-const isWindows = window.knightSim?.platform === 'win32';
 
 export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
@@ -48,7 +48,11 @@ export function App() {
   }, []);
 
   const stopSidebarResize = useCallback(() => {
+    if (!sidebarResizingRef.current) return;
     sidebarResizingRef.current = false;
+    setSidebarWidth((currentWidth) => (
+      currentWidth < COMPACT_SIDEBAR_WIDTH ? MIN_SIDEBAR_WIDTH : currentWidth
+    ));
     setSidebarResizing(false);
   }, []);
 
