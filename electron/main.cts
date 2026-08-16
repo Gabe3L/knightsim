@@ -4,6 +4,10 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell } from 'electron';
 
+// Prefer the discrete GPU on hybrid Windows/macOS systems. Hardware acceleration
+// remains enabled by Electron, and the WebGL context also requests this preference.
+app.commandLine.appendSwitch('force_high_performance_gpu');
+
 type Axis = 'x' | 'y' | 'z';
 
 interface RobotModelOrientation {

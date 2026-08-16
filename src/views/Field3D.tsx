@@ -1,10 +1,11 @@
-import { Box, Center, OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { AdaptiveDpr, Box, Center, OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
 import { Crosshair } from 'lucide-react';
-import { Component, Suspense, useMemo, type ErrorInfo, type ReactNode } from 'react';
-import { BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh } from 'three';
+import { Component, memo, Suspense, useEffect, useMemo, type ErrorInfo, type ReactNode } from 'react';
+import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
 import { configureDracoLoader } from '../loaders/draco';
+import { prepareRobotModel } from '../loaders/prepareRobotModel';
 import type { CameraState, RobotModelRecord, RobotTelemetry } from '../types';
 
 interface Field3DProps {
@@ -127,19 +128,10 @@ class ModelErrorBoundary extends Component<ModelErrorBoundaryProps, ModelErrorBo
   }
 }
 
-function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
+const UploadedRobot = memo(function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
   const url = window.knightSim?.robotModels.urlFor(model.id) ?? '';
   const { scene } = useGLTF(url, false, true, configureDracoLoader);
-  const instance = useMemo(() => {
-    const next = scene.clone(true);
-    next.traverse((child) => {
-      if (child instanceof Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-    return next;
-  }, [scene]);
+  const prepared = useMemo(() => prepareRobotModel(scene), [scene]);
   const { rotationDeg, flipped } = model.orientation;
   const orientationKey = [
     rotationDeg.x,
@@ -151,7 +143,7 @@ function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
   ].join(':');
 
   return (
-    <Center top cacheKey={orientationKey}>
+    <Center top precise={false} cacheKey={orientationKey}>
       <group
         rotation={[
           (rotationDeg.x * Math.PI) / 180,
@@ -160,11 +152,11 @@ function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
         ]}
         scale={[flipped.x ? -1 : 1, flipped.y ? -1 : 1, flipped.z ? -1 : 1]}
       >
-        <primitive object={instance} />
+        <primitive object={prepared.object} />
       </group>
     </Center>
   );
-}
+});
 
 function Robot({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
   return (
@@ -183,11 +175,11 @@ function Robot({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
   );
 }
 
-function Arena({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
+const Arena = memo(function Arena() {
   return (
     <>
       <ambientLight intensity={1.25} />
-      <directionalLight position={[-3, 12, 6]} intensity={2.7} castShadow shadow-mapSize={[2048, 2048]} />
+      <directionalLight position={[-3, 12, 6]} intensity={2.7} castShadow shadow-mapSize={[1024, 1024]} />
       <hemisphereLight args={['#b7d4ff', '#15181d', 0.8]} />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -308,17 +300,32 @@ function Arena({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
       <Wall position={[0, ARCC_2026_FIELD.wall.heightM / 2, 4]} rotation={[0, Math.PI, 0]} width={12} />
       <Wall position={[-6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, Math.PI / 2, 0]} width={8} />
       <Wall position={[6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, -Math.PI / 2, 0]} width={8} />
-
-      <Robot robot={robot} model={model} />
     </>
   );
+});
+
+function AdaptiveReplayQuality({ robot }: Pick<Field3DProps, 'robot'>) {
+  const regress = useThree((state) => state.performance.regress);
+  const initialDpr = useThree((state) => state.viewport.initialDpr);
+
+  useEffect(() => {
+    regress();
+  }, [regress, robot.xM, robot.yM, robot.yawDeg]);
+
+  return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
 export function Field3D({ robot, camera, model }: Field3DProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
     <div className="field-stage field-stage-3d">
-      <Canvas shadows dpr={[1, 1.75]} gl={{ antialias: true, alpha: false }}>
+      <Canvas
+        shadows
+        frameloop="demand"
+        dpr={[1, 1.5]}
+        performance={{ min: 0.7, debounce: 250 }}
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      >
         <color attach="background" args={['#0b0f15']} />
         <fog attach="fog" args={['#0b0f15', 14, 26]} />
         <PerspectiveCamera
@@ -332,7 +339,9 @@ export function Field3D({ robot, camera, model }: Field3DProps) {
             worldZ(camera.targetYM) + 8.8 * distanceScale,
           ]}
         />
-        <Arena robot={robot} model={model} />
+        <Arena />
+        <Robot robot={robot} model={model} />
+        <AdaptiveReplayQuality robot={robot} />
         <OrbitControls
           makeDefault
           target={[worldX(camera.targetXM), 0, worldZ(camera.targetYM)]}
@@ -340,6 +349,7 @@ export function Field3D({ robot, camera, model }: Field3DProps) {
           maxDistance={25}
           maxPolarAngle={Math.PI / 2.05}
           enableDamping
+          regress
           dampingFactor={0.08}
         />
       </Canvas>
