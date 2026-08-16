@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const isDevelopment = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isWindows = process.platform === 'win32';
+const appIcon = path.join(__dirname, '../src/assets/app-icon.png');
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -10,6 +11,7 @@ function createWindow(): void {
     height: 930,
     minWidth: 1040,
     minHeight: 700,
+    icon: appIcon,
     backgroundColor: '#090b10',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : isWindows ? 'hidden' : 'default',
     ...(isWindows ? {
