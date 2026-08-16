@@ -57,6 +57,11 @@
 .telemetry-field { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; min-height: 28px; align-items: center; gap: 5px; padding: 0 15px 0 58px; }
 .telemetry-field:hover { background: #151c24; }
 .field-branch { color: #5f6a77; font-size: 11px; }
+.telemetry-field-draggable { cursor: grab; }
+.telemetry-field-draggable:hover { background: #18222b; }
+.telemetry-field-draggable:active { cursor: grabbing; }
+.telemetry-field-draggable .field-branch { display: grid; color: #6fdab7; place-items: center; }
+.telemetry-field-draggable:hover dt { color: #b7c2ce; }
 .telemetry-field dt { overflow: hidden; color: #7d8895; font: italic 550 10px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
 .telemetry-field dd { margin: 0; color: #d4dae1; font: 580 10px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .connection-dot { width: 7px; height: 7px; border-radius: 50%; }

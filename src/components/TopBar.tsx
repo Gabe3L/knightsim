@@ -30,7 +30,11 @@ export function TopBar({ activeView, onViewChange }: TopBarProps) {
           <Route size={15} />
           Odometry
         </button>
-        <button className="view-tab view-tab-placeholder" type="button" disabled title="Line Graph view coming soon">
+        <button
+          className={activeView === 'graph' ? 'view-tab view-tab-active' : 'view-tab'}
+          type="button"
+          onClick={() => onViewChange('graph')}
+        >
           <ChartLine size={15} />
           Line Graph
         </button>

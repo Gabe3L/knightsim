@@ -6,5 +6,6 @@
 @import "./styles/topbar.css";
 @import "./styles/field.css";
 @import "./styles/inspector.css";
+@import "./styles/graph.css";
 @import "./styles/timeline.css";
 @import "./styles/responsive.css";

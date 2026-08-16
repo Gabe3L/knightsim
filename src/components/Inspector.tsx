@@ -1,19 +1,27 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type DragEvent } from 'react';
 import {
   Bot,
   ChevronRight,
   Gauge,
+  GripVertical,
 } from 'lucide-react';
+import {
+  GRAPH_SIGNAL_DRAG_TYPE,
+  graphSignalById,
+  graphSignalValueAt,
+} from '../telemetry/graphSignals';
 import type { RobotTelemetry } from '../types';
 
 interface InspectorProps {
   readonly robot: RobotTelemetry;
+  readonly currentTimeS: number;
   readonly collapsed?: boolean;
 }
 
 interface TelemetryField {
   readonly label: string;
   readonly value: string;
+  readonly graphSignalId?: string;
 }
 
 interface TelemetryTopic {
@@ -50,29 +58,41 @@ interface RobotSnapshot {
   readonly aimLocked: boolean;
 }
 
-const formatMeters = (value: number): string => `${value.toFixed(3)} m`;
-const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
+function graphField(
+  label: string,
+  graphSignalId: string,
+  timeS: number,
+  displayValue?: string,
+): TelemetryField {
+  const descriptor = graphSignalById(graphSignalId);
+  const value = graphSignalValueAt(graphSignalId, timeS);
+  return {
+    label,
+    value: displayValue ?? (descriptor && value !== null ? descriptor.format(value) : '—'),
+    graphSignalId: descriptor ? graphSignalId : undefined,
+  };
+}
 
-function topicsFor(snapshot: RobotSnapshot): readonly TelemetryTopic[] {
+function topicsFor(snapshot: RobotSnapshot, robotId: string, timeS: number): readonly TelemetryTopic[] {
   return [
     {
       id: 'pose',
       label: 'Pose',
       fields: [
-        { label: 'X', value: formatMeters(snapshot.x) },
-        { label: 'Y', value: formatMeters(snapshot.y) },
-        { label: 'Z', value: formatMeters(snapshot.z) },
-        { label: 'Yaw', value: formatDegrees(snapshot.yaw) },
-        { label: 'Pitch', value: formatDegrees(snapshot.pitch) },
-        { label: 'Roll', value: formatDegrees(snapshot.roll) },
+        graphField('X', `${robotId}.pose.x`, timeS),
+        graphField('Y', `${robotId}.pose.y`, timeS),
+        graphField('Z', `${robotId}.pose.z`, timeS),
+        graphField('Yaw', `${robotId}.pose.yaw`, timeS),
+        graphField('Pitch', `${robotId}.pose.pitch`, timeS),
+        graphField('Roll', `${robotId}.pose.roll`, timeS),
       ],
     },
     {
       id: 'referee',
       label: 'Referee state',
       fields: [
-        { label: 'Hit points', value: `${snapshot.hp} / ${snapshot.maxHp}` },
-        { label: 'Barrel heat', value: `${snapshot.heat} / ${snapshot.maxHeat}` },
+        graphField('Hit points', `${robotId}.referee.hp`, timeS, `${snapshot.hp} / ${snapshot.maxHp}`),
+        graphField('Barrel heat', `${robotId}.referee.heat`, timeS, `${snapshot.heat} / ${snapshot.maxHeat}`),
         { label: 'Team', value: 'Red' },
         { label: 'Match stage', value: 'Battle' },
       ],
@@ -81,10 +101,16 @@ function topicsFor(snapshot: RobotSnapshot): readonly TelemetryTopic[] {
       id: 'systems',
       label: 'Systems',
       fields: [
-        { label: 'Battery', value: snapshot.battery },
-        { label: 'Signal', value: snapshot.signal },
+        snapshot.battery === '—'
+          ? { label: 'Battery', value: snapshot.battery }
+          : graphField('Battery', `${robotId}.systems.battery`, timeS),
+        snapshot.signal === 'No link'
+          ? { label: 'Signal', value: snapshot.signal }
+          : graphField('Signal', `${robotId}.systems.signal`, timeS),
         { label: 'Drive mode', value: snapshot.mode },
-        { label: 'CPU load', value: snapshot.cpu },
+        snapshot.cpu === '—'
+          ? { label: 'CPU load', value: snapshot.cpu }
+          : graphField('CPU load', `${robotId}.systems.cpu`, timeS),
       ],
     },
     {
@@ -92,8 +118,12 @@ function topicsFor(snapshot: RobotSnapshot): readonly TelemetryTopic[] {
       label: 'Aim',
       fields: [
         { label: 'Target', value: snapshot.aimTarget },
-        { label: 'Yaw error', value: snapshot.yawError },
-        { label: 'Pitch error', value: snapshot.pitchError },
+        snapshot.yawError === '—'
+          ? { label: 'Yaw error', value: snapshot.yawError }
+          : graphField('Yaw error', `${robotId}.aim.yaw-error`, timeS),
+        snapshot.pitchError === '—'
+          ? { label: 'Pitch error', value: snapshot.pitchError }
+          : graphField('Pitch error', `${robotId}.aim.pitch-error`, timeS),
         { label: 'Locked', value: snapshot.aimLocked ? 'Yes' : 'No' },
       ],
     },
@@ -107,7 +137,7 @@ function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
   return next;
 }
 
-export function Inspector({ robot, collapsed = false }: InspectorProps) {
+export function Inspector({ robot, currentTimeS, collapsed = false }: InspectorProps) {
   const [expandedRobots, setExpandedRobots] = useState<ReadonlySet<string>>(() => new Set(['infantry']));
   const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set(['infantry:pose']));
 
@@ -121,7 +151,7 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
         hp: 600, maxHp: 600, heat: 0, maxHeat: 400,
         battery: '—', signal: 'No link', mode: 'Idle', cpu: '—',
         aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
-      }),
+      }, 'sentry', currentTimeS),
     },
     {
       id: 'infantry',
@@ -132,7 +162,7 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
         hp: robot.hp, maxHp: robot.maxHp, heat: robot.heat, maxHeat: robot.maxHeat,
         battery: '23.8 V', signal: '-47 dBm', mode: 'Chassis follow', cpu: '38%',
         aimTarget: 'Blue-03', yawError: '0.8°', pitchError: '-0.3°', aimLocked: true,
-      }),
+      }, 'infantry', currentTimeS),
     },
     {
       id: 'hero',
@@ -143,9 +173,15 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
         hp: 300, maxHp: 300, heat: 18, maxHeat: 200,
         battery: '—', signal: 'No link', mode: 'Safe', cpu: '—',
         aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
-      }),
+      }, 'hero', currentTimeS),
     },
-  ], [robot]);
+  ], [currentTimeS, robot]);
+
+  const startSignalDrag = (event: DragEvent<HTMLDivElement>, graphSignalId: string): void => {
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData(GRAPH_SIGNAL_DRAG_TYPE, graphSignalId);
+    event.dataTransfer.setData('text/plain', graphSignalId);
+  };
 
   if (collapsed) {
     return (
@@ -204,8 +240,16 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
                         {topicExpanded ? (
                           <dl className="telemetry-fields" id={`${item.id}-${topic.id}-fields`}>
                             {topic.fields.map((field) => (
-                              <div className="telemetry-field" key={field.label}>
-                                <span className="field-branch">—</span>
+                              <div
+                                className={field.graphSignalId ? 'telemetry-field telemetry-field-draggable' : 'telemetry-field'}
+                                draggable={Boolean(field.graphSignalId)}
+                                key={field.label}
+                                title={field.graphSignalId ? 'Drag onto Line Graph' : undefined}
+                                onDragStart={field.graphSignalId ? (event) => startSignalDrag(event, field.graphSignalId!) : undefined}
+                              >
+                                <span className="field-branch">
+                                  {field.graphSignalId ? <GripVertical size={11} /> : '—'}
+                                </span>
                                 <dt>{field.label}</dt>
                                 <dd>{field.value}</dd>
                               </div>

@@ -9,6 +9,7 @@ import { useRobotModels } from './hooks/useRobotModels';
 import type { CameraState, ViewMode } from './types';
 import { Field2D } from './views/Field2D';
 import { Field3D } from './views/Field3D';
+import { LineGraph } from './views/LineGraph';
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const DEFAULT_SIDEBAR_WIDTH = 292;
@@ -107,6 +108,7 @@ export function App() {
         maxWidth={MAX_SIDEBAR_WIDTH}
         minWidth={MIN_SIDEBAR_WIDTH}
         robot={robot}
+        currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
         onOpenSettings={() => setSettingsOpen(true)}
         onResize={resizeSidebar}
@@ -131,6 +133,12 @@ export function App() {
             aria-hidden={activeView !== '3d'}
           >
             <Field3D robot={robot} camera={camera} model={robotModels.modelForRobot(robot.robotId)} />
+          </div>
+          <div
+            className={activeView === 'graph' ? 'workspace-view workspace-view-active' : 'workspace-view'}
+            aria-hidden={activeView !== 'graph'}
+          >
+            <LineGraph replay={replay} onSeek={seek} />
           </div>
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />

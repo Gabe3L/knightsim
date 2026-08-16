@@ -9,6 +9,7 @@ interface SidebarProps {
   readonly maxWidth: number;
   readonly minWidth: number;
   readonly robot: RobotTelemetry;
+  readonly currentTimeS: number;
   readonly width: number;
   readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
@@ -19,6 +20,7 @@ interface SidebarProps {
 
 export function Sidebar({
   compact,
+  currentTimeS,
   maxWidth,
   minWidth,
   robot,
@@ -69,7 +71,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-body">
-        <Inspector robot={robot} collapsed={compact} />
+        <Inspector robot={robot} currentTimeS={currentTimeS} collapsed={compact} />
       </div>
 
       <div className="sidebar-footer">
