@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Sidebar } from './components/Sidebar';
+import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
 import { ARCC_2026_FIELD } from './field/fieldSpec';
 import { useReplay } from './hooks/useReplay';
+import { useRobotModels } from './hooks/useRobotModels';
 import type { CameraState, ViewMode } from './types';
 import { Field2D } from './views/Field2D';
 import { Field3D } from './views/Field3D';
@@ -21,6 +23,7 @@ export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [sidebarResizing, setSidebarResizing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const [camera, setCamera] = useState<CameraState>({
@@ -30,6 +33,7 @@ export function App() {
     followRobot: false,
   });
   const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
+  const robotModels = useRobotModels();
 
   const startSidebarResize = useCallback((pointerX: number) => {
     sidebarDragStart.current = { pointerX, width: sidebarWidth };
@@ -79,6 +83,7 @@ export function App() {
         minWidth={MIN_SIDEBAR_WIDTH}
         robot={robot}
         width={sidebarWidth}
+        onOpenSettings={() => setSettingsOpen(true)}
         onResize={resizeSidebar}
         onResizeEnd={stopSidebarResize}
         onResizeKeyboard={resizeSidebarByKeyboard}
@@ -93,11 +98,25 @@ export function App() {
           {activeView === '2d' ? (
             <Field2D robot={robot} camera={camera} onCameraChange={setCamera} />
           ) : (
-            <Field3D robot={robot} camera={camera} />
+            <Field3D robot={robot} camera={camera} model={robotModels.activeModel} />
           )}
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
+      {settingsOpen ? (
+        <SettingsDialog
+          busy={robotModels.busy}
+          error={robotModels.error}
+          library={robotModels.library}
+          loading={robotModels.loading}
+          onClearError={robotModels.clearError}
+          onClose={() => setSettingsOpen(false)}
+          onImport={() => void robotModels.importModel()}
+          onRemove={(id) => void robotModels.removeModel(id)}
+          onSelect={(id) => void robotModels.setActiveModel(id)}
+          onUpdateOrientation={(id, orientation) => void robotModels.updateOrientation(id, orientation)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 {
   "name": "knightsim",
+  "productName": "KnightSim",
   "version": "0.1.0",
   "private": true,
   "description": "A desktop replay and field visualization workbench.",

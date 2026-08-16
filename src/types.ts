@@ -1,5 +1,27 @@
 export type ViewMode = '2d' | '3d';
 
+export type ModelAxis = 'x' | 'y' | 'z';
+
+export interface RobotModelOrientation {
+  readonly rotationDeg: Record<ModelAxis, number>;
+  readonly flipped: Record<ModelAxis, boolean>;
+}
+
+export interface RobotModelRecord {
+  readonly id: string;
+  readonly name: string;
+  readonly sourceFileName: string;
+  readonly sizeBytes: number;
+  readonly importedAt: string;
+  readonly orientation: RobotModelOrientation;
+}
+
+export interface RobotModelLibrary {
+  readonly version: 1;
+  readonly activeModelId: string | null;
+  readonly models: readonly RobotModelRecord[];
+}
+
 export interface RobotPose {
   readonly xM: number;
   readonly yM: number;

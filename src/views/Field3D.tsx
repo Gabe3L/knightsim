@@ -1,14 +1,15 @@
-import { Box, OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Box, Center, OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Crosshair } from 'lucide-react';
-import { useMemo } from 'react';
-import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three';
+import { Component, Suspense, useMemo, type ErrorInfo, type ReactNode } from 'react';
+import { BufferGeometry, DoubleSide, Float32BufferAttribute, Mesh } from 'three';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
-import type { CameraState, RobotTelemetry } from '../types';
+import type { CameraState, RobotModelRecord, RobotTelemetry } from '../types';
 
 interface Field3DProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
+  readonly model: RobotModelRecord | null;
 }
 
 const worldX = (xM: number): number => xM - 6;
@@ -73,7 +74,117 @@ function Ramp({
   );
 }
 
-function Arena({ robot }: Pick<Field3DProps, 'robot'>) {
+function PlaceholderRobot() {
+  return (
+    <>
+      <Box args={[0.52, 0.18, 0.46]} position={[0, 0.125, 0]} castShadow>
+        <meshStandardMaterial color="#e23b49" roughness={0.42} metalness={0.55} />
+      </Box>
+      <Box args={[0.3, 0.24, 0.3]} position={[0, 0.315, 0]} castShadow>
+        <meshStandardMaterial color="#202936" roughness={0.34} metalness={0.68} />
+      </Box>
+      <mesh position={[0.34, 0.145, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.09, 0.22, 4]} />
+        <meshStandardMaterial color="#fff" emissive="#ff4655" emissiveIntensity={1.5} />
+      </mesh>
+      {([[-0.19, -0.19], [-0.19, 0.19], [0.19, -0.19], [0.19, 0.19]] as const).map(([x, z], index) => (
+        <mesh key={index} position={[x, 0.035, z]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.08, 14]} />
+          <meshStandardMaterial color="#090b0f" roughness={0.8} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+interface ModelErrorBoundaryProps {
+  readonly cacheKey: string;
+  readonly children: ReactNode;
+}
+
+interface ModelErrorBoundaryState {
+  readonly failed: boolean;
+}
+
+class ModelErrorBoundary extends Component<ModelErrorBoundaryProps, ModelErrorBoundaryState> {
+  override state: ModelErrorBoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): ModelErrorBoundaryState {
+    return { failed: true };
+  }
+
+  override componentDidCatch(error: Error, info: ErrorInfo): void {
+    console.error('Unable to render the selected robot model:', error, info);
+  }
+
+  override componentDidUpdate(previous: ModelErrorBoundaryProps): void {
+    if (this.state.failed && previous.cacheKey !== this.props.cacheKey) this.setState({ failed: false });
+  }
+
+  override render(): ReactNode {
+    return this.state.failed ? <PlaceholderRobot /> : this.props.children;
+  }
+}
+
+function UploadedRobot({ model }: { readonly model: RobotModelRecord }) {
+  const url = window.knightSim?.robotModels.urlFor(model.id) ?? '';
+  // Onshape's optional compression is intentionally unsupported for now so
+  // model loading remains completely offline on every platform.
+  const { scene } = useGLTF(url, false);
+  const instance = useMemo(() => {
+    const next = scene.clone(true);
+    next.traverse((child) => {
+      if (child instanceof Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    return next;
+  }, [scene]);
+  const { rotationDeg, flipped } = model.orientation;
+  const orientationKey = [
+    rotationDeg.x,
+    rotationDeg.y,
+    rotationDeg.z,
+    flipped.x,
+    flipped.y,
+    flipped.z,
+  ].join(':');
+
+  return (
+    <Center top cacheKey={orientationKey}>
+      <group
+        rotation={[
+          (rotationDeg.x * Math.PI) / 180,
+          (rotationDeg.y * Math.PI) / 180,
+          (rotationDeg.z * Math.PI) / 180,
+        ]}
+        scale={[flipped.x ? -1 : 1, flipped.y ? -1 : 1, flipped.z ? -1 : 1]}
+      >
+        <primitive object={instance} />
+      </group>
+    </Center>
+  );
+}
+
+function Robot({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
+  return (
+    <group
+      position={[worldX(robot.xM), 0.035, worldZ(robot.yM)]}
+      rotation={[0, (-robot.yawDeg * Math.PI) / 180, 0]}
+    >
+      {model && window.knightSim?.robotModels ? (
+        <ModelErrorBoundary cacheKey={model.id}>
+          <Suspense fallback={<PlaceholderRobot />}>
+            <UploadedRobot model={model} />
+          </Suspense>
+        </ModelErrorBoundary>
+      ) : <PlaceholderRobot />}
+    </group>
+  );
+}
+
+function Arena({ robot, model }: Pick<Field3DProps, 'robot' | 'model'>) {
   return (
     <>
       <ambientLight intensity={1.25} />
@@ -199,32 +310,12 @@ function Arena({ robot }: Pick<Field3DProps, 'robot'>) {
       <Wall position={[-6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, Math.PI / 2, 0]} width={8} />
       <Wall position={[6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, -Math.PI / 2, 0]} width={8} />
 
-      <group
-        position={[worldX(robot.xM), 0.035, worldZ(robot.yM)]}
-        rotation={[0, (-robot.yawDeg * Math.PI) / 180, 0]}
-      >
-        <Box args={[0.52, 0.18, 0.46]} position={[0, 0.16, 0]} castShadow>
-          <meshStandardMaterial color="#e23b49" roughness={0.42} metalness={0.55} />
-        </Box>
-        <Box args={[0.3, 0.24, 0.3]} position={[0, 0.35, 0]} castShadow>
-          <meshStandardMaterial color="#202936" roughness={0.34} metalness={0.68} />
-        </Box>
-        <mesh position={[0.34, 0.18, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.09, 0.22, 4]} />
-          <meshStandardMaterial color="#fff" emissive="#ff4655" emissiveIntensity={1.5} />
-        </mesh>
-        {([[-0.19, -0.19], [-0.19, 0.19], [0.19, -0.19], [0.19, 0.19]] as const).map(([x, z], index) => (
-          <mesh key={index} position={[x, 0.07, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.07, 0.07, 0.08, 14]} />
-            <meshStandardMaterial color="#090b0f" roughness={0.8} />
-          </mesh>
-        ))}
-      </group>
+      <Robot robot={robot} model={model} />
     </>
   );
 }
 
-export function Field3D({ robot, camera }: Field3DProps) {
+export function Field3D({ robot, camera, model }: Field3DProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
     <div className="field-stage field-stage-3d">
@@ -242,7 +333,7 @@ export function Field3D({ robot, camera }: Field3DProps) {
             worldZ(camera.targetYM) + 8.8 * distanceScale,
           ]}
         />
-        <Arena robot={robot} />
+        <Arena robot={robot} model={model} />
         <OrbitControls
           makeDefault
           target={[worldX(camera.targetXM), 0, worldZ(camera.targetYM)]}

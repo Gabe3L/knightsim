@@ -10,6 +10,7 @@ interface SidebarProps {
   readonly minWidth: number;
   readonly robot: RobotTelemetry;
   readonly width: number;
+  readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
   readonly onResizeEnd: () => void;
   readonly onResizeKeyboard: (width: number) => void;
@@ -22,6 +23,7 @@ export function Sidebar({
   minWidth,
   robot,
   width,
+  onOpenSettings,
   onResize,
   onResizeEnd,
   onResizeKeyboard,
@@ -71,7 +73,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
-        <button className="sidebar-settings" type="button" aria-label="Settings" title="Settings">
+        <button className="sidebar-settings" type="button" aria-label="Settings" title="Settings" onClick={onOpenSettings}>
           <Settings2 size={18} />
           <span>Settings</span>
         </button>
