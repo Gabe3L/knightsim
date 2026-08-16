@@ -2,6 +2,7 @@ import {
   AdaptiveDpr,
   Box,
   Center,
+  Line,
   OrbitControls,
   PerspectiveCamera,
   useGLTF,
@@ -203,6 +204,36 @@ function Ramp({
     return next;
   }, [ascending, depthM, heightM, widthM]);
 
+  const edgePoints = useMemo<readonly [number, number, number][]>(() => {
+    const leftHeight = ascending ? 0 : heightM;
+    const rightHeight = ascending ? heightM : 0;
+    const highX = ascending ? widthM : 0;
+
+    return [
+      // Floor perimeter.
+      [0, 0, 0],
+      [widthM, 0, 0],
+      [0, 0, depthM],
+      [widthM, 0, depthM],
+      [0, 0, 0],
+      [0, 0, depthM],
+      [widthM, 0, 0],
+      [widthM, 0, depthM],
+      // The two exposed sides of the sloped surface.
+      [0, leftHeight, 0],
+      [widthM, rightHeight, 0],
+      [0, leftHeight, depthM],
+      [widthM, rightHeight, depthM],
+      // Uprights on the tall end. The top edge across the ramp is omitted:
+      // it meets the adjacent deck at the same elevation and should not read
+      // as a seam between the two surfaces.
+      [highX, 0, 0],
+      [highX, heightM, 0],
+      [highX, 0, depthM],
+      [highX, heightM, depthM],
+    ];
+  }, [ascending, depthM, heightM, widthM]);
+
   return (
     <mesh
       geometry={geometry}
@@ -221,6 +252,13 @@ function Ramp({
         color={fieldWoodColor}
         roughness={0.92}
         metalness={0}
+      />
+      <Line
+        points={edgePoints}
+        segments
+        color="#090a0c"
+        lineWidth={4}
+        scale={1.002}
       />
     </mesh>
   );
