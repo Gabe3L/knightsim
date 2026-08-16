@@ -305,19 +305,25 @@ const Arena = memo(function Arena() {
       ))}
       <Box
         args={[
-          ARCC_2026_FIELD.highGround.upperDeck.widthM,
-          ARCC_2026_FIELD.highGround.upperHeightM,
-          ARCC_2026_FIELD.highGround.upperDeck.depthM,
+          ARCC_2026_FIELD.highGround.centerBarrier.widthM,
+          ARCC_2026_FIELD.highGround.centerBarrier.heightM,
+          ARCC_2026_FIELD.highGround.centerBarrier.depthM,
         ]}
         position={[
-          worldX(6),
-          ARCC_2026_FIELD.highGround.upperHeightM / 2,
-          worldZ(7.5),
+          worldX(
+            ARCC_2026_FIELD.highGround.centerBarrier.xM
+              + ARCC_2026_FIELD.highGround.centerBarrier.widthM / 2,
+          ),
+          ARCC_2026_FIELD.highGround.centerBarrier.heightM / 2,
+          worldZ(
+            ARCC_2026_FIELD.highGround.centerBarrier.yM
+              + ARCC_2026_FIELD.highGround.centerBarrier.depthM / 2,
+          ),
         ]}
         castShadow
         receiveShadow
       >
-        <meshStandardMaterial color="#9ca6b2" roughness={0.72} />
+        <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
       </Box>
 
       <Box

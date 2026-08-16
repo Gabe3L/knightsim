@@ -147,11 +147,14 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
           <rect key={`inner-ramp-${index}`} x={ramp.xM} y={rectY(ramp.yM, ramp.depthM)} width={ramp.widthM} height={ramp.depthM} fill="#8c96a3" opacity=".82" />
         ))}
         <rect
-          x={ARCC_2026_FIELD.highGround.upperDeck.xM}
-          y={rectY(ARCC_2026_FIELD.highGround.upperDeck.yM, ARCC_2026_FIELD.highGround.upperDeck.depthM)}
-          width={ARCC_2026_FIELD.highGround.upperDeck.widthM}
-          height={ARCC_2026_FIELD.highGround.upperDeck.depthM}
-          fill="#9da7b4"
+          x={ARCC_2026_FIELD.highGround.centerBarrier.xM}
+          y={rectY(
+            ARCC_2026_FIELD.highGround.centerBarrier.yM,
+            ARCC_2026_FIELD.highGround.centerBarrier.depthM,
+          )}
+          width={ARCC_2026_FIELD.highGround.centerBarrier.widthM}
+          height={ARCC_2026_FIELD.highGround.centerBarrier.depthM}
+          fill={fieldWoodColor}
         />
 
         <rect

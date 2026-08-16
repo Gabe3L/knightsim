@@ -47,11 +47,10 @@ export interface HighGroundSpec {
   readonly footprint: readonly Point2M[];
   readonly approachRunM: number;
   readonly lowerHeightM: number;
-  readonly upperHeightM: number;
   readonly inclineDeg: number;
   readonly lowerDecks: readonly RectM[];
   readonly innerRamps: readonly RampSpec[];
-  readonly upperDeck: RectM;
+  readonly centerBarrier: FieldPlatform;
 }
 
 export interface FieldPlatform extends RectM {
@@ -241,7 +240,6 @@ export const ARCC_2026_FIELD = {
     ],
     approachRunM: mm(784),
     lowerHeightM: mm(210),
-    upperHeightM: mm(410),
     inclineDeg: 15,
     lowerDecks: [
       { xM: 3, yM: 7, widthM: 6, depthM: 1 },
@@ -252,7 +250,16 @@ export const ARCC_2026_FIELD = {
       { xM: 4, yM: 6, widthM: 1, depthM: 1, ascending: false },
       { xM: 7, yM: 6, widthM: 1, depthM: 1, ascending: true },
     ],
-    upperDeck: { xM: 5, yM: 7, widthM: 2, depthM: 1 },
+    centerBarrier: {
+      id: 'high-ground-center-barrier',
+      // Figure 3-6 shows a 19 mm wood panel on the center-facing edge. Its
+      // 410 mm dimension is the total barrier height, not a raised deck.
+      xM: 5,
+      yM: 7,
+      widthM: 2,
+      depthM: mm(19),
+      heightM: mm(410),
+    },
   },
   bumpyRoad: {
     tileSizeM: mm(400),
