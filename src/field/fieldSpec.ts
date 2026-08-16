@@ -106,7 +106,7 @@ const makeRoad = (team: 'red' | 'blue'): RoadTile[] => {
       const mirroredX = 12 - leftX - tileM;
       return {
         id: `${team}-road-${row}-${column}`,
-        xM: team === 'red' ? leftX : mirroredX,
+        xM: team === 'blue' ? leftX : mirroredX,
         yM: mm(250) + row * tileM,
         widthM: tileM,
         depthM: tileM,
@@ -132,7 +132,7 @@ const mirrorX = (xM: number): number => 12 - xM;
 /**
  * ARCC 2026 3v3 battlefield, transcribed from manual Figures 3-1–3-10.
  * Coordinates use the lower-left inner field corner as (0, 0), +x toward
- * blue, and +y toward the high-ground long wall. Values are stored in metres.
+ * red, and +y toward the high-ground long wall. Values are stored in metres.
  */
 export const ARCC_2026_FIELD = {
   id: 'arcc-2026-3v3',
@@ -147,7 +147,7 @@ export const ARCC_2026_FIELD = {
       kind: 'starting-resupply',
       team: 'red',
       label: 'Red resupply',
-      xM: 0,
+      xM: 10.5,
       yM: mm(2666),
       widthM: 1.5,
       depthM: 2,
@@ -157,7 +157,7 @@ export const ARCC_2026_FIELD = {
       kind: 'starting-resupply',
       team: 'blue',
       label: 'Blue resupply',
-      xM: 10.5,
+      xM: 0,
       yM: mm(2666),
       widthM: 1.5,
       depthM: 2,
@@ -173,41 +173,41 @@ export const ARCC_2026_FIELD = {
       depthM: 2,
     },
   ],
-  // Figure 3-3 dimensions the red wall faces at x = 2250/3250 mm, the
+  // Figure 3-3 dimensions the blue wall faces at x = 2250/3250 mm, the
   // south and north runs at 3025.4/2025.4 mm. The back wall is uniformly
   // 987 mm high along its full run; the front wall is uniformly 420 mm.
   // Figure 3-10 places the east face of the south wall at
-  // x = 2428 mm, establishing the 178 mm wall thickness. Blue is mirrored.
+  // x = 2428 mm, establishing the 178 mm wall thickness. Red is mirrored.
   barriers: [
     {
       id: 'red-south-barrier',
       team: 'red',
-      start: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM },
-      end: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM + backBarrierLengthM },
-      heightM: backBarrierHeightM,
-      thicknessM: barrierThicknessM,
-    },
-    {
-      id: 'red-north-barrier',
-      team: 'red',
-      start: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM - northBarrierLengthM },
-      end: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM },
-      heightM: frontBarrierHeightM,
-      thicknessM: barrierThicknessM,
-    },
-    {
-      id: 'blue-south-barrier',
-      team: 'blue',
       start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: backBarrierStartM },
       end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: backBarrierStartM + backBarrierLengthM },
       heightM: backBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
     {
-      id: 'blue-north-barrier',
-      team: 'blue',
+      id: 'red-north-barrier',
+      team: 'red',
       start: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM - northBarrierLengthM },
       end: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM },
+      heightM: frontBarrierHeightM,
+      thicknessM: barrierThicknessM,
+    },
+    {
+      id: 'blue-south-barrier',
+      team: 'blue',
+      start: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM },
+      end: { xM: mm(2250) + barrierThicknessM / 2, yM: backBarrierStartM + backBarrierLengthM },
+      heightM: backBarrierHeightM,
+      thicknessM: barrierThicknessM,
+    },
+    {
+      id: 'blue-north-barrier',
+      team: 'blue',
+      start: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM - northBarrierLengthM },
+      end: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM },
       heightM: frontBarrierHeightM,
       thicknessM: barrierThicknessM,
     },
