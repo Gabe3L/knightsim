@@ -9,6 +9,9 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell } from 
 app.commandLine.appendSwitch('force_high_performance_gpu');
 
 type Axis = 'x' | 'y' | 'z';
+type RobotId = 'sentry' | 'infantry' | 'hero';
+
+const ROBOT_IDS: readonly RobotId[] = ['sentry', 'infantry', 'hero'];
 
 interface RobotModelOrientation {
   readonly rotationDeg: Record<Axis, number>;
@@ -25,14 +28,14 @@ interface RobotModelRecord {
 }
 
 interface RobotModelLibrary {
-  readonly version: 1;
-  readonly activeModelId: string | null;
+  readonly version: 2;
+  readonly modelIdByRobot: Readonly<Record<RobotId, string | null>>;
   readonly models: readonly RobotModelRecord[];
 }
 
 const EMPTY_MODEL_LIBRARY: RobotModelLibrary = {
-  version: 1,
-  activeModelId: null,
+  version: 2,
+  modelIdByRobot: { sentry: null, infantry: null, hero: null },
   models: [],
 };
 
@@ -62,6 +65,10 @@ const modelFilePath = (id: string): string => path.join(modelDirectory(), `${id}
 
 const isRecord = (value: unknown): value is Record<string, unknown> => (
   typeof value === 'object' && value !== null
+);
+
+const isRobotId = (value: unknown): value is RobotId => (
+  typeof value === 'string' && ROBOT_IDS.includes(value as RobotId)
 );
 
 function normalizeOrientation(value: unknown): RobotModelOrientation {
@@ -104,11 +111,19 @@ async function readModelLibrary(): Promise<RobotModelLibrary> {
     const parsed: unknown = JSON.parse(await readFile(modelLibraryPath(), 'utf8'));
     if (!isRecord(parsed) || !Array.isArray(parsed.models)) return EMPTY_MODEL_LIBRARY;
     const models = parsed.models.map(normalizeModel).filter((model): model is RobotModelRecord => model !== null);
-    const activeModelId = typeof parsed.activeModelId === 'string'
+    const legacyModelId = typeof parsed.activeModelId === 'string'
       && models.some((model) => model.id === parsed.activeModelId)
       ? parsed.activeModelId
       : models[0]?.id ?? null;
-    return { version: 1, activeModelId, models };
+    const storedAssignments = isRecord(parsed.modelIdByRobot) ? parsed.modelIdByRobot : null;
+    const modelIdByRobot = Object.fromEntries(ROBOT_IDS.map((robotId) => {
+      const candidate = storedAssignments?.[robotId];
+      const modelId = typeof candidate === 'string' && models.some((model) => model.id === candidate)
+        ? candidate
+        : storedAssignments ? null : legacyModelId;
+      return [robotId, modelId];
+    })) as Record<RobotId, string | null>;
+    return { version: 2, modelIdByRobot, models };
   } catch (error) {
     if (isRecord(error) && error.code === 'ENOENT') return EMPTY_MODEL_LIBRARY;
     console.error('Unable to read the robot model library:', error);
@@ -155,7 +170,11 @@ async function validateGlb(filePath: string): Promise<number> {
   return fileStats.size;
 }
 
-async function importRobotModel(owner: BrowserWindow | undefined): Promise<RobotModelLibrary | null> {
+async function importRobotModel(
+  owner: BrowserWindow | undefined,
+  robotId: unknown,
+): Promise<RobotModelLibrary | null> {
+  if (!isRobotId(robotId)) throw new Error('Invalid robot identifier.');
   const options: Electron.OpenDialogOptions = {
     title: 'Import robot model',
     buttonLabel: 'Import model',
@@ -186,8 +205,8 @@ async function importRobotModel(owner: BrowserWindow | undefined): Promise<Robot
   try {
     const current = await readModelLibrary();
     const next: RobotModelLibrary = {
-      version: 1,
-      activeModelId: id,
+      version: 2,
+      modelIdByRobot: { ...current.modelIdByRobot, [robotId]: id },
       models: [...current.models, model],
     };
     await writeModelLibrary(next);
@@ -200,13 +219,19 @@ async function importRobotModel(owner: BrowserWindow | undefined): Promise<Robot
 
 function registerRobotModelIpc(): void {
   ipcMain.handle('robot-models:list', () => readModelLibrary());
-  ipcMain.handle('robot-models:import', (event) => importRobotModel(BrowserWindow.fromWebContents(event.sender) ?? undefined));
-  ipcMain.handle('robot-models:set-active', async (_event, id: unknown) => {
+  ipcMain.handle('robot-models:import', (event, robotId: unknown) => (
+    importRobotModel(BrowserWindow.fromWebContents(event.sender) ?? undefined, robotId)
+  ));
+  ipcMain.handle('robot-models:set-for-robot', async (_event, robotId: unknown, id: unknown) => {
+    if (!isRobotId(robotId)) throw new Error('Invalid robot identifier.');
     const current = await readModelLibrary();
     if (id !== null && (typeof id !== 'string' || !current.models.some((model) => model.id === id))) {
       throw new Error('That robot model is no longer available.');
     }
-    const next = { ...current, activeModelId: id } satisfies RobotModelLibrary;
+    const next = {
+      ...current,
+      modelIdByRobot: { ...current.modelIdByRobot, [robotId]: id },
+    } satisfies RobotModelLibrary;
     await writeModelLibrary(next);
     return next;
   });
@@ -229,9 +254,12 @@ function registerRobotModelIpc(): void {
     const models = current.models.filter((model) => model.id !== id);
     if (models.length === current.models.length) throw new Error('That robot model is no longer available.');
     const next: RobotModelLibrary = {
-      version: 1,
+      version: 2,
       models,
-      activeModelId: current.activeModelId === id ? models[0]?.id ?? null : current.activeModelId,
+      modelIdByRobot: Object.fromEntries(ROBOT_IDS.map((robotId) => [
+        robotId,
+        current.modelIdByRobot[robotId] === id ? null : current.modelIdByRobot[robotId],
+      ])) as Record<RobotId, string | null>,
     };
     await writeModelLibrary(next);
     await unlink(modelFilePath(id)).catch((error: unknown) => {

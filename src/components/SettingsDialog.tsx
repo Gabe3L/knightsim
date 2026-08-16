@@ -13,8 +13,8 @@ import {
   Wifi,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import type { ModelAxis, RobotModelLibrary, RobotModelOrientation } from '../types';
+import { useEffect, useState } from 'react';
+import type { ModelAxis, RobotId, RobotModelLibrary, RobotModelOrientation } from '../types';
 import '../styles/settings.css';
 
 interface SettingsDialogProps {
@@ -24,14 +24,13 @@ interface SettingsDialogProps {
   readonly loading: boolean;
   readonly onClearError: () => void;
   readonly onClose: () => void;
-  readonly onImport: () => void;
+  readonly onImport: (robotId: RobotId) => void;
   readonly onRemove: (id: string) => void;
-  readonly onSelect: (id: string) => void;
+  readonly onSelect: (robotId: RobotId, id: string | null) => void;
   readonly onUpdateOrientation: (id: string, orientation: RobotModelOrientation) => void;
 }
 
 type SettingsPage = 'settings' | 'connectivity';
-type RobotId = 'sentry' | 'infantry' | 'hero';
 type AuthenticationMethod = 'key' | 'password';
 
 interface RobotOption {
@@ -242,9 +241,9 @@ export function SettingsDialog({
   const selectedRobot = ROBOTS.find((robot) => robot.id === selectedRobotId) ?? ROBOTS[1]!;
   const tuning = tuningByRobot[selectedRobotId];
   const connectivity = connectivityByRobot[selectedRobotId];
-  const activeModel = useMemo(() => (
-    library.models.find((model) => model.id === library.activeModelId) ?? null
-  ), [library]);
+  const activeModel = library.models.find(
+    (model) => model.id === library.modelIdByRobot[selectedRobotId],
+  ) ?? null;
 
   useEffect(() => {
     window.localStorage.setItem(TUNING_STORAGE_KEY, JSON.stringify(tuningByRobot));
@@ -366,13 +365,13 @@ export function SettingsDialog({
                       className="settings-select model-dropdown"
                       value={activeModel?.id ?? ''}
                       disabled={busy || loading || library.models.length === 0}
-                      onChange={(event) => onSelect(event.currentTarget.value)}
-                      aria-label="Robot model"
+                      onChange={(event) => onSelect(selectedRobotId, event.currentTarget.value || null)}
+                      aria-label={`${selectedRobot.name} robot model`}
                     >
-                      {library.models.length === 0 ? <option value="">No model imported</option> : null}
+                      <option value="">{library.models.length === 0 ? 'No model imported' : 'Default placeholder'}</option>
                       {library.models.map((model) => <option value={model.id} key={model.id}>{model.name}</option>)}
                     </select>
-                    <button className="secondary-button" type="button" onClick={onImport} disabled={busy || loading}>
+                    <button className="secondary-button" type="button" onClick={() => onImport(selectedRobotId)} disabled={busy || loading}>
                       <Upload size={14} />
                       Import GLB
                     </button>

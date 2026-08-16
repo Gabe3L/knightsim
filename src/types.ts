@@ -1,5 +1,7 @@
 export type ViewMode = '2d' | '3d';
 
+export type RobotId = 'sentry' | 'infantry' | 'hero';
+
 export type ModelAxis = 'x' | 'y' | 'z';
 
 export interface RobotModelOrientation {
@@ -17,8 +19,8 @@ export interface RobotModelRecord {
 }
 
 export interface RobotModelLibrary {
-  readonly version: 1;
-  readonly activeModelId: string | null;
+  readonly version: 2;
+  readonly modelIdByRobot: Readonly<Record<RobotId, string | null>>;
   readonly models: readonly RobotModelRecord[];
 }
 
@@ -29,6 +31,7 @@ export interface RobotPose {
 }
 
 export interface RobotTelemetry extends RobotPose {
+  readonly robotId: RobotId;
   readonly hp: number;
   readonly maxHp: number;
   readonly heat: number;

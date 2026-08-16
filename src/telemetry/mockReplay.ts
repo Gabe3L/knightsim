@@ -23,6 +23,7 @@ export const telemetryAt = (timeS: number): RobotTelemetry => {
   const progress = (clampedTime - start.timeS) / span;
 
   return {
+    robotId: 'infantry',
     xM: lerp(start.xM, end.xM, progress),
     yM: lerp(start.yM, end.yM, progress),
     yawDeg: lerp(start.yawDeg, end.yawDeg, progress),

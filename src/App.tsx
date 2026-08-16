@@ -98,7 +98,7 @@ export function App() {
           {activeView === '2d' ? (
             <Field2D robot={robot} camera={camera} onCameraChange={setCamera} />
           ) : (
-            <Field3D robot={robot} camera={camera} model={robotModels.activeModel} />
+            <Field3D robot={robot} camera={camera} model={robotModels.modelForRobot(robot.robotId)} />
           )}
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
@@ -111,9 +111,9 @@ export function App() {
           loading={robotModels.loading}
           onClearError={robotModels.clearError}
           onClose={() => setSettingsOpen(false)}
-          onImport={() => void robotModels.importModel()}
+          onImport={(robotId) => void robotModels.importModel(robotId)}
           onRemove={(id) => void robotModels.removeModel(id)}
-          onSelect={(id) => void robotModels.setActiveModel(id)}
+          onSelect={(robotId, id) => void robotModels.setRobotModel(robotId, id)}
           onUpdateOrientation={(id, orientation) => void robotModels.updateOrientation(id, orientation)}
         />
       ) : null}

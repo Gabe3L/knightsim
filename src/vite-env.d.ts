@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { RobotModelLibrary, RobotModelOrientation } from './types';
+import type { RobotId, RobotModelLibrary, RobotModelOrientation } from './types';
 
 declare global {
   interface Window {
@@ -9,8 +9,8 @@ declare global {
       readonly versions: { readonly electron: string };
       readonly robotModels: {
         readonly list: () => Promise<RobotModelLibrary>;
-        readonly import: () => Promise<RobotModelLibrary | null>;
-        readonly setActive: (id: string | null) => Promise<RobotModelLibrary>;
+        readonly import: (robotId: RobotId) => Promise<RobotModelLibrary | null>;
+        readonly setForRobot: (robotId: RobotId, id: string | null) => Promise<RobotModelLibrary>;
         readonly updateOrientation: (
           id: string,
           orientation: RobotModelOrientation,

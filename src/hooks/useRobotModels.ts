@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { RobotModelLibrary, RobotModelOrientation, RobotModelRecord } from '../types';
+import { useCallback, useEffect, useState } from 'react';
+import type { RobotId, RobotModelLibrary, RobotModelOrientation, RobotModelRecord } from '../types';
 
 const EMPTY_LIBRARY: RobotModelLibrary = {
-  version: 1,
-  activeModelId: null,
+  version: 2,
+  modelIdByRobot: { sentry: null, infantry: null, hero: null },
   models: [],
 };
 
@@ -55,16 +55,16 @@ export function useRobotModels() {
     }
   }, []);
 
-  const importModel = useCallback(async (): Promise<void> => {
+  const importModel = useCallback(async (robotId: RobotId): Promise<void> => {
     if (!api) {
       setError('Robot models can only be imported from the KnightSim desktop app.');
       return;
     }
-    await run(() => api.import());
+    await run(() => api.import(robotId));
   }, [api, run]);
 
-  const setActiveModel = useCallback(async (id: string): Promise<void> => {
-    if (api) await run(() => api.setActive(id));
+  const setRobotModel = useCallback(async (robotId: RobotId, id: string | null): Promise<void> => {
+    if (api) await run(() => api.setForRobot(robotId, id));
   }, [api, run]);
 
   const updateOrientation = useCallback(async (
@@ -79,12 +79,12 @@ export function useRobotModels() {
   }, [api, run]);
 
   const clearError = useCallback(() => setError(null), []);
-  const activeModel = useMemo<RobotModelRecord | null>(() => (
-    library.models.find((model) => model.id === library.activeModelId) ?? null
-  ), [library]);
+  const modelForRobot = useCallback((robotId: RobotId): RobotModelRecord | null => {
+    const modelId = library.modelIdByRobot[robotId];
+    return library.models.find((model) => model.id === modelId) ?? null;
+  }, [library]);
 
   return {
-    activeModel,
     available: Boolean(api),
     busy,
     clearError,
@@ -92,8 +92,9 @@ export function useRobotModels() {
     importModel,
     library,
     loading,
+    modelForRobot,
     removeModel,
-    setActiveModel,
+    setRobotModel,
     updateOrientation,
   };
 }
