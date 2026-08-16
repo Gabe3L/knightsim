@@ -25,7 +25,6 @@ interface TelemetryTopic {
 interface RobotNode {
   readonly id: string;
   readonly name: string;
-  readonly role: string;
   readonly connected: boolean;
   readonly topics: readonly TelemetryTopic[];
 }
@@ -116,7 +115,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
     {
       id: 'sentry',
       name: 'Sentry',
-      role: 'RED-07',
       connected: false,
       topics: topicsFor({
         x: 2.184, y: 6.932, z: 0, yaw: -90, pitch: 0, roll: 0,
@@ -128,7 +126,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
     {
       id: 'infantry',
       name: 'Infantry',
-      role: 'RED-01',
       connected: robot.connected,
       topics: topicsFor({
         x: robot.xM, y: robot.yM, z: 0, yaw: robot.yawDeg, pitch: -1.4, roll: 0.2,
@@ -140,7 +137,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
     {
       id: 'hero',
       name: 'Hero',
-      role: 'RED-01H',
       connected: false,
       topics: topicsFor({
         x: 8.642, y: 1.207, z: 0, yaw: 176.4, pitch: 0, roll: -0.1,
@@ -181,7 +177,6 @@ export function Inspector({ robot, collapsed = false }: InspectorProps) {
                 <ChevronRight className="tree-chevron" size={15} />
                 <span className="robot-node-copy">
                   <strong>{item.name}</strong>
-                  <small>{item.role}</small>
                 </span>
                 <span className={item.connected ? 'tree-status online' : 'tree-status offline'}>
                   <i />{item.connected ? 'Online' : 'Offline'}

@@ -37,7 +37,6 @@ type AuthenticationMethod = 'key' | 'password';
 interface RobotOption {
   readonly id: RobotId;
   readonly name: string;
-  readonly role: string;
 }
 
 interface TuningSettings {
@@ -70,9 +69,9 @@ interface ConnectivitySettings {
 }
 
 const ROBOTS: readonly RobotOption[] = [
-  { id: 'sentry', name: 'Sentry', role: 'RED-07' },
-  { id: 'infantry', name: 'Infantry', role: 'RED-01' },
-  { id: 'hero', name: 'Hero', role: 'RED-01H' },
+  { id: 'sentry', name: 'Sentry' },
+  { id: 'infantry', name: 'Infantry' },
+  { id: 'hero', name: 'Hero' },
 ];
 
 const DEFAULT_TUNING: Record<RobotId, TuningSettings> = {
@@ -347,7 +346,7 @@ export function SettingsDialog({
                     onClick={() => setSelectedRobotId(robot.id)}
                   >
                     <Bot size={15} />
-                    <span><strong>{robot.name}</strong><small>{robot.role}</small></span>
+                    <span><strong>{robot.name}</strong></span>
                   </button>
                 ))}
               </div>
