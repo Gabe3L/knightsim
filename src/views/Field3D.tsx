@@ -2,7 +2,7 @@ import { AdaptiveDpr, Box, Center, OrbitControls, PerspectiveCamera, useGLTF } f
 import { Canvas, useThree } from '@react-three/fiber';
 import { Crosshair } from 'lucide-react';
 import { Component, memo, Suspense, useEffect, useMemo, type ErrorInfo, type ReactNode } from 'react';
-import { BufferGeometry, DoubleSide, Float32BufferAttribute } from 'three';
+import { BufferGeometry, CanvasTexture, DoubleSide, Float32BufferAttribute, SRGBColorSpace } from 'three';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
 import { configureDracoLoader } from '../loaders/draco';
 import { prepareRobotModel } from '../loaders/prepareRobotModel';
@@ -17,11 +17,46 @@ interface Field3DProps {
 const worldX = (xM: number): number => xM - 6;
 const worldZ = (yM: number): number => yM - 4;
 
-function Wall({ position, rotation, width }: { readonly position: [number, number, number]; readonly rotation: [number, number, number]; readonly width: number }) {
+function PerimeterWall({ position, args }: { readonly position: [number, number, number]; readonly args: [number, number, number] }) {
   return (
-    <mesh position={position} rotation={rotation} receiveShadow>
-      <planeGeometry args={[width, ARCC_2026_FIELD.wall.heightM]} />
-      <meshStandardMaterial color="#545e6b" roughness={0.76} metalness={0.18} side={DoubleSide} />
+    <Box args={args} position={position} castShadow receiveShadow>
+      <meshStandardMaterial color="#545e6b" roughness={0.76} metalness={0.18} />
+    </Box>
+  );
+}
+
+function MarkerFace({ marker }: { readonly marker: (typeof ARCC_2026_FIELD.markers)[number] }) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    if (context) {
+      context.fillStyle = '#05070a';
+      context.fillRect(0, 0, 256, 256);
+      context.strokeStyle = '#ffffff';
+      context.lineWidth = 16;
+      context.strokeRect(8, 8, 240, 240);
+      context.fillStyle = '#ffffff';
+      context.font = '700 132px Arial, sans-serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(String(marker.id), 128, 136);
+    }
+    const next = new CanvasTexture(canvas);
+    next.colorSpace = SRGBColorSpace;
+    return next;
+  }, [marker.id]);
+
+  useEffect(() => () => texture.dispose(), [texture]);
+
+  return (
+    <mesh
+      position={[worldX(marker.xM), marker.zM, worldZ(marker.yM)]}
+      rotation={[0, (-marker.facingDeg * Math.PI) / 180, 0]}
+    >
+      <planeGeometry args={[marker.sideM, marker.sideM]} />
+      <meshBasicMaterial map={texture} side={DoubleSide} toneMapped={false} />
     </mesh>
   );
 }
@@ -186,7 +221,6 @@ const Arena = memo(function Arena() {
         <planeGeometry args={[12, 8]} />
         <meshStandardMaterial color="#151a22" roughness={0.95} />
       </mesh>
-      <gridHelper args={[12, 24, '#354050', '#252d38']} position={[0, 0.002, 0]} />
 
       {ARCC_2026_FIELD.zones.map((zone) => (
         <mesh
@@ -231,6 +265,17 @@ const Arena = memo(function Arena() {
         heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
         ascending={false}
       />
+      {ARCC_2026_FIELD.highGround.innerRamps.map((ramp, index) => (
+        <Ramp
+          key={`inner-ramp-${index}`}
+          xM={ramp.xM}
+          yM={ramp.yM}
+          widthM={ramp.widthM}
+          depthM={ramp.depthM}
+          heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
+          ascending={ramp.ascending}
+        />
+      ))}
       <Box
         args={[
           ARCC_2026_FIELD.highGround.upperDeck.widthM,
@@ -248,10 +293,27 @@ const Arena = memo(function Arena() {
         <meshStandardMaterial color="#9ca6b2" roughness={0.72} />
       </Box>
 
+      <Box
+        args={[
+          ARCC_2026_FIELD.centralPlatform.widthM,
+          ARCC_2026_FIELD.centralPlatform.heightM,
+          ARCC_2026_FIELD.centralPlatform.depthM,
+        ]}
+        position={[
+          worldX(ARCC_2026_FIELD.centralPlatform.xM + ARCC_2026_FIELD.centralPlatform.widthM / 2),
+          ARCC_2026_FIELD.centralPlatform.heightM / 2,
+          worldZ(ARCC_2026_FIELD.centralPlatform.yM + ARCC_2026_FIELD.centralPlatform.depthM / 2),
+        ]}
+        castShadow
+        receiveShadow
+      >
+        <meshStandardMaterial color="#c3c9d1" roughness={0.72} />
+      </Box>
+
       {ARCC_2026_FIELD.bumpyRoad.tiles.map((tile) => (
         <Box
           key={tile.id}
-          args={[tile.widthM - 0.012, ARCC_2026_FIELD.bumpyRoad.bumpHeightM, tile.depthM - 0.012]}
+          args={[tile.widthM, ARCC_2026_FIELD.bumpyRoad.bumpHeightM, tile.depthM]}
           position={[
             worldX(tile.xM + tile.widthM / 2),
             ARCC_2026_FIELD.bumpyRoad.bumpHeightM / 2,
@@ -269,8 +331,9 @@ const Arena = memo(function Arena() {
         const length = Math.hypot(dx, dy);
         const angle = Math.atan2(dy, dx);
         return (
-          <mesh
+          <Box
             key={barrier.id}
+            args={[length, barrier.heightM, barrier.thicknessM]}
             position={[
               worldX((barrier.start.xM + barrier.end.xM) / 2),
               barrier.heightM / 2,
@@ -278,28 +341,31 @@ const Arena = memo(function Arena() {
             ]}
             rotation={[0, -angle, 0]}
             castShadow
+            receiveShadow
           >
-            <planeGeometry args={[length, barrier.heightM]} />
-            <meshStandardMaterial color={teamColor(barrier.team)} roughness={0.64} metalness={0.24} side={DoubleSide} />
-          </mesh>
+            <meshStandardMaterial color={teamColor(barrier.team)} roughness={0.64} metalness={0.24} />
+          </Box>
         );
       })}
 
-      {ARCC_2026_FIELD.markers.map((marker) => (
-        <mesh
-          key={marker.id}
-          position={[worldX(marker.xM), marker.zM, worldZ(marker.yM)]}
-          rotation={[0, (-marker.facingDeg * Math.PI) / 180, 0]}
-        >
-          <planeGeometry args={[marker.sideM, marker.sideM]} />
-          <meshBasicMaterial color="#f5f7fa" side={DoubleSide} />
-        </mesh>
-      ))}
+      {ARCC_2026_FIELD.markers.map((marker) => <MarkerFace key={marker.id} marker={marker} />)}
 
-      <Wall position={[0, ARCC_2026_FIELD.wall.heightM / 2, -4]} rotation={[0, 0, 0]} width={12} />
-      <Wall position={[0, ARCC_2026_FIELD.wall.heightM / 2, 4]} rotation={[0, Math.PI, 0]} width={12} />
-      <Wall position={[-6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, Math.PI / 2, 0]} width={8} />
-      <Wall position={[6, ARCC_2026_FIELD.wall.heightM / 2, 0]} rotation={[0, -Math.PI / 2, 0]} width={8} />
+      <PerimeterWall
+        position={[0, ARCC_2026_FIELD.wall.heightM / 2, -4 - ARCC_2026_FIELD.wall.thicknessM / 2]}
+        args={[12 + 2 * ARCC_2026_FIELD.wall.thicknessM, ARCC_2026_FIELD.wall.heightM, ARCC_2026_FIELD.wall.thicknessM]}
+      />
+      <PerimeterWall
+        position={[0, ARCC_2026_FIELD.wall.heightM / 2, 4 + ARCC_2026_FIELD.wall.thicknessM / 2]}
+        args={[12 + 2 * ARCC_2026_FIELD.wall.thicknessM, ARCC_2026_FIELD.wall.heightM, ARCC_2026_FIELD.wall.thicknessM]}
+      />
+      <PerimeterWall
+        position={[-6 - ARCC_2026_FIELD.wall.thicknessM / 2, ARCC_2026_FIELD.wall.heightM / 2, 0]}
+        args={[ARCC_2026_FIELD.wall.thicknessM, ARCC_2026_FIELD.wall.heightM, 8]}
+      />
+      <PerimeterWall
+        position={[6 + ARCC_2026_FIELD.wall.thicknessM / 2, ARCC_2026_FIELD.wall.heightM / 2, 0]}
+        args={[ARCC_2026_FIELD.wall.thicknessM, ARCC_2026_FIELD.wall.heightM, 8]}
+      />
     </>
   );
 });

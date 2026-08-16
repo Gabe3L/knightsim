@@ -23,11 +23,13 @@ export interface FieldBarrier {
   readonly start: Point2M;
   readonly end: Point2M;
   readonly heightM: number;
+  readonly thicknessM: number;
 }
 
 export interface VisualMarker extends Point2M {
   readonly id: number;
   readonly zM: number;
+  /** Outward normal of the marker face: 0 = +y, -90 = +x. */
   readonly facingDeg: number;
   readonly sideM: number;
 }
@@ -37,6 +39,10 @@ export interface RoadTile extends RectM {
   readonly rotationDeg: 0 | 90;
 }
 
+export interface RampSpec extends RectM {
+  readonly ascending: boolean;
+}
+
 export interface HighGroundSpec {
   readonly footprint: readonly Point2M[];
   readonly approachRunM: number;
@@ -44,7 +50,13 @@ export interface HighGroundSpec {
   readonly upperHeightM: number;
   readonly inclineDeg: number;
   readonly lowerDecks: readonly RectM[];
+  readonly innerRamps: readonly RampSpec[];
   readonly upperDeck: RectM;
+}
+
+export interface FieldPlatform extends RectM {
+  readonly id: string;
+  readonly heightM: number;
 }
 
 export interface FieldSpec {
@@ -52,12 +64,14 @@ export interface FieldSpec {
   readonly name: string;
   readonly units: 'metres';
   readonly size: { readonly lengthM: number; readonly widthM: number };
-  readonly wall: { readonly heightM: number };
+  readonly wall: { readonly heightM: number; readonly thicknessM: number };
   readonly zones: readonly FieldZone[];
   readonly barriers: readonly FieldBarrier[];
+  readonly centralPlatform: FieldPlatform;
   readonly highGround: HighGroundSpec;
   readonly bumpyRoad: {
     readonly tileSizeM: number;
+    readonly baseThicknessM: number;
     readonly bumpHeightM: number;
     readonly tiles: readonly RoadTile[];
   };
@@ -97,7 +111,18 @@ const makeRoad = (team: 'red' | 'blue'): RoadTile[] => {
   );
 };
 
-const lowerBarrierHeightM = mm(987);
+const perimeterWallThicknessM = mm(175);
+const barrierThicknessM = mm(178);
+const lowBarrierHeightM = mm(420);
+const tallBarrierHeightM = mm(987);
+const southBarrierStartM = mm(1701);
+const southBarrierLengthM = mm(3025.4);
+const northBarrierEndM = 6;
+const northBarrierLengthM = mm(2025.4);
+const tallPanelLengthM = 1;
+const tallPanelStartM = southBarrierStartM + (southBarrierLengthM - tallPanelLengthM) / 2;
+
+const mirrorX = (xM: number): number => 12 - xM;
 
 /**
  * ARCC 2026 3v3 battlefield, transcribed from manual Figures 3-1–3-10.
@@ -109,7 +134,7 @@ export const ARCC_2026_FIELD = {
   name: 'ARCC 2026 · 3v3 Battlefield',
   units: 'metres',
   size: { lengthM: 12, widthM: 8 },
-  wall: { heightM: mm(420) },
+  wall: { heightM: mm(420), thicknessM: perimeterWallThicknessM },
   zones: [
     {
       id: 'red-resupply',
@@ -142,38 +167,69 @@ export const ARCC_2026_FIELD = {
       depthM: 2,
     },
   ],
-  // Barrier centre-lines follow the dimensioned/coordinate callouts in
-  // Figures 3-3 and 3-10; the team pair is mirrored about x = 6 m.
+  // Figure 3-3 dimensions the red wall faces at x = 2250/3250 mm, the
+  // south and north runs at 3025.4/2025.4 mm, and the raised panel at
+  // 1000 mm. Figure 3-10 places the east face of the south wall at
+  // x = 2428 mm, establishing the 178 mm wall thickness. Blue is mirrored.
   barriers: [
     {
       id: 'red-south-barrier',
       team: 'red',
-      start: { xM: 2.25, yM: mm(1701) },
-      end: { xM: 2.25, yM: mm(3679) },
-      heightM: lowerBarrierHeightM,
+      start: { xM: mm(2250) + barrierThicknessM / 2, yM: southBarrierStartM },
+      end: { xM: mm(2250) + barrierThicknessM / 2, yM: southBarrierStartM + southBarrierLengthM },
+      heightM: lowBarrierHeightM,
+      thicknessM: barrierThicknessM,
+    },
+    {
+      id: 'red-south-raised-panel',
+      team: 'red',
+      start: { xM: mm(2250) + barrierThicknessM / 2, yM: tallPanelStartM },
+      end: { xM: mm(2250) + barrierThicknessM / 2, yM: tallPanelStartM + tallPanelLengthM },
+      heightM: tallBarrierHeightM,
+      thicknessM: barrierThicknessM,
     },
     {
       id: 'red-north-barrier',
       team: 'red',
-      start: { xM: 3.25, yM: mm(6983.9) - mm(2025.4) },
-      end: { xM: 3.25, yM: mm(6983.9) },
-      heightM: lowerBarrierHeightM,
+      start: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM - northBarrierLengthM },
+      end: { xM: mm(3250) + barrierThicknessM / 2, yM: northBarrierEndM },
+      heightM: lowBarrierHeightM,
+      thicknessM: barrierThicknessM,
     },
     {
       id: 'blue-south-barrier',
       team: 'blue',
-      start: { xM: 9.75, yM: mm(1701) },
-      end: { xM: 9.75, yM: mm(3679) },
-      heightM: lowerBarrierHeightM,
+      start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: southBarrierStartM },
+      end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: southBarrierStartM + southBarrierLengthM },
+      heightM: lowBarrierHeightM,
+      thicknessM: barrierThicknessM,
+    },
+    {
+      id: 'blue-south-raised-panel',
+      team: 'blue',
+      start: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: tallPanelStartM },
+      end: { xM: mirrorX(mm(2250) + barrierThicknessM / 2), yM: tallPanelStartM + tallPanelLengthM },
+      heightM: tallBarrierHeightM,
+      thicknessM: barrierThicknessM,
     },
     {
       id: 'blue-north-barrier',
       team: 'blue',
-      start: { xM: 8.75, yM: mm(6983.9) - mm(2025.4) },
-      end: { xM: 8.75, yM: mm(6983.9) },
-      heightM: lowerBarrierHeightM,
+      start: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM - northBarrierLengthM },
+      end: { xM: mirrorX(mm(3250) + barrierThicknessM / 2), yM: northBarrierEndM },
+      heightM: lowBarrierHeightM,
+      thicknessM: barrierThicknessM,
     },
   ],
+  centralPlatform: {
+    id: 'central-marker-platform',
+    // Marker centres in Figure 3-10 establish the four front faces.
+    xM: mm(4999),
+    yM: mm(699),
+    widthM: mm(2002),
+    depthM: mm(1002),
+    heightM: mm(250),
+  },
   highGround: {
     // 2.2163 m edge location, two 1 m rows, 6 m deck, 784 mm approaches.
     footprint: [
@@ -192,13 +248,18 @@ export const ARCC_2026_FIELD = {
     inclineDeg: 15,
     lowerDecks: [
       { xM: 3, yM: 7, widthM: 6, depthM: 1 },
-      { xM: 3, yM: 6, widthM: 2, depthM: 1 },
-      { xM: 7, yM: 6, widthM: 2, depthM: 1 },
+      { xM: 3, yM: 6, widthM: 1, depthM: 1 },
+      { xM: 8, yM: 6, widthM: 1, depthM: 1 },
+    ],
+    innerRamps: [
+      { xM: 4, yM: 6, widthM: 1, depthM: 1, ascending: false },
+      { xM: 7, yM: 6, widthM: 1, depthM: 1, ascending: true },
     ],
     upperDeck: { xM: 5, yM: 7, widthM: 2, depthM: 1 },
   },
   bumpyRoad: {
     tileSizeM: mm(400),
+    baseThicknessM: mm(2.5),
     bumpHeightM: mm(3.7),
     tiles: [...makeRoad('red'), ...makeRoad('blue')],
   },
@@ -209,24 +270,24 @@ export const ARCC_2026_FIELD = {
     verticalGapM: mm(70),
   },
   markers: [
-    { id: 0, xM: mm(2428), yM: mm(3679), zM: mm(288), facingDeg: 0, sideM: mm(150) },
-    { id: 1, xM: mm(2428), yM: mm(2666), zM: mm(288), facingDeg: 0, sideM: mm(150) },
+    { id: 0, xM: mm(2428), yM: mm(3679), zM: mm(288), facingDeg: -90, sideM: mm(150) },
+    { id: 1, xM: mm(2428), yM: mm(2666), zM: mm(288), facingDeg: -90, sideM: mm(150) },
     { id: 2, xM: mm(4999), yM: mm(1200), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 3, xM: mm(7001), yM: mm(1200), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 4, xM: mm(9572), yM: mm(1701), zM: mm(288), facingDeg: 180, sideM: mm(150) },
-    { id: 5, xM: mm(9572), yM: mm(3679), zM: mm(288), facingDeg: 180, sideM: mm(150) },
-    { id: 6, xM: 11, yM: mm(7999), zM: mm(288), facingDeg: -90, sideM: mm(150) },
-    { id: 7, xM: 6, yM: mm(1701), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 8, xM: 6, yM: mm(6983.9), zM: mm(288), facingDeg: 90, sideM: mm(150) },
-    { id: 9, xM: 1, yM: mm(7999), zM: mm(288), facingDeg: -90, sideM: mm(150) },
+    { id: 3, xM: mm(7001), yM: mm(1200), zM: mm(288), facingDeg: -90, sideM: mm(150) },
+    { id: 4, xM: mm(9572), yM: mm(1701), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 5, xM: mm(9572), yM: mm(3679), zM: mm(288), facingDeg: 90, sideM: mm(150) },
+    { id: 6, xM: 11, yM: mm(7999), zM: mm(288), facingDeg: 180, sideM: mm(150) },
+    { id: 7, xM: 6, yM: mm(1701), zM: mm(288), facingDeg: 0, sideM: mm(150) },
+    { id: 8, xM: 6, yM: mm(6983.9), zM: mm(288), facingDeg: 180, sideM: mm(150) },
+    { id: 9, xM: 1, yM: mm(7999), zM: mm(288), facingDeg: 180, sideM: mm(150) },
   ],
   provenance: [
     '2026 ARCC Rules: Events, §3.2.1–3.2.6.2, printed pages 14–20.',
-    'Figures 3-1–3-3: overall field, mirrored layout, module placement, heights.',
+    'Figures 3-1–3-3: overall field, mirrored layout, module placement, heights, and wall profiles.',
     'Figures 3-4–3-5: 1500 × 2000 mm starting/resupply zones.',
     'Figures 3-6–3-7: high-ground and 2000 × 2000 mm capture dimensions.',
     'Figures 3-8–3-9: RFID grid and 400 mm bumpy-road tile construction.',
-    'Figure 3-10: marker centres and 150 mm marker side length.',
+    'Figure 3-10: marker front-face centres, 288 mm centre elevation, 175/178 mm wall depths, and 150 mm marker side length.',
   ],
 } as const satisfies FieldSpec;
 

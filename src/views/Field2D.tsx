@@ -13,6 +13,21 @@ const fieldY = (yM: number): number => ARCC_2026_FIELD.size.widthM - yM;
 const rectY = (yM: number, depthM: number): number => fieldY(yM + depthM);
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 
+const barrierPoints = (barrier: (typeof ARCC_2026_FIELD.barriers)[number]): string => {
+  const dx = barrier.end.xM - barrier.start.xM;
+  const dy = barrier.end.yM - barrier.start.yM;
+  const length = Math.hypot(dx, dy);
+  const offsetX = (-dy / length) * barrier.thicknessM / 2;
+  const offsetY = (dx / length) * barrier.thicknessM / 2;
+  const points: ReadonlyArray<readonly [number, number]> = [
+    [barrier.start.xM + offsetX, barrier.start.yM + offsetY],
+    [barrier.end.xM + offsetX, barrier.end.yM + offsetY],
+    [barrier.end.xM - offsetX, barrier.end.yM - offsetY],
+    [barrier.start.xM - offsetX, barrier.start.yM - offsetY],
+  ];
+  return points.map(([xM, yM]) => `${xM},${fieldY(yM)}`).join(' ');
+};
+
 export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
   const viewBox = useMemo(() => {
     const width = 12.7 / camera.zoom;
@@ -39,11 +54,33 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
           </pattern>
           <pattern
             id="rfid-grid"
-            width={ARCC_2026_FIELD.rfidPattern.cardWidthM + ARCC_2026_FIELD.rfidPattern.horizontalGapM}
+            width={2 * (ARCC_2026_FIELD.rfidPattern.cardWidthM + ARCC_2026_FIELD.rfidPattern.horizontalGapM)}
             height={ARCC_2026_FIELD.rfidPattern.cardDepthM + ARCC_2026_FIELD.rfidPattern.verticalGapM}
             patternUnits="userSpaceOnUse"
           >
             <rect
+              width={ARCC_2026_FIELD.rfidPattern.cardWidthM}
+              height={ARCC_2026_FIELD.rfidPattern.cardDepthM}
+              rx=".012"
+              fill="none"
+              stroke="#54f0b6"
+              strokeOpacity=".48"
+              strokeWidth=".012"
+            />
+            <rect
+              x={ARCC_2026_FIELD.rfidPattern.cardWidthM + ARCC_2026_FIELD.rfidPattern.horizontalGapM}
+              y={(ARCC_2026_FIELD.rfidPattern.cardDepthM + ARCC_2026_FIELD.rfidPattern.verticalGapM) / 2}
+              width={ARCC_2026_FIELD.rfidPattern.cardWidthM}
+              height={ARCC_2026_FIELD.rfidPattern.cardDepthM}
+              rx=".012"
+              fill="none"
+              stroke="#54f0b6"
+              strokeOpacity=".48"
+              strokeWidth=".012"
+            />
+            <rect
+              x={ARCC_2026_FIELD.rfidPattern.cardWidthM + ARCC_2026_FIELD.rfidPattern.horizontalGapM}
+              y={-(ARCC_2026_FIELD.rfidPattern.cardDepthM + ARCC_2026_FIELD.rfidPattern.verticalGapM) / 2}
               width={ARCC_2026_FIELD.rfidPattern.cardWidthM}
               height={ARCC_2026_FIELD.rfidPattern.cardDepthM}
               rx=".012"
@@ -99,6 +136,9 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
         {ARCC_2026_FIELD.highGround.lowerDecks.map((deck, index) => (
           <rect key={`deck-${index}`} x={deck.xM} y={rectY(deck.yM, deck.depthM)} width={deck.widthM} height={deck.depthM} fill="#737d8b" opacity=".72" />
         ))}
+        {ARCC_2026_FIELD.highGround.innerRamps.map((ramp, index) => (
+          <rect key={`inner-ramp-${index}`} x={ramp.xM} y={rectY(ramp.yM, ramp.depthM)} width={ramp.widthM} height={ramp.depthM} fill="#8c96a3" opacity=".82" />
+        ))}
         <rect
           x={ARCC_2026_FIELD.highGround.upperDeck.xM}
           y={rectY(ARCC_2026_FIELD.highGround.upperDeck.yM, ARCC_2026_FIELD.highGround.upperDeck.depthM)}
@@ -107,14 +147,24 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
           fill="#9da7b4"
         />
 
+        <rect
+          x={ARCC_2026_FIELD.centralPlatform.xM}
+          y={rectY(ARCC_2026_FIELD.centralPlatform.yM, ARCC_2026_FIELD.centralPlatform.depthM)}
+          width={ARCC_2026_FIELD.centralPlatform.widthM}
+          height={ARCC_2026_FIELD.centralPlatform.depthM}
+          fill="#c3c9d1"
+          stroke="#eef1f4"
+          strokeWidth=".018"
+          vectorEffect="non-scaling-stroke"
+        />
+
         {ARCC_2026_FIELD.bumpyRoad.tiles.map((tile) => (
           <rect
             key={tile.id}
-            x={tile.xM + 0.012}
-            y={rectY(tile.yM, tile.depthM) + 0.012}
-            width={tile.widthM - 0.024}
-            height={tile.depthM - 0.024}
-            rx="0.025"
+            x={tile.xM}
+            y={rectY(tile.yM, tile.depthM)}
+            width={tile.widthM}
+            height={tile.depthM}
             fill="#303844"
             stroke="#4d5766"
             strokeWidth="0.01"
@@ -133,27 +183,26 @@ export function Field2D({ robot, camera, onCameraChange }: Field2DProps) {
         ))}
 
         {ARCC_2026_FIELD.barriers.map((barrier) => (
-          <line
+          <polygon
             key={barrier.id}
-            x1={barrier.start.xM}
-            y1={fieldY(barrier.start.yM)}
-            x2={barrier.end.xM}
-            y2={fieldY(barrier.end.yM)}
-            stroke={teamColor(barrier.team)}
-            strokeWidth="0.13"
-            strokeLinecap="square"
-            vectorEffect="non-scaling-stroke"
+            points={barrierPoints(barrier)}
+            fill={teamColor(barrier.team)}
+            opacity={barrier.heightM > 0.5 ? 1 : 0.78}
           />
         ))}
 
         {ARCC_2026_FIELD.markers.map((marker) => (
-          <g key={marker.id} transform={`translate(${marker.xM} ${fieldY(marker.yM)})`}>
-            <rect x="-0.075" y="-0.075" width="0.15" height="0.15" rx=".015" fill="#05070a" stroke="#fff" strokeWidth=".018" />
-            <text x="0" y="0.025" textAnchor="middle" fill="#fff" fontSize=".075" fontFamily="Inter, system-ui, sans-serif" fontWeight="700">{marker.id}</text>
+          <g key={marker.id} transform={`translate(${marker.xM} ${fieldY(marker.yM)}) rotate(${marker.facingDeg})`}>
+            <rect x={-marker.sideM / 2} y="-.018" width={marker.sideM} height=".036" rx=".006" fill="#05070a" stroke="#fff" strokeWidth=".012" />
+            <text transform={`rotate(${-marker.facingDeg})`} x="0" y="-.055" textAnchor="middle" fill="#fff" fontSize=".07" fontFamily="Inter, system-ui, sans-serif" fontWeight="700">{marker.id}</text>
           </g>
         ))}
 
-        <rect x="0" y="0" width="12" height="8" fill="none" stroke="#7d8794" strokeWidth="0.11" vectorEffect="non-scaling-stroke" />
+        <path
+          d={`M 0 0 H 12 V 8 H 0 Z M ${-ARCC_2026_FIELD.wall.thicknessM} ${-ARCC_2026_FIELD.wall.thicknessM} V ${8 + ARCC_2026_FIELD.wall.thicknessM} H ${12 + ARCC_2026_FIELD.wall.thicknessM} V ${-ARCC_2026_FIELD.wall.thicknessM} Z`}
+          fill="#66717e"
+          fillRule="evenodd"
+        />
 
         <g
           transform={`translate(${robot.xM} ${fieldY(robot.yM)}) rotate(${-robot.yawDeg})`}
