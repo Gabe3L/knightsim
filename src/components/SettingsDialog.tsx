@@ -1,6 +1,7 @@
 import {
   Bot,
   Box,
+  Crosshair,
   FileKey,
   Gauge,
   Keyboard,
@@ -15,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { FIELD_CAMERA_KEYBINDINGS } from '../keybindings';
 import type { ModelAxis, RobotId, RobotModelLibrary, RobotModelOrientation } from '../types';
 import '../styles/settings.css';
 
@@ -637,6 +639,26 @@ export function SettingsDialog({
                     <kbd>B</kbd>
                   </div>
                 </div>
+              </section>
+              <section className="settings-group">
+                <div className="settings-group-heading">
+                  <Crosshair size={16} />
+                  <div>
+                    <h3>Field camera</h3>
+                    <p>Flight controls available while the Field view is active.</p>
+                  </div>
+                </div>
+                {FIELD_CAMERA_KEYBINDINGS.map((binding) => (
+                  <div className="keybinding-row" key={binding.action}>
+                    <div className="keybinding-copy">
+                      <strong>{binding.label}</strong>
+                      <span>{binding.description}</span>
+                    </div>
+                    <div className="keybinding-keys" aria-label={binding.key}>
+                      <kbd>{binding.key}</kbd>
+                    </div>
+                  </div>
+                ))}
               </section>
             </div>
           )}

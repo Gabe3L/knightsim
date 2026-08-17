@@ -261,7 +261,13 @@ export function App() {
             className={activeView === 'field' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== 'field'}
           >
-            <Field robot={categorizedRobot} camera={DEFAULT_CAMERA} overlays={fieldOverlays} model={robotModels.modelForRobot(robot.robotId)} />
+            <Field
+              active={activeView === 'field' && !settingsOpen}
+              robot={categorizedRobot}
+              camera={DEFAULT_CAMERA}
+              overlays={fieldOverlays}
+              model={robotModels.modelForRobot(robot.robotId)}
+            />
           </div>
           <div
             className={activeView === 'graph' ? 'workspace-view workspace-view-active' : 'workspace-view'}

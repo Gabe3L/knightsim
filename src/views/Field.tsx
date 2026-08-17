@@ -8,7 +8,7 @@ import {
   PerspectiveCamera,
   useGLTF,
 } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Crosshair } from "lucide-react";
 import {
   Component,
@@ -16,6 +16,8 @@ import {
   Suspense,
   useEffect,
   useMemo,
+  useRef,
+  type ComponentRef,
   type ErrorInfo,
   type ReactNode,
 } from "react";
@@ -25,8 +27,10 @@ import {
   DoubleSide,
   Float32BufferAttribute,
   SRGBColorSpace,
+  Vector3,
 } from "three";
 import { ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
+import { fieldCameraActionForCode, type FieldCameraAction } from "../keybindings";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
@@ -34,6 +38,7 @@ import { robotRenderProfile } from "../telemetry/robotCategories";
 import type { CameraState, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface FieldProps {
+  readonly active: boolean;
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
   readonly model: RobotModelRecord | null;
@@ -833,7 +838,89 @@ function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
-export function Field({ robot, camera, model, overlays }: FieldProps) {
+const CAMERA_FLIGHT_SPEED_MPS = 5;
+
+const isEditableTarget = (target: EventTarget | null): boolean => (
+  target instanceof HTMLElement
+  && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+);
+
+function FieldCameraFlightControls({ active, camera: cameraState }: Pick<FieldProps, 'active' | 'camera'>) {
+  const sceneCamera = useThree((state) => state.camera);
+  const invalidate = useThree((state) => state.invalidate);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const pressedActions = useRef(new Set<FieldCameraAction>());
+  const forward = useMemo(() => new Vector3(), []);
+  const right = useMemo(() => new Vector3(), []);
+  const movement = useMemo(() => new Vector3(), []);
+  const vertical = useMemo(() => new Vector3(0, 1, 0), []);
+
+  useEffect(() => {
+    pressedActions.current.clear();
+    if (!active) return;
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      const action = fieldCameraActionForCode(event.code);
+      if (!action || event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
+      event.preventDefault();
+      pressedActions.current.add(action);
+      invalidate();
+    };
+    const handleKeyUp = (event: KeyboardEvent): void => {
+      const action = fieldCameraActionForCode(event.code);
+      if (action) pressedActions.current.delete(action);
+    };
+    const stopMovement = (): void => pressedActions.current.clear();
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', stopMovement);
+    return () => {
+      pressedActions.current.clear();
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', stopMovement);
+    };
+  }, [active, invalidate]);
+
+  useFrame((_state, delta) => {
+    if (!active || pressedActions.current.size === 0 || !controlsRef.current) return;
+
+    sceneCamera.getWorldDirection(forward);
+    right.set(1, 0, 0).applyQuaternion(sceneCamera.quaternion);
+    movement.set(0, 0, 0);
+
+    if (pressedActions.current.has('forward')) movement.add(forward);
+    if (pressedActions.current.has('back')) movement.sub(forward);
+    if (pressedActions.current.has('right')) movement.add(right);
+    if (pressedActions.current.has('left')) movement.sub(right);
+    if (pressedActions.current.has('up')) movement.add(vertical);
+    if (pressedActions.current.has('down')) movement.sub(vertical);
+
+    if (movement.lengthSq() === 0) return;
+    movement.normalize().multiplyScalar(CAMERA_FLIGHT_SPEED_MPS * Math.min(delta, 0.1));
+    sceneCamera.position.add(movement);
+    controlsRef.current.target.add(movement);
+    controlsRef.current.update();
+    invalidate();
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      target={[worldX(cameraState.targetXM), 0, worldZ(cameraState.targetYM)]}
+      minDistance={4.5}
+      maxDistance={25}
+      maxPolarAngle={Math.PI / 2.05}
+      enableDamping
+      regress
+      dampingFactor={0.08}
+    />
+  );
+}
+
+export function Field({ active, robot, camera, model, overlays }: FieldProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
     <div className="field-stage">
@@ -865,23 +952,14 @@ export function Field({ robot, camera, model, overlays }: FieldProps) {
         <Robot robot={robot} model={model} />
         <FieldOverlays overlays={overlays} />
         <AdaptiveReplayQuality robot={robot} />
-        <OrbitControls
-          makeDefault
-          target={[worldX(camera.targetXM), 0, worldZ(camera.targetYM)]}
-          minDistance={4.5}
-          maxDistance={25}
-          maxPolarAngle={Math.PI / 2.05}
-          enableDamping
-          regress
-          dampingFactor={0.08}
-        />
+        <FieldCameraFlightControls active={active} camera={camera} />
       </Canvas>
       <div className="field-overlay field-overlay-left">
         <span className="eyebrow">PERSPECTIVE CAMERA</span>
         <strong>ARCC 2026 · METRES</strong>
       </div>
       <div className="field-hint">
-        <Crosshair size={13} /> Orbit · scroll to zoom · right-drag to pan
+        <Crosshair size={13} /> WASD to fly · E/Q up/down · orbit · scroll to zoom
       </div>
     </div>
   );
