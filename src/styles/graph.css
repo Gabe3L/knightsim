@@ -22,7 +22,7 @@
 }
 
 .line-graph-title { display: flex; min-width: 0; align-items: center; gap: 9px; }
-.line-graph-title-icon { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgba(98,231,188,.2); border-radius: 7px; color: var(--accent); background: rgba(98,231,188,.065); }
+.line-graph-title-icon { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgba(239,71,100,.2); border-radius: 7px; color: var(--accent); background: rgba(239,71,100,.065); }
 .line-graph-title > span:last-child { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .line-graph-title strong { color: #e5ebf1; font-size: 14px; font-weight: 670; }
 .line-graph-title small { overflow: hidden; color: #667381; font: 550 11px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
@@ -61,18 +61,18 @@
 .graph-axis-text { fill: #687582; font: 500 11px var(--font-ui); font-variant-numeric: tabular-nums; pointer-events: none; }
 .graph-unit-label { fill: #84919e; font: 700 11px var(--font-ui); letter-spacing: .04em; pointer-events: none; }
 .graph-series-line { stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 2px rgba(255,255,255,.08)); pointer-events: none; }
-.graph-current-cursor { stroke: #63e7bd; stroke-width: 1.2; vector-effect: non-scaling-stroke; pointer-events: none; }
+.graph-current-cursor { stroke: #ef4764; stroke-width: 1.2; vector-effect: non-scaling-stroke; pointer-events: none; }
 .graph-hover-cursor { stroke: #94a1ae; stroke-width: 1; stroke-dasharray: 4 4; opacity: .72; vector-effect: non-scaling-stroke; pointer-events: none; }
-.graph-current-point { stroke: #08100d; stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: none; }
+.graph-current-point { stroke: #10080b; stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: none; }
 
 .line-graph-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 24px; color: #727f8d; text-align: center; pointer-events: none; }
-.line-graph-empty > span { display: grid; width: 54px; height: 54px; margin-bottom: 14px; place-items: center; border: 1px dashed #344251; border-radius: 12px; color: #68dcb8; background: rgba(98,231,188,.04); }
+.line-graph-empty > span { display: grid; width: 54px; height: 54px; margin-bottom: 14px; place-items: center; border: 1px dashed #344251; border-radius: 12px; color: #d47a8d; background: rgba(239,71,100,.04); }
 .line-graph-empty strong { color: #c7d0da; font-size: 15px; font-weight: 650; }
 .line-graph-empty p { max-width: 380px; margin: 7px 0 0; color: #687582; font-size: 12px; line-height: 1.5; }
 
-.line-graph-drop-active .line-graph-chart { border-color: rgba(98,231,188,.6); box-shadow: inset 0 0 0 1px rgba(98,231,188,.15), 0 0 26px rgba(98,231,188,.08); }
-.line-graph-drop-overlay { position: absolute; z-index: 5; inset: 66px 14px 14px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px dashed rgba(98,231,188,.7); border-radius: 9px; color: #bff5e2; background: rgba(15, 39, 35, .78); backdrop-filter: blur(5px); font-size: 14px; font-weight: 650; pointer-events: none; }
-.line-graph-drop-overlay span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; color: #07120e; background: var(--accent); }
+.line-graph-drop-active .line-graph-chart { border-color: rgba(239,71,100,.6); box-shadow: inset 0 0 0 1px rgba(239,71,100,.15), 0 0 26px rgba(239,71,100,.08); }
+.line-graph-drop-overlay { position: absolute; z-index: 5; inset: 66px 14px 14px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px dashed rgba(239,71,100,.7); border-radius: 9px; color: #ffdce2; background: rgba(47, 17, 29, .78); backdrop-filter: blur(5px); font-size: 14px; font-weight: 650; pointer-events: none; }
+.line-graph-drop-overlay span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; color: #12070b; background: var(--accent); }
 
 @media (max-width: 1050px) {
   .line-graph-drop-hint { display: none; }

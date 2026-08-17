@@ -90,7 +90,7 @@ export function ControllerView({ currentTimeS, selectedInputIds }: ControllerVie
               <feDropShadow dx="0" dy="20" stdDeviation="20" floodColor="#00060b" floodOpacity="0.52" />
             </filter>
             <filter id="controller-active-glow" x="-100%" y="-100%" width="300%" height="300%">
-              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#62e7bc" floodOpacity="0.9" />
+              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#ef4764" floodOpacity="0.9" />
             </filter>
           </defs>
 

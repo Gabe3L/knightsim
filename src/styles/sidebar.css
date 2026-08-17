@@ -104,5 +104,5 @@
 .sidebar-resize-handle:focus-visible::after,
 .sidebar-is-resizing .sidebar-resize-handle::after {
   background: var(--accent);
-  box-shadow: 0 0 9px rgba(98, 231, 188, .42);
+  box-shadow: 0 0 9px rgba(239, 71, 100, .42);
 }

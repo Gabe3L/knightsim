@@ -23,18 +23,18 @@
 }
 
 .controller-stage-title { display: flex; min-width: 0; align-items: center; gap: 9px; }
-.controller-stage-title > span { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(98,231,188,.2); border-radius: 7px; color: var(--accent); background: rgba(98,231,188,.065); }
+.controller-stage-title > span { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(239,71,100,.2); border-radius: 7px; color: var(--accent); background: rgba(239,71,100,.065); }
 .controller-stage-title > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
 .controller-stage-title strong { color: #e5ebf1; font-size: 14px; font-weight: 670; }
 .controller-stage-title small { overflow: hidden; color: #667381; font: 550 11px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
 
 .controller-live-status { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid #29323e; border-radius: 99px; color: #677380; background: #10161d; font-size: 11px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
-.controller-live-status-active { border-color: rgba(98,231,188,.25); color: #78d9ba; background: rgba(98,231,188,.06); }
-.controller-live-status-active svg { filter: drop-shadow(0 0 4px rgba(98,231,188,.55)); }
+.controller-live-status-active { border-color: rgba(239,71,100,.25); color: #f17b8f; background: rgba(239,71,100,.06); }
+.controller-live-status-active svg { filter: drop-shadow(0 0 4px rgba(239,71,100,.55)); }
 
 .controller-canvas { position: relative; display: grid; min-width: 0; min-height: 0; overflow: hidden; place-items: center; }
 .controller-canvas::before { content: ''; position: absolute; inset: 6% 8% 10%; border: 1px solid rgba(42,54,66,.28); border-radius: 24px; background: linear-gradient(145deg, rgba(17,24,32,.18), rgba(7,10,14,.08)); }
-.controller-canvas::after { content: ''; position: absolute; right: 22px; bottom: 16px; width: 62px; height: 62px; border-right: 1px solid rgba(98,231,188,.14); border-bottom: 1px solid rgba(98,231,188,.14); pointer-events: none; }
+.controller-canvas::after { content: ''; position: absolute; right: 22px; bottom: 16px; width: 62px; height: 62px; border-right: 1px solid rgba(239,71,100,.14); border-bottom: 1px solid rgba(239,71,100,.14); pointer-events: none; }
 .controller-ambient-glow { position: absolute; top: 18%; left: 50%; width: 55%; height: 58%; border-radius: 50%; background: rgba(182,207,214,.08); filter: blur(54px); transform: translateX(-50%); pointer-events: none; }
 
 .controller-remote { position: relative; z-index: 1; display: block; width: min(94%, 820px); height: min(94%, 670px); overflow: visible; }
@@ -81,26 +81,26 @@
 .remote-input-mapped { filter: url(#controller-active-glow); }
 .remote-input-mapped .remote-small-label,
 .remote-input-mapped .remote-control-label,
-.remote-input-mapped .remote-button-text { fill: #238c70; }
+.remote-input-mapped .remote-button-text { fill: #b93450; }
 .remote-input-mapped .remote-face-button,
 .remote-input-mapped .remote-custom-button,
 .remote-input-mapped .remote-side-control,
 .remote-input-mapped .remote-stick-bezel,
-.remote-input-mapped .remote-shoulder { stroke: #54cba7; stroke-width: 2.2; }
+.remote-input-mapped .remote-shoulder { stroke: #ef4764; stroke-width: 2.2; }
 .remote-input-active .remote-face-button,
 .remote-input-active .remote-custom-button,
 .remote-input-active .remote-button-core,
-.remote-input-active .remote-switch-knob { fill: #62e7bc; stroke: #b9f7e3; }
-.remote-input-active .remote-face-icon { stroke: #08251c; }
-.remote-input-active .remote-button-text { fill: #08251c; }
-.remote-input-active .remote-stick-knob { stroke: #76f0c8; stroke-width: 3; }
-.remote-input-active .remote-stick-well { stroke: #57d5ad; stroke-width: 3; }
-.remote-input-active .remote-dial { stroke: #65e7bd; stroke-width: 3; }
-.remote-input-active .remote-record-mark { fill: #061a13; }
-.remote-input-active .remote-shutter-mark { stroke: #061a13; }
+.remote-input-active .remote-switch-knob { fill: #ef4764; stroke: #ffc2cd; }
+.remote-input-active .remote-face-icon { stroke: #2b0911; }
+.remote-input-active .remote-button-text { fill: #2b0911; }
+.remote-input-active .remote-stick-knob { stroke: #ff7087; stroke-width: 3; }
+.remote-input-active .remote-stick-well { stroke: #e64d69; stroke-width: 3; }
+.remote-input-active .remote-dial { stroke: #ef4764; stroke-width: 3; }
+.remote-input-active .remote-record-mark { fill: #1b070d; }
+.remote-input-active .remote-shutter-mark { stroke: #1b070d; }
 
-.controller-empty-callout { position: absolute; z-index: 2; bottom: 18px; left: 50%; display: flex; width: min(430px, calc(100% - 36px)); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid rgba(98,231,188,.18); border-radius: 9px; background: rgba(10,16,21,.88); box-shadow: 0 12px 34px rgba(0,0,0,.28); backdrop-filter: blur(9px); transform: translateX(-50%); }
-.controller-empty-callout > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px dashed #3a4b51; border-radius: 8px; color: #69d8b5; background: rgba(98,231,188,.05); }
+.controller-empty-callout { position: absolute; z-index: 2; bottom: 18px; left: 50%; display: flex; width: min(430px, calc(100% - 36px)); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid rgba(239,71,100,.18); border-radius: 9px; background: rgba(10,16,21,.88); box-shadow: 0 12px 34px rgba(0,0,0,.28); backdrop-filter: blur(9px); transform: translateX(-50%); }
+.controller-empty-callout > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px dashed #3a4b51; border-radius: 8px; color: #d47a8d; background: rgba(239,71,100,.05); }
 .controller-empty-callout strong { color: #cbd4dd; font-size: 13px; font-weight: 660; }
 .controller-empty-callout p { margin: 3px 0 0; color: #71808c; font-size: 11.5px; line-height: 1.4; }
 
@@ -118,7 +118,7 @@
 }
 
 .controller-input-sidebar-header { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid #222a35; background: linear-gradient(180deg, #151b24, #10151d); }
-.controller-input-sidebar-icon { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(98,231,188,.2); border-radius: 7px; color: var(--accent); background: rgba(98,231,188,.07); }
+.controller-input-sidebar-icon { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(239,71,100,.2); border-radius: 7px; color: var(--accent); background: rgba(239,71,100,.07); }
 .controller-input-sidebar-title { min-width: 0; }
 .controller-input-sidebar-title strong { display: block; overflow: hidden; font-size: 15px; font-weight: 670; text-overflow: ellipsis; white-space: nowrap; }
 .controller-input-sidebar-title small { display: block; margin-top: 3px; color: #697582; font-size: 11px; font-weight: 650; letter-spacing: .055em; text-transform: uppercase; }
@@ -137,7 +137,7 @@
 .controller-input-empty strong { color: #aeb8c3; font-size: 14px; font-weight: 650; }
 .controller-input-empty p { max-width: 225px; margin: 7px 0 0; font-size: 12.5px; line-height: 1.45; }
 
-.controller-input-row { --input-color: #62e7bc; display: grid; min-height: 55px; grid-template-columns: 3px minmax(0, 1fr) auto 26px; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 5px 6px 0; border: 1px solid #232c37; border-radius: 7px; background: #111820; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
+.controller-input-row { --input-color: #ef4764; display: grid; min-height: 55px; grid-template-columns: 3px minmax(0, 1fr) auto 26px; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 5px 6px 0; border: 1px solid #232c37; border-radius: 7px; background: #111820; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
 .controller-input-row-sentry { --input-color: #f0b35a; }
 .controller-input-row-hero { --input-color: #c5c8d0; }
 .controller-input-row:hover { border-color: #303b48; background: #151d26; }
@@ -151,8 +151,8 @@
 .controller-input-row-active .controller-input-value { color: var(--input-color); }
 .controller-input-row button { width: 25px; height: 27px; }
 
-.controller-input-sidebar-drop-active { border-color: rgba(98,231,188,.72); box-shadow: inset 0 0 0 1px rgba(98,231,188,.18), -8px 0 28px rgba(37,140,111,.15); }
-.controller-input-drop-message { position: absolute; z-index: 30; inset: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(98,231,188,.8); border-radius: 9px; color: #c3f8e7; background: rgba(14,42,35,.92); box-shadow: inset 0 0 44px rgba(98,231,188,.06); backdrop-filter: blur(6px); font-size: 13px; font-weight: 680; pointer-events: none; }
+.controller-input-sidebar-drop-active { border-color: rgba(239,71,100,.72); box-shadow: inset 0 0 0 1px rgba(239,71,100,.18), -8px 0 28px rgba(139,37,58,.15); }
+.controller-input-drop-message { position: absolute; z-index: 30; inset: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(239,71,100,.8); border-radius: 9px; color: #ffdce2; background: rgba(46,13,22,.92); box-shadow: inset 0 0 44px rgba(239,71,100,.06); backdrop-filter: blur(6px); font-size: 13px; font-weight: 680; pointer-events: none; }
 
 @media (max-width: 1060px) {
   .controller-stage { grid-template-rows: 52px minmax(0, 1fr); }
