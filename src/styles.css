@@ -8,5 +8,6 @@
 @import "./styles/field-overlays.css";
 @import "./styles/inspector.css";
 @import "./styles/graph.css";
+@import "./styles/controller.css";
 @import "./styles/timeline.css";
 @import "./styles/responsive.css";

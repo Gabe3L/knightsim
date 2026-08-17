@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FieldOverlaySidebar } from './components/FieldOverlaySidebar';
+import { ControllerInputSidebar } from './components/ControllerInputSidebar';
 import { Sidebar } from './components/Sidebar';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
@@ -18,10 +19,12 @@ import {
   resolveFieldOverlays,
 } from './overlays/fieldOverlays';
 import { odometryDebugAt } from './telemetry/odometryDebug';
+import { controllerInputById } from './telemetry/controllerInputs';
 import type { CameraState, ViewMode } from './types';
 import { Field2D } from './views/Field2D';
 import { Field3D } from './views/Field3D';
 import { LineGraph } from './views/LineGraph';
+import { ControllerView } from './views/ControllerView';
 
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const DEFAULT_SIDEBAR_WIDTH = 292;
@@ -31,9 +34,13 @@ const isWindows = window.knightSim?.platform === 'win32';
 const MIN_SIDEBAR_WIDTH = isWindows ? 64 : 96;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
+const CONTROLLER_SIDEBAR_WIDTH = 304;
 
 export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('2d');
+  const [controllerInputIds, setControllerInputIds] = useState<readonly string[]>([]);
+  const fieldViewActive = activeView === '2d' || activeView === '3d';
+  const controllerViewActive = activeView === 'controller';
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [sidebarResizing, setSidebarResizing] = useState(false);
   const [fieldSidebarResizing, setFieldSidebarResizing] = useState(false);
@@ -124,7 +131,7 @@ export function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       const platform = window.knightSim?.platform ?? 'win32';
-      if (isFieldSidebarShortcut(event, platform) && activeView !== 'graph') {
+      if (isFieldSidebarShortcut(event, platform) && fieldViewActive) {
         event.preventDefault();
         dispatchFieldOverlay({ type: 'toggle-sidebar' });
       } else if (isLeftSidebarShortcut(event, platform)) {
@@ -134,7 +141,7 @@ export function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeView, dispatchFieldOverlay, toggleSidebar]);
+  }, [dispatchFieldOverlay, fieldViewActive, toggleSidebar]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -150,7 +157,21 @@ export function App() {
     dispatchFieldOverlay({ type: 'finish-sidebar-resize' });
   }, [dispatchFieldOverlay]);
 
-  const fieldViewActive = activeView === '2d' || activeView === '3d';
+  const addControllerInput = useCallback((id: string) => {
+    const descriptor = controllerInputById(id);
+    if (!descriptor) return;
+    setControllerInputIds((current) => [
+      ...current.filter((currentId) => controllerInputById(currentId)?.control !== descriptor.control),
+      descriptor.id,
+    ]);
+    setActiveView('controller');
+  }, []);
+
+  const rightSidebarWidth = fieldViewActive
+    ? fieldOverlayWorkspace.sidebarWidth
+    : controllerViewActive
+      ? CONTROLLER_SIDEBAR_WIDTH
+      : 0;
 
   return (
     <div
@@ -162,7 +183,7 @@ export function App() {
       ].filter(Boolean).join(' ')}
       style={{
         '--sidebar-width': `${sidebarWidth}px`,
-        '--field-sidebar-width': `${fieldViewActive ? fieldOverlayWorkspace.sidebarWidth : 0}px`,
+        '--field-sidebar-width': `${rightSidebarWidth}px`,
       } as React.CSSProperties}
     >
       <Sidebar
@@ -172,6 +193,7 @@ export function App() {
         robot={robot}
         currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
+        onAddControllerInput={addControllerInput}
         onAddFieldOverlay={(id) => {
           dispatchFieldOverlay({ type: 'add', id });
           dispatchFieldOverlay({ type: 'expand-sidebar' });
@@ -206,6 +228,12 @@ export function App() {
           >
             <LineGraph replay={replay} onSeek={seek} />
           </div>
+          <div
+            className={activeView === 'controller' ? 'workspace-view workspace-view-active' : 'workspace-view'}
+            aria-hidden={activeView !== 'controller'}
+          >
+            <ControllerView currentTimeS={replay.currentTimeS} selectedInputIds={controllerInputIds} />
+          </div>
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
@@ -228,6 +256,14 @@ export function App() {
           onResizeKeyboard={resizeFieldSidebarByKeyboard}
           onResizeStart={startFieldSidebarResize}
           onToggleVisibility={(id) => dispatchFieldOverlay({ type: 'toggle-visibility', id })}
+        />
+      ) : controllerViewActive ? (
+        <ControllerInputSidebar
+          currentTimeS={replay.currentTimeS}
+          inputIds={controllerInputIds}
+          onAdd={addControllerInput}
+          onClear={() => setControllerInputIds([])}
+          onRemove={(id) => setControllerInputIds((current) => current.filter((currentId) => currentId !== id))}
         />
       ) : null}
       {settingsOpen ? (

@@ -1,4 +1,4 @@
-export type ViewMode = '2d' | '3d' | 'graph';
+export type ViewMode = '2d' | '3d' | 'graph' | 'controller';
 
 export type RobotId = 'sentry' | 'infantry' | 'hero';
 

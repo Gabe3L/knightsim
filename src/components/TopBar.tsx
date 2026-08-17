@@ -1,4 +1,4 @@
-import { Box, ChartLine, CircleDot, Gamepad2, Route } from 'lucide-react';
+import { Box, ChartLine, CircleDot, Gamepad2 } from 'lucide-react';
 import type { ViewMode } from '../types';
 
 interface TopBarProps {
@@ -34,9 +34,13 @@ export function TopBar({ activeView, onViewChange }: TopBarProps) {
           <ChartLine size={15} />
           Line Graph
         </button>
-        <button className="view-tab view-tab-placeholder" type="button" disabled title="Joysticks view coming soon">
+        <button
+          className={activeView === 'controller' ? 'view-tab view-tab-active' : 'view-tab'}
+          type="button"
+          onClick={() => onViewChange('controller')}
+        >
           <Gamepad2 size={15} />
-          Joysticks
+          Controller
         </button>
       </nav>
 

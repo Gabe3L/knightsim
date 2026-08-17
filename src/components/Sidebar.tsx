@@ -11,6 +11,7 @@ interface SidebarProps {
   readonly robot: RobotTelemetry;
   readonly currentTimeS: number;
   readonly width: number;
+  readonly onAddControllerInput: (id: string) => void;
   readonly onAddFieldOverlay: (id: string) => void;
   readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
@@ -26,6 +27,7 @@ export function Sidebar({
   minWidth,
   robot,
   width,
+  onAddControllerInput,
   onAddFieldOverlay,
   onOpenSettings,
   onResize,
@@ -77,6 +79,7 @@ export function Sidebar({
           robot={robot}
           currentTimeS={currentTimeS}
           collapsed={compact}
+          onAddControllerInput={onAddControllerInput}
           onAddFieldOverlay={onAddFieldOverlay}
         />
       </div>
