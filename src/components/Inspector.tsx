@@ -139,8 +139,8 @@ function topicsFor(snapshot: RobotSnapshot, robotId: string, timeS: number): rea
   if (robotId === 'infantry') {
     const sampleById = new Map(odometryDebugAt(timeS).map((sample) => [sample.id, sample]));
     topics.splice(1, 0, {
-      id: 'odometry-debug',
-      label: 'Odometry debug',
+      id: 'odometry',
+      label: 'Odometry',
       fields: FIELD_OVERLAY_SOURCES.map((source) => {
         const sample = sampleById.get(source.id);
         const state = !sample?.available ? 'Unavailable' : sample.status ?? 'Available';
