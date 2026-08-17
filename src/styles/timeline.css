@@ -1,4 +1,4 @@
-.timeline { position: relative; z-index: 2; display: grid; grid-template-columns: auto 142px minmax(200px, 1fr) 98px; align-items: center; gap: 14px; margin: 10px; padding: 0 15px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(180deg, #111720, #0d1118); box-shadow: 0 10px 35px rgba(0,0,0,.22); }
+.timeline { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; display: grid; min-height: 62px; grid-template-columns: auto 142px minmax(200px, 1fr) 98px; align-items: center; gap: 14px; margin: 10px; padding: 0 15px; border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(180deg, #111720, #0d1118); box-shadow: 0 10px 35px rgba(0,0,0,.22); }
 .transport-controls { display: flex; align-items: center; gap: 5px; }
 .transport-controls button { display: grid; place-items: center; border-radius: 6px; cursor: pointer; }
 .transport-secondary { width: 29px; height: 29px; border: 1px solid #252e39; color: #77818f; background: #10151c; }
