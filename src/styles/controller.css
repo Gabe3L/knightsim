@@ -25,10 +25,10 @@
 .controller-stage-title { display: flex; min-width: 0; align-items: center; gap: 9px; }
 .controller-stage-title > span { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 1px solid rgba(98,231,188,.2); border-radius: 7px; color: var(--accent); background: rgba(98,231,188,.065); }
 .controller-stage-title > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.controller-stage-title strong { color: #e5ebf1; font-size: 12px; font-weight: 670; }
-.controller-stage-title small { overflow: hidden; color: #667381; font: 550 9px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
+.controller-stage-title strong { color: #e5ebf1; font-size: 14px; font-weight: 670; }
+.controller-stage-title small { overflow: hidden; color: #667381; font: 550 11px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
 
-.controller-live-status { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid #29323e; border-radius: 99px; color: #677380; background: #10161d; font-size: 9px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
+.controller-live-status { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid #29323e; border-radius: 99px; color: #677380; background: #10161d; font-size: 11px; font-weight: 700; letter-spacing: .055em; text-transform: uppercase; }
 .controller-live-status-active { border-color: rgba(98,231,188,.25); color: #78d9ba; background: rgba(98,231,188,.06); }
 .controller-live-status-active svg { filter: drop-shadow(0 0 4px rgba(98,231,188,.55)); }
 
@@ -51,7 +51,7 @@
 .remote-button-core { fill: #323940; stroke: #0b1014; stroke-width: 3; }
 .remote-record-mark { fill: #e45a65; }
 .remote-shutter-mark { fill: none; stroke: #cbd1d5; stroke-width: 3; }
-.remote-small-label { fill: #6f7a80; font: 700 8px var(--font-ui); letter-spacing: .12em; }
+.remote-small-label { fill: #6f7a80; font: 700 10px var(--font-ui); letter-spacing: .12em; }
 .remote-side-control { fill: #d6dcdf; stroke: #adb6bb; stroke-width: 1.5; }
 .remote-dial { fill: #242b31; stroke: #0d1216; stroke-width: 2; }
 .remote-dial-tick { stroke: #8b949a; stroke-linecap: round; stroke-width: 1.5; }
@@ -66,13 +66,13 @@
 .remote-stick-stem { fill: #3d454c; stroke: #090d10; stroke-width: 1.5; }
 .remote-stick-knob { fill: url(#controller-stick); stroke: #06090c; stroke-width: 2; }
 .remote-stick-knurl { fill: none; stroke: #879097; stroke-dasharray: 2 2; stroke-width: 2; }
-.remote-control-label { fill: #8a949a; font: 700 8px var(--font-ui); letter-spacing: .11em; }
+.remote-control-label { fill: #8a949a; font: 700 10px var(--font-ui); letter-spacing: .11em; }
 
 .remote-face-button { fill: #d8dde0; stroke: #9fa9af; stroke-width: 1.5; }
 .remote-power-button { fill: #d3d9dc; }
 .remote-face-icon { fill: none; stroke: #4e5960; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.6; }
 .remote-custom-button { fill: #d2d8dc; stroke: #a4aeb4; stroke-width: 1.5; }
-.remote-button-text { fill: #58636a; font: 800 10px var(--font-ui); letter-spacing: .06em; }
+.remote-button-text { fill: #58636a; font: 800 12px var(--font-ui); letter-spacing: .06em; }
 .remote-status-lights circle { fill: #8e9b9f; }
 .remote-screws circle { fill: #d2d8db; stroke: #919ba1; stroke-width: 1.4; }
 .remote-screws path { fill: none; stroke: #7b858a; stroke-linecap: round; stroke-width: 1.2; }
@@ -101,8 +101,8 @@
 
 .controller-empty-callout { position: absolute; z-index: 2; bottom: 18px; left: 50%; display: flex; width: min(430px, calc(100% - 36px)); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid rgba(98,231,188,.18); border-radius: 9px; background: rgba(10,16,21,.88); box-shadow: 0 12px 34px rgba(0,0,0,.28); backdrop-filter: blur(9px); transform: translateX(-50%); }
 .controller-empty-callout > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px dashed #3a4b51; border-radius: 8px; color: #69d8b5; background: rgba(98,231,188,.05); }
-.controller-empty-callout strong { color: #cbd4dd; font-size: 11px; font-weight: 660; }
-.controller-empty-callout p { margin: 3px 0 0; color: #71808c; font-size: 9.5px; line-height: 1.4; }
+.controller-empty-callout strong { color: #cbd4dd; font-size: 13px; font-weight: 660; }
+.controller-empty-callout p { margin: 3px 0 0; color: #71808c; font-size: 11.5px; line-height: 1.4; }
 
 .controller-input-sidebar {
   position: relative;
@@ -120,13 +120,13 @@
 .controller-input-sidebar-header { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: 8px; padding: 0 12px; border-bottom: 1px solid #222a35; background: linear-gradient(180deg, #151b24, #10151d); }
 .controller-input-sidebar-icon { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(98,231,188,.2); border-radius: 7px; color: var(--accent); background: rgba(98,231,188,.07); }
 .controller-input-sidebar-title { min-width: 0; }
-.controller-input-sidebar-title strong { display: block; overflow: hidden; font-size: 13px; font-weight: 670; text-overflow: ellipsis; white-space: nowrap; }
-.controller-input-sidebar-title small { display: block; margin-top: 3px; color: #697582; font-size: 9px; font-weight: 650; letter-spacing: .055em; text-transform: uppercase; }
-.controller-input-sidebar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 0 9px 0 12px; border-bottom: 1px solid #202832; color: #65717e; background: #0e131a; font-size: 9px; font-weight: 620; }
+.controller-input-sidebar-title strong { display: block; overflow: hidden; font-size: 15px; font-weight: 670; text-overflow: ellipsis; white-space: nowrap; }
+.controller-input-sidebar-title small { display: block; margin-top: 3px; color: #697582; font-size: 11px; font-weight: 650; letter-spacing: .055em; text-transform: uppercase; }
+.controller-input-sidebar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 5px; padding: 0 9px 0 12px; border-bottom: 1px solid #202832; color: #65717e; background: #0e131a; font-size: 11px; font-weight: 620; }
 .controller-input-sidebar-toolbar > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .controller-input-sidebar-toolbar button,
 .controller-input-row button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 5px; color: #7e8996; background: transparent; cursor: pointer; }
-.controller-input-sidebar-toolbar button { gap: 5px; min-height: 25px; padding: 0 7px; font-size: 10px; font-weight: 620; }
+.controller-input-sidebar-toolbar button { gap: 5px; min-height: 25px; padding: 0 7px; font-size: 12px; font-weight: 620; }
 .controller-input-sidebar-toolbar button:hover:not(:disabled),
 .controller-input-row button:hover { color: #eef3f8; border-color: #2b3541; background: #1a222d; }
 .controller-input-sidebar-toolbar button:disabled { opacity: .3; cursor: default; }
@@ -134,8 +134,8 @@
 .controller-input-list { min-height: 0; overflow-x: hidden; overflow-y: auto; padding: 6px; scrollbar-width: thin; scrollbar-color: #293440 transparent; }
 .controller-input-empty { display: flex; min-height: 250px; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; color: #687583; text-align: center; }
 .controller-input-empty > span { display: grid; width: 45px; height: 45px; margin-bottom: 13px; place-items: center; border: 1px dashed #34414e; border-radius: 10px; color: #738191; background: #121922; }
-.controller-input-empty strong { color: #aeb8c3; font-size: 12px; font-weight: 650; }
-.controller-input-empty p { max-width: 225px; margin: 7px 0 0; font-size: 10.5px; line-height: 1.45; }
+.controller-input-empty strong { color: #aeb8c3; font-size: 14px; font-weight: 650; }
+.controller-input-empty p { max-width: 225px; margin: 7px 0 0; font-size: 12.5px; line-height: 1.45; }
 
 .controller-input-row { --input-color: #62e7bc; display: grid; min-height: 55px; grid-template-columns: 3px minmax(0, 1fr) auto 26px; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 5px 6px 0; border: 1px solid #232c37; border-radius: 7px; background: #111820; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
 .controller-input-row-sentry { --input-color: #f0b35a; }
@@ -145,14 +145,14 @@
 .controller-input-row-active { border-color: color-mix(in srgb, var(--input-color) 34%, #27313c); box-shadow: inset 0 0 16px color-mix(in srgb, var(--input-color) 5%, transparent); }
 .controller-input-row-active > i { opacity: 1; box-shadow: 0 0 9px var(--input-color); }
 .controller-input-row-copy { display: flex; min-width: 0; flex-direction: column; justify-content: center; }
-.controller-input-row-copy strong { overflow: hidden; color: #d9e0e7; font-size: 10.5px; font-weight: 640; text-overflow: ellipsis; white-space: nowrap; }
-.controller-input-row-copy small { overflow: hidden; margin-top: 4px; color: #74808d; font-size: 8.5px; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
-.controller-input-value { color: #c7d0d9; font: 610 9px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.controller-input-row-copy strong { overflow: hidden; color: #d9e0e7; font-size: 12.5px; font-weight: 640; text-overflow: ellipsis; white-space: nowrap; }
+.controller-input-row-copy small { overflow: hidden; margin-top: 4px; color: #74808d; font-size: 10.5px; text-overflow: ellipsis; text-transform: capitalize; white-space: nowrap; }
+.controller-input-value { color: #c7d0d9; font: 610 11px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .controller-input-row-active .controller-input-value { color: var(--input-color); }
 .controller-input-row button { width: 25px; height: 27px; }
 
 .controller-input-sidebar-drop-active { border-color: rgba(98,231,188,.72); box-shadow: inset 0 0 0 1px rgba(98,231,188,.18), -8px 0 28px rgba(37,140,111,.15); }
-.controller-input-drop-message { position: absolute; z-index: 30; inset: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(98,231,188,.8); border-radius: 9px; color: #c3f8e7; background: rgba(14,42,35,.92); box-shadow: inset 0 0 44px rgba(98,231,188,.06); backdrop-filter: blur(6px); font-size: 11px; font-weight: 680; pointer-events: none; }
+.controller-input-drop-message { position: absolute; z-index: 30; inset: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed rgba(98,231,188,.8); border-radius: 9px; color: #c3f8e7; background: rgba(14,42,35,.92); box-shadow: inset 0 0 44px rgba(98,231,188,.06); backdrop-filter: blur(6px); font-size: 13px; font-weight: 680; pointer-events: none; }
 
 @media (max-width: 1060px) {
   .controller-stage { grid-template-rows: 52px minmax(0, 1fr); }

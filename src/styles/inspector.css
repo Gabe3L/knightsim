@@ -1,9 +1,9 @@
 .inspector { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; border: 0; background: transparent; box-shadow: none; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; min-height: 54px; padding: 0 14px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, #121720, #0f141c); }
-.panel-heading h2 { margin: 4px 0 0; font-size: 14px; font-weight: 660; }
+.panel-heading h2 { margin: 4px 0 0; font-size: 16px; font-weight: 660; }
 .telemetry-heading { min-height: 45px; flex: 0 0 auto; padding-inline: 14px 12px; background: #10151c; }
-.telemetry-heading h2 { margin-top: 2px; font-size: 13px; }
-.asset-count { color: #65717e; font: 600 9px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
+.telemetry-heading h2 { margin-top: 2px; font-size: 15px; }
+.asset-count { color: #65717e; font: 600 11px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
 .telemetry-tree { min-height: 0; padding: 5px 0 14px; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #293440 transparent; }
 .robot-node { overflow: hidden; border: 0; background: transparent; }
 .robot-node-toggle,
@@ -28,9 +28,9 @@
 .expanded > .robot-node-toggle > .tree-chevron,
 .expanded > .topic-node-toggle > .tree-chevron { color: #a9b4c1; transform: rotate(90deg); }
 .robot-node-copy { display: flex; min-width: 0; align-items: baseline; gap: 7px; }
-.robot-node-copy strong { overflow: hidden; color: #e0e5eb; font-size: 12px; font-weight: 610; text-overflow: ellipsis; white-space: nowrap; }
-.robot-node-copy small { overflow: hidden; color: #596573; font: 550 9px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
-.tree-status { display: flex; align-items: center; gap: 5px; color: #75818e; font: 650 8px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
+.robot-node-copy strong { overflow: hidden; color: #e0e5eb; font-size: 14px; font-weight: 610; text-overflow: ellipsis; white-space: nowrap; }
+.robot-node-copy small { overflow: hidden; color: #596573; font: 550 11px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
+.tree-status { display: flex; align-items: center; gap: 5px; color: #75818e; font: 650 10px/1 var(--font-ui); letter-spacing: .04em; text-transform: uppercase; }
 .tree-status i { width: 5px; height: 5px; border-radius: 50%; }
 .tree-status.online { color: #58cba6; }
 .tree-status.online i { background: var(--accent); box-shadow: 0 0 6px rgba(70,231,178,.62); }
@@ -47,7 +47,7 @@
   padding: 2px 12px 2px 35px;
   color: #a8b1bc;
   background: transparent;
-  font-size: 11.5px;
+  font-size: 13.5px;
   font-style: italic;
   font-weight: 560;
 }
@@ -56,43 +56,43 @@
 .telemetry-fields { margin: 0; padding: 1px 0 4px; }
 .telemetry-field { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; min-height: 28px; align-items: center; gap: 5px; padding: 0 15px 0 58px; }
 .telemetry-field:hover { background: #151c24; }
-.field-branch { color: #5f6a77; font-size: 11px; }
+.field-branch { color: #5f6a77; font-size: 13px; }
 .telemetry-field-draggable { cursor: grab; }
 .telemetry-field-draggable:hover { background: #18222b; }
 .telemetry-field-draggable:active { cursor: grabbing; }
 .telemetry-field-draggable:focus-visible { outline: 1px solid var(--accent); outline-offset: -2px; background: #18252a; }
 .telemetry-field-draggable .field-branch { display: grid; color: #6fdab7; place-items: center; }
 .telemetry-field-draggable:hover dt { color: #b7c2ce; }
-.telemetry-field dt { overflow: hidden; color: #7d8895; font: italic 550 10px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
-.telemetry-field dd { margin: 0; color: #d4dae1; font: 580 10px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.telemetry-field dt { overflow: hidden; color: #7d8895; font: italic 550 12px/1 var(--font-ui); text-overflow: ellipsis; white-space: nowrap; }
+.telemetry-field dd { margin: 0; color: #d4dae1; font: 580 12px/1 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .connection-dot { width: 7px; height: 7px; border-radius: 50%; }
 .connection-dot.online { background: var(--accent); box-shadow: 0 0 9px rgba(70,231,178,.66); }
 .connection-dot.offline { background: #ff5b67; box-shadow: 0 0 9px rgba(255,91,103,.6); }
 .robot-card { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; margin: 12px; padding: 11px; border: 1px solid #252e3a; border-radius: 8px; background: linear-gradient(145deg, #151b25, #10151d); }
 .robot-avatar { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(255,76,87,.28); border-radius: 7px; color: #ff6570; background: rgba(255,76,87,.08); }
-.robot-name { font-size: 13px; font-weight: 680; }
-.robot-id { margin-top: 4px; color: #687281; font: 500 10px/1.15 var(--font-ui); }
-.status-chip { padding: 5px 6px; border-radius: 4px; font: 700 10px/1 var(--font-ui); letter-spacing: .035em; }
+.robot-name { font-size: 15px; font-weight: 680; }
+.robot-id { margin-top: 4px; color: #687281; font: 500 12px/1.15 var(--font-ui); }
+.status-chip { padding: 5px 6px; border-radius: 4px; font: 700 12px/1 var(--font-ui); letter-spacing: .035em; }
 .status-chip.connected { color: #58ddb1; background: rgba(70,231,178,.08); }
 .status-chip.disconnected { color: #ff707a; background: rgba(255,76,87,.1); }
 .inspector-section { padding: 5px 12px 12px; }
 .inspector-section + .inspector-section { padding-top: 12px; border-top: 1px solid #1e2631; }
-.inspector-section h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 9px; color: #7e8997; font: 700 10px/1 var(--font-ui); letter-spacing: .075em; text-transform: uppercase; }
+.inspector-section h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 9px; color: #7e8997; font: 700 12px/1 var(--font-ui); letter-spacing: .075em; text-transform: uppercase; }
 .metric-stack { overflow: hidden; border: 1px solid #222b36; border-radius: 7px; }
 .metric-row { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; min-height: 52px; padding: 0 10px; border-bottom: 1px solid #202833; background: #11161e; }
 .metric-row:last-child { border-bottom: 0; }
 .metric-icon { display: grid; width: 22px; height: 22px; place-items: center; color: #828d9a; }
-.metric-label { color: #707b89; font: 650 10px/1 var(--font-ui); letter-spacing: .05em; }
-.metric-value { margin-top: 5px; font: 650 14px/1 var(--font-ui); font-variant-numeric: tabular-nums; }
-.metric-subvalue { color: #687382; font: 600 10px/1 var(--font-ui); }
-.axis { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 4px; font: 800 10px/1 var(--font-ui); }
+.metric-label { color: #707b89; font: 650 12px/1 var(--font-ui); letter-spacing: .05em; }
+.metric-value { margin-top: 5px; font: 650 16px/1 var(--font-ui); font-variant-numeric: tabular-nums; }
+.metric-subvalue { color: #687382; font: 600 12px/1 var(--font-ui); }
+.axis { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 4px; font: 800 12px/1 var(--font-ui); }
 .axis-x { color: #ff707a; background: rgba(255,91,103,.1); }
 .axis-y { color: #5ce1b6; background: rgba(70,231,178,.1); }
 .vital-card { margin-top: 7px; padding: 10px; border: 1px solid #222b36; border-radius: 7px; background: #11161e; }
 .vital-header { display: flex; align-items: center; justify-content: space-between; }
-.vital-header > span { display: flex; align-items: center; gap: 6px; color: #778391; font: 650 10px/1 var(--font-ui); letter-spacing: .05em; }
-.vital-header strong { font: 650 13px/1 var(--font-ui); font-variant-numeric: tabular-nums; }
-.vital-header small { color: #687382; font-size: 10px; }
+.vital-header > span { display: flex; align-items: center; gap: 6px; color: #778391; font: 650 12px/1 var(--font-ui); letter-spacing: .05em; }
+.vital-header strong { font: 650 15px/1 var(--font-ui); font-variant-numeric: tabular-nums; }
+.vital-header small { color: #687382; font-size: 12px; }
 .value-bar { height: 4px; margin-top: 9px; overflow: hidden; border-radius: 8px; background: #242c36; }
 .value-bar span { display: block; height: 100%; border-radius: inherit; box-shadow: 0 0 8px currentColor; transition: width .2s ease; }
 .inspector-collapsed { align-items: center; gap: 7px; padding-top: 12px; }
