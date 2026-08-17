@@ -211,16 +211,6 @@ export function ControllerView({ currentTimeS, selectedInputIds }: ControllerVie
             ))}
           </g>
         </svg>
-
-        {inputs.length === 0 ? (
-          <div className="controller-empty-callout">
-            <span><Gamepad2 size={18} /></span>
-            <div>
-              <strong>Map controller inputs</strong>
-              <p>Open a robot’s Inputs folder, then drag channels into the panel on the right.</p>
-            </div>
-          </div>
-        ) : null}
       </div>
     </section>
   );

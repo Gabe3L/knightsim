@@ -7,6 +7,10 @@ declare global {
     readonly knightSim?: {
       readonly platform: string;
       readonly versions: { readonly electron: string };
+      readonly windowState: {
+        readonly isFullScreen: () => Promise<boolean>;
+        readonly onFullScreenChange: (listener: (isFullScreen: boolean) => void) => () => void;
+      };
       readonly robotModels: {
         readonly list: () => Promise<RobotModelLibrary>;
         readonly import: (robotId: RobotId) => Promise<RobotModelLibrary | null>;

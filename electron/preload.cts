@@ -3,6 +3,16 @@ import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('knightSim', {
   platform: process.platform,
   versions: Object.freeze({ electron: process.versions.electron }),
+  windowState: Object.freeze({
+    isFullScreen: () => ipcRenderer.invoke('window-state:is-full-screen'),
+    onFullScreenChange: (listener: (isFullScreen: boolean) => void) => {
+      const handleChange = (_event: Electron.IpcRendererEvent, isFullScreen: boolean): void => {
+        listener(isFullScreen);
+      };
+      ipcRenderer.on('window-state:full-screen-changed', handleChange);
+      return () => ipcRenderer.removeListener('window-state:full-screen-changed', handleChange);
+    },
+  }),
   robotModels: Object.freeze({
     list: () => ipcRenderer.invoke('robot-models:list'),
     import: (robotId: string) => ipcRenderer.invoke('robot-models:import', robotId),

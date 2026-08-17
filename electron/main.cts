@@ -309,6 +309,12 @@ function createWindow(): void {
     },
   });
 
+  const notifyFullScreenChange = (isFullScreen: boolean): void => {
+    window.webContents.send('window-state:full-screen-changed', isFullScreen);
+  };
+  window.on('enter-full-screen', () => notifyFullScreenChange(true));
+  window.on('leave-full-screen', () => notifyFullScreenChange(false));
+
   window.once('ready-to-show', () => window.show());
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('https://')) void shell.openExternal(url);
@@ -328,6 +334,9 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   if (isWindows) Menu.setApplicationMenu(null);
+  ipcMain.handle('window-state:is-full-screen', (event) => (
+    BrowserWindow.fromWebContents(event.sender)?.isFullScreen() ?? false
+  ));
   registerRobotModelIpc();
   void registerRobotModelProtocol();
   createWindow();

@@ -29,14 +29,21 @@ import { ControllerView } from './views/ControllerView';
 const clamp = (value: number, min: number, max: number): number => Math.max(min, Math.min(max, value));
 const DEFAULT_SIDEBAR_WIDTH = 292;
 const isWindows = window.knightSim?.platform === 'win32';
+const isMac = window.knightSim?.platform === 'darwin';
 // The macOS traffic lights start at x=16 and span roughly 52px. The extra room
 // keeps them comfortably contained instead of letting the resize edge crowd them.
-const MIN_SIDEBAR_WIDTH = isWindows ? 64 : 96;
+const COMPACT_SIDEBAR_WIDTH_WITH_WINDOW_CONTROLS = 96;
+const COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS = 64;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
 const CONTROLLER_SIDEBAR_WIDTH = 304;
 
 export function App() {
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const usesWindowsSidebarLayout = isWindows || (isMac && isFullScreen);
+  const minSidebarWidth = usesWindowsSidebarLayout
+    ? COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS
+    : COMPACT_SIDEBAR_WIDTH_WITH_WINDOW_CONTROLS;
   const [activeView, setActiveView] = useState<ViewMode>('2d');
   const [controllerInputIds, setControllerInputIds] = useState<readonly string[]>([]);
   const fieldViewActive = activeView === '2d' || activeView === '3d';
@@ -64,6 +71,27 @@ export function App() {
     odometryDebugAt(replay.currentTimeS),
   ), [fieldOverlayWorkspace.items, replay.currentTimeS]);
 
+  useEffect(() => {
+    const windowState = window.knightSim?.windowState;
+    if (!windowState) return;
+
+    let active = true;
+    void windowState.isFullScreen().then((nextIsFullScreen) => {
+      if (active) setIsFullScreen(nextIsFullScreen);
+    });
+    const unsubscribe = windowState.onFullScreenChange(setIsFullScreen);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    setSidebarWidth((currentWidth) => (
+      currentWidth < COMPACT_SIDEBAR_WIDTH ? minSidebarWidth : currentWidth
+    ));
+  }, [minSidebarWidth]);
+
   const startSidebarResize = useCallback((pointerX: number) => {
     sidebarDragStart.current = { pointerX, width: sidebarWidth };
     sidebarResizingRef.current = true;
@@ -73,27 +101,27 @@ export function App() {
   const resizeSidebar = useCallback((pointerX: number) => {
     if (!sidebarResizingRef.current) return;
     const nextWidth = sidebarDragStart.current.width + pointerX - sidebarDragStart.current.pointerX;
-    setSidebarWidth(clamp(nextWidth, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH));
-  }, []);
+    setSidebarWidth(clamp(nextWidth, minSidebarWidth, MAX_SIDEBAR_WIDTH));
+  }, [minSidebarWidth]);
 
   const stopSidebarResize = useCallback(() => {
     if (!sidebarResizingRef.current) return;
     sidebarResizingRef.current = false;
     setSidebarWidth((currentWidth) => {
-      if (currentWidth < COMPACT_SIDEBAR_WIDTH) return MIN_SIDEBAR_WIDTH;
+      if (currentWidth < COMPACT_SIDEBAR_WIDTH) return minSidebarWidth;
       expandedSidebarWidthRef.current = currentWidth;
       return currentWidth;
     });
     setSidebarResizing(false);
-  }, []);
+  }, [minSidebarWidth]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarWidth((currentWidth) => {
       if (currentWidth < COMPACT_SIDEBAR_WIDTH) return expandedSidebarWidthRef.current;
       expandedSidebarWidthRef.current = currentWidth;
-      return MIN_SIDEBAR_WIDTH;
+      return minSidebarWidth;
     });
-  }, []);
+  }, [minSidebarWidth]);
 
   const startFieldSidebarResize = useCallback((pointerX: number) => {
     fieldSidebarDragStart.current = { pointerX, width: fieldOverlayWorkspace.sidebarWidth };
@@ -149,8 +177,8 @@ export function App() {
   }, [activeView, fieldOverlayWorkspace.sidebarWidth]);
 
   const resizeSidebarByKeyboard = useCallback((nextWidth: number) => {
-    setSidebarWidth(clamp(nextWidth, MIN_SIDEBAR_WIDTH, MAX_SIDEBAR_WIDTH));
-  }, []);
+    setSidebarWidth(clamp(nextWidth, minSidebarWidth, MAX_SIDEBAR_WIDTH));
+  }, [minSidebarWidth]);
 
   const resizeFieldSidebarByKeyboard = useCallback((nextWidth: number) => {
     dispatchFieldOverlay({ type: 'set-sidebar-width', width: nextWidth });
@@ -177,7 +205,7 @@ export function App() {
     <div
       className={[
         'app-shell',
-        isWindows && 'app-shell-windows',
+        usesWindowsSidebarLayout && 'app-shell-windows',
         sidebarResizing && 'sidebar-is-resizing',
         fieldSidebarResizing && 'field-sidebar-is-resizing',
       ].filter(Boolean).join(' ')}
@@ -189,7 +217,7 @@ export function App() {
       <Sidebar
         compact={sidebarWidth < COMPACT_SIDEBAR_WIDTH}
         maxWidth={MAX_SIDEBAR_WIDTH}
-        minWidth={MIN_SIDEBAR_WIDTH}
+        minWidth={minSidebarWidth}
         robot={robot}
         currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
