@@ -1,0 +1,275 @@
+/* KnightSim brand layer: crimson energy and engineered silver. */
+
+body { background: #09080d; }
+
+.app-shell {
+  background:
+    radial-gradient(circle at 48% -18%, rgba(197, 200, 208, .075), transparent 40%),
+    radial-gradient(circle at 8% 112%, rgba(239, 71, 100, .07), transparent 34%),
+    #09080d;
+}
+
+.sidebar,
+.data-sidebar,
+.field-overlay-sidebar,
+.controller-input-sidebar {
+  border-color: #2c2934;
+  background: linear-gradient(180deg, #13111a 0%, #0d0c12 100%);
+}
+
+.sidebar-brand-row,
+.data-sidebar-header,
+.field-overlay-sidebar-header,
+.controller-input-sidebar-header {
+  border-color: #302c39;
+  background:
+    linear-gradient(90deg, rgba(239, 71, 100, .07), transparent 52%),
+    linear-gradient(180deg, #1a1722, #121019);
+}
+
+.sidebar-brand-row::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), rgba(197, 200, 208, .62), transparent 82%);
+  content: '';
+  opacity: .75;
+}
+
+.sidebar-brand-row { position: relative; }
+.brand-logo { filter: drop-shadow(0 0 10px rgba(239, 71, 100, .2)); }
+.brand-title { color: #f2f3f6; text-shadow: 0 0 20px rgba(197, 200, 208, .08); }
+
+.window-controls-bar,
+.sidebar-footer,
+.data-sidebar-toolbar,
+.field-overlay-sidebar-toolbar,
+.controller-input-sidebar-toolbar {
+  border-color: #292631;
+  background: rgba(15, 13, 20, .94);
+}
+
+.topbar {
+  border-color: #2b2834;
+  background: rgba(11, 9, 15, .91);
+}
+
+.view-tabs {
+  border-color: #332e40;
+  background: #0c0a10;
+  box-shadow: inset 0 1px 2px #050407, 0 0 0 1px rgba(197, 200, 208, .02);
+}
+
+.view-tab:hover { color: #d8d9df; background: #191620; }
+.view-tab:focus-visible { outline: 2px solid rgba(239, 71, 100, .78); outline-offset: 2px; }
+.view-tab-active {
+  color: #faf9fc;
+  background: linear-gradient(145deg, #2b2034, #211927) !important;
+  box-shadow: inset 0 0 0 1px rgba(239, 71, 100, .28), 0 4px 14px rgba(0, 0, 0, .32);
+}
+.view-tab-active svg { color: var(--accent); filter: drop-shadow(0 0 5px rgba(239, 71, 100, .36)); }
+
+.panel-heading,
+.telemetry-heading {
+  border-color: #292630;
+  background: linear-gradient(180deg, #17151e, #110f17);
+}
+
+.robot-node-toggle:hover,
+.topic-node-toggle:hover,
+.telemetry-field:hover { background: rgba(197, 200, 208, .045); }
+.telemetry-field-draggable:hover { background: rgba(239, 71, 100, .055); }
+.telemetry-field-draggable .field-branch { color: #d47a8d; }
+.telemetry-field-draggable:focus-visible { background: rgba(239, 71, 100, .08); }
+
+.tree-status.online { color: #b8bcc5; }
+.tree-status.online i,
+.connection-dot.online,
+.rail-status.online {
+  background: var(--silver);
+  box-shadow: 0 0 8px rgba(197, 200, 208, .5);
+}
+
+.data-sidebar-icon,
+.field-overlay-sidebar-icon,
+.controller-input-sidebar-icon,
+.line-graph-title-icon,
+.controller-stage-title > span {
+  border-color: rgba(197, 200, 208, .28);
+  color: #d2d5dc;
+  background: rgba(197, 200, 208, .075);
+  box-shadow: inset 0 0 12px rgba(197, 200, 208, .035);
+}
+
+.data-structure-card,
+.data-drop-zone,
+.field-overlay-row,
+.controller-input-row,
+.line-graph-legend-item {
+  border-color: #2d2936;
+  background: #131119;
+}
+
+.data-structure-card > header,
+.data-drop-zone > header {
+  border-color: #302c38;
+  background: #191620;
+}
+
+.data-structure-card > header svg,
+.data-drop-zone > header svg { color: var(--silver); }
+.data-drop-empty > svg { color: var(--accent); }
+
+.data-controller-slot-filled {
+  border-color: rgba(239, 71, 100, .25);
+  background: rgba(239, 71, 100, .045);
+}
+
+.data-robot-identity select:focus-visible,
+.data-color-category select:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(239, 71, 100, .12);
+}
+
+.sidebar-resize-handle:hover::after,
+.sidebar-resize-handle:focus-visible::after,
+.sidebar-is-resizing .sidebar-resize-handle::after,
+.field-overlay-sidebar-resize-handle:hover::after,
+.field-overlay-sidebar-resize-handle:focus-visible::after,
+.field-sidebar-is-resizing .field-overlay-sidebar-resize-handle::after,
+.field-overlay-sidebar-collapsed .field-overlay-sidebar-resize-handle::after {
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(239, 71, 100, .48);
+}
+
+.data-sidebar-grip:hover,
+.data-sidebar-grip:focus-visible,
+.data-sidebar-is-resizing .data-sidebar-grip {
+  border-color: rgba(239, 71, 100, .5);
+  color: var(--accent);
+  box-shadow: 0 0 14px rgba(239, 71, 100, .16);
+}
+
+.field-stage { background: #09080d; }
+.field-overlay,
+.field-hint { border-color: rgba(155, 148, 168, .34); background: rgba(10, 8, 14, .76); }
+
+.line-graph-stage {
+  background:
+    radial-gradient(circle at 50% -25%, rgba(239, 71, 100, .085), transparent 48%),
+    #09080d;
+}
+.line-graph-toolbar { border-color: #292631; background: rgba(15, 13, 20, .9); }
+.line-graph-legend { border-color: #27232e; background: rgba(12, 10, 16, .8); }
+.line-graph-chart { border-color: #2d2936; background: rgba(10, 8, 13, .94); }
+.graph-plot-background { fill: #0d0b12; stroke: #2c2834; }
+.graph-grid-line { stroke: #292531; }
+.graph-time-grid { stroke: #211e28; }
+.graph-current-cursor { stroke: var(--accent); }
+.graph-current-point { stroke: #13090d; }
+
+.controller-stage {
+  background:
+    radial-gradient(circle at 50% 32%, rgba(197, 200, 208, .07), transparent 43%),
+    linear-gradient(180deg, #0d0b12, #09080d);
+}
+.controller-stage-header { border-color: #292631; background: rgba(15, 13, 20, .9); }
+.controller-live-status-active { border-color: rgba(239, 71, 100, .3); color: #f17b8f; background: rgba(239, 71, 100, .07); }
+.controller-live-status-active svg { filter: drop-shadow(0 0 4px rgba(239, 71, 100, .58)); }
+.controller-canvas::after { border-color: rgba(197, 200, 208, .2); }
+.controller-ambient-glow { background: rgba(197, 200, 208, .075); }
+.remote-record-mark { fill: var(--accent); }
+.remote-input-mapped .remote-small-label,
+.remote-input-mapped .remote-control-label,
+.remote-input-mapped .remote-button-text { fill: #b93450; }
+.remote-input-mapped .remote-face-button,
+.remote-input-mapped .remote-custom-button,
+.remote-input-mapped .remote-side-control,
+.remote-input-mapped .remote-stick-bezel { stroke: var(--accent); }
+.controller-input-row { --input-color: #ef4764; }
+.controller-input-row-sentry { --input-color: #c5c8d0; }
+.controller-input-row-hero { --input-color: #c5c8d0; }
+
+.timeline {
+  border-color: #302c39;
+  background: linear-gradient(180deg, #17141d, #100e15);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, .28), inset 0 1px rgba(197, 200, 208, .025);
+}
+.play-button {
+  border-color: #ff6a80;
+  color: #1b070d;
+  background: linear-gradient(145deg, #ff617a, #df3857);
+  box-shadow: 0 0 20px rgba(239, 71, 100, .22);
+}
+.scrubber-fill {
+  background: linear-gradient(90deg, #c5c8d0, #ef4764 72%, #ff7087);
+  box-shadow: 0 0 9px rgba(239, 71, 100, .3);
+}
+.event-tick { background: #c5c8d0; }
+.tick-b { background: #ef4764; }
+
+.rail-tool-active {
+  color: var(--silver);
+  border-color: rgba(197, 200, 208, .26);
+  background: rgba(197, 200, 208, .075);
+}
+.axis-y { color: #d2d5dc; background: rgba(197, 200, 208, .1); }
+.status-chip.connected { color: #c5c8d0; background: rgba(197, 200, 208, .09); }
+
+.settings-backdrop {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(239, 71, 100, .13), transparent 46%),
+    rgba(4, 3, 7, .87);
+}
+.settings-dialog {
+  --settings-surface: #141119;
+  --settings-surface-raised: #1a1621;
+  --settings-input: #0d0b11;
+  --settings-line: #312c3a;
+  --settings-soft-line: rgba(197, 200, 208, .1);
+  border-color: #3b3447;
+  background: #0f0d13;
+}
+.settings-dialog::before { background: linear-gradient(90deg, transparent, var(--accent), var(--silver), transparent); }
+.settings-header {
+  background:
+    radial-gradient(circle at 50% -90px, rgba(239, 71, 100, .11), transparent 220px),
+    linear-gradient(180deg, #1c1824, #15121b);
+}
+.settings-content { background: radial-gradient(circle at 50% -80px, rgba(239, 71, 100, .055), transparent 320px), #0f0d13; }
+.settings-page-tabs button.active {
+  color: #fff8fa;
+  background: linear-gradient(135deg, rgba(239, 71, 100, .24), rgba(197, 200, 208, .1));
+  box-shadow: 0 0 0 1px rgba(239, 71, 100, .3) inset;
+}
+.robot-picker button.active {
+  color: #fff8fa;
+  border-color: rgba(239, 71, 100, .55);
+  background: linear-gradient(135deg, #3a1823, #25172e);
+  box-shadow: 0 0 0 1px rgba(197, 200, 208, .08) inset, 0 8px 24px rgba(0, 0, 0, .18);
+}
+.robot-picker button.active small { color: #c8a7b4; }
+.settings-input:focus,
+.settings-select:focus,
+.input-with-icon:focus-within,
+.number-input:focus-within { border-color: rgba(239, 71, 100, .78); box-shadow: 0 0 0 3px rgba(239, 71, 100, .11); }
+.primary-button { border-color: #ff6078; color: #1b070d; background: #ef4764; box-shadow: 0 6px 20px rgba(239, 71, 100, .17); }
+.primary-button:hover:not(:disabled) { background: #ff637b; }
+.model-loading-dot { box-shadow: 0 0 10px rgba(239, 71, 100, .7); }
+.segmented-controls button:hover:not(:disabled),
+.segmented-controls button.pressed { color: #fff9fb; background: #412031; }
+.settings-toggle.checked { border-color: #db3f5b; background: #4a1e2a; }
+.connection-summary { border-color: #3a2a38; background: linear-gradient(100deg, #24151d, #16131c 68%); }
+.connection-icon { border-color: #673045; color: var(--accent); background: #301823; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .view-tab,
+  .play-button,
+  .sidebar-settings,
+  .data-structure-card,
+  .field-overlay-row,
+  .controller-input-row { transition: color .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
+  .play-button:hover { transform: translateY(-1px); box-shadow: 0 0 25px rgba(239, 71, 100, .3); }
+}

@@ -100,14 +100,14 @@ export const FIELD_OVERLAY_SOURCES: readonly FieldOverlaySourceDescriptor[] = [
     name: 'IMU prediction',
     source: 'IMU · Motion model',
     kind: 'imu',
-    defaultColor: '#b28cff',
+    defaultColor: '#c5c8d0',
   },
   {
     id: 'infantry.odometry.fused',
     name: 'Final fused pose',
     source: 'Odometry · Fused',
     kind: 'fused',
-    defaultColor: '#62e7bc',
+    defaultColor: '#ef4764',
   },
   {
     id: 'infantry.odometry.ground-truth',

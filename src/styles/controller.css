@@ -139,7 +139,7 @@
 
 .controller-input-row { --input-color: #62e7bc; display: grid; min-height: 55px; grid-template-columns: 3px minmax(0, 1fr) auto 26px; align-items: center; gap: 8px; margin-bottom: 4px; padding: 6px 5px 6px 0; border: 1px solid #232c37; border-radius: 7px; background: #111820; transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease; }
 .controller-input-row-sentry { --input-color: #f0b35a; }
-.controller-input-row-hero { --input-color: #b98fe9; }
+.controller-input-row-hero { --input-color: #c5c8d0; }
 .controller-input-row:hover { border-color: #303b48; background: #151d26; }
 .controller-input-row > i { width: 3px; height: 100%; min-height: 39px; border-radius: 0 3px 3px 0; background: var(--input-color); opacity: .56; }
 .controller-input-row-active { border-color: color-mix(in srgb, var(--input-color) 34%, #27313c); box-shadow: inset 0 0 16px color-mix(in srgb, var(--input-color) 5%, transparent); }
