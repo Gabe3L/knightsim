@@ -618,8 +618,8 @@ export function SettingsDialog({
                     <strong>Toggle sidebar</strong>
                     <span>Switch the left sidebar between its narrow rail and last expanded width.</span>
                   </div>
-                  <div className="keybinding-keys" aria-label="Control plus B">
-                    <kbd>Ctrl</kbd>
+                  <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command' : 'Control'} plus B`}>
+                    <kbd>{window.knightSim?.platform === 'darwin' ? 'Command' : 'Ctrl'}</kbd>
                     <span>+</span>
                     <kbd>B</kbd>
                   </div>
@@ -629,8 +629,8 @@ export function SettingsDialog({
                     <strong>Toggle field overlays</strong>
                     <span>Open or collapse the field-overlay sidebar in 2D and 3D views.</span>
                   </div>
-                  <div className="keybinding-keys" aria-label={`Control plus ${window.knightSim?.platform === 'darwin' ? 'Option' : 'Alt'} plus B`}>
-                    <kbd>Ctrl</kbd>
+                  <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command plus Option' : 'Control plus Alt'} plus B`}>
+                    <kbd>{window.knightSim?.platform === 'darwin' ? 'Command' : 'Ctrl'}</kbd>
                     <span>+</span>
                     <kbd>{window.knightSim?.platform === 'darwin' ? 'Option' : 'Alt'}</kbd>
                     <span>+</span>

@@ -168,7 +168,7 @@ export function FieldOverlaySidebar({
             <button
               type="button"
               aria-label="Collapse field overlays sidebar"
-              title="Collapse field overlays sidebar (Ctrl+Alt+B)"
+              title={`Collapse field overlays sidebar (${window.knightSim?.platform === 'darwin' ? 'Command+Option+B' : 'Ctrl+Alt+B'})`}
               onClick={onCollapse}
             >
               <PanelRightClose size={15} />
@@ -251,7 +251,9 @@ export function FieldOverlaySidebar({
         aria-valuemax={maxWidth}
         aria-valuemin={minWidth}
         aria-valuenow={Math.round(width)}
-        title={collapsed ? 'Drag to open field overlays (Ctrl+Alt+B)' : 'Drag to resize field overlays'}
+        title={collapsed
+          ? `Drag to open field overlays (${window.knightSim?.platform === 'darwin' ? 'Command+Option+B' : 'Ctrl+Alt+B'})`
+          : 'Drag to resize field overlays'}
         onDoubleClick={collapsed ? onExpand : onCollapse}
         onKeyDown={handleResizeKeyDown}
         onLostPointerCapture={onResizeEnd}

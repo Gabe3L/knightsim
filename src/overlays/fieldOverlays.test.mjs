@@ -6,6 +6,7 @@ import {
   defaultFieldOverlayWorkspaceState,
   fieldOverlayWorkspaceReducer,
   isFieldSidebarShortcut,
+  isLeftSidebarShortcut,
   parseFieldOverlayWorkspace,
   readFieldOverlayDragId,
   resolveFieldOverlays,
@@ -26,6 +27,34 @@ test('Ctrl+Alt+B toggles field overlays except while typing', () => {
   assert.equal(isFieldSidebarShortcut({ ...shortcut, target: { tagName: 'INPUT' } }), false);
   assert.equal(isFieldSidebarShortcut({ ...shortcut, target: { isContentEditable: true } }), false);
   assert.equal(isFieldSidebarShortcut({ ...shortcut, altKey: false }), false);
+});
+
+test('Command+Option+B toggles field overlays on macOS without changing Windows shortcuts', () => {
+  const macShortcut = {
+    ctrlKey: false,
+    altKey: true,
+    metaKey: true,
+    code: 'KeyB',
+    repeat: false,
+    target: null,
+  };
+  assert.equal(isFieldSidebarShortcut(macShortcut, 'darwin'), true);
+  assert.equal(isFieldSidebarShortcut(macShortcut, 'win32'), false);
+  assert.equal(isFieldSidebarShortcut({ ...macShortcut, ctrlKey: true }, 'darwin'), false);
+});
+
+test('Command+B toggles the left sidebar on macOS and Ctrl+B remains the Windows shortcut', () => {
+  const macShortcut = {
+    ctrlKey: false,
+    altKey: false,
+    metaKey: true,
+    code: 'KeyB',
+    repeat: false,
+    target: null,
+  };
+  assert.equal(isLeftSidebarShortcut(macShortcut, 'darwin'), true);
+  assert.equal(isLeftSidebarShortcut(macShortcut, 'win32'), false);
+  assert.equal(isLeftSidebarShortcut({ ...macShortcut, ctrlKey: true, metaKey: false }), true);
 });
 
 test('a supported field-overlay drag payload is accepted', () => {

@@ -123,10 +123,11 @@ export function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (isFieldSidebarShortcut(event) && activeView !== 'graph') {
+      const platform = window.knightSim?.platform ?? 'win32';
+      if (isFieldSidebarShortcut(event, platform) && activeView !== 'graph') {
         event.preventDefault();
         dispatchFieldOverlay({ type: 'toggle-sidebar' });
-      } else if (isLeftSidebarShortcut(event)) {
+      } else if (isLeftSidebarShortcut(event, platform)) {
         event.preventDefault();
         toggleSidebar();
       }

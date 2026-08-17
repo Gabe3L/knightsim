@@ -281,10 +281,12 @@ function isEditableTarget(target: EventTarget | null): boolean {
 export function isFieldSidebarShortcut(event: Pick<
   KeyboardEvent,
   'altKey' | 'code' | 'ctrlKey' | 'metaKey' | 'repeat' | 'target'
->): boolean {
-  return event.ctrlKey
+>, platform: string = 'win32'): boolean {
+  const primaryModifierPressed = platform === 'darwin' ? event.metaKey : event.ctrlKey;
+  const otherPrimaryModifierPressed = platform === 'darwin' ? event.ctrlKey : event.metaKey;
+  return primaryModifierPressed
     && event.altKey
-    && !event.metaKey
+    && !otherPrimaryModifierPressed
     && event.code === 'KeyB'
     && !event.repeat
     && !isEditableTarget(event.target);
@@ -293,10 +295,12 @@ export function isFieldSidebarShortcut(event: Pick<
 export function isLeftSidebarShortcut(event: Pick<
   KeyboardEvent,
   'altKey' | 'code' | 'ctrlKey' | 'metaKey' | 'repeat' | 'target'
->): boolean {
-  return event.ctrlKey
+>, platform: string = 'win32'): boolean {
+  const primaryModifierPressed = platform === 'darwin' ? event.metaKey : event.ctrlKey;
+  const otherPrimaryModifierPressed = platform === 'darwin' ? event.ctrlKey : event.metaKey;
+  return primaryModifierPressed
     && !event.altKey
-    && !event.metaKey
+    && !otherPrimaryModifierPressed
     && event.code === 'KeyB'
     && !event.repeat
     && !isEditableTarget(event.target);
