@@ -1,4 +1,4 @@
-import { Box, ChartLine, CircleDot, Gamepad2 } from 'lucide-react';
+import { Box, ChartLine, Gamepad2 } from 'lucide-react';
 import type { ViewMode } from '../types';
 
 interface TopBarProps {
@@ -11,20 +11,12 @@ export function TopBar({ activeView, onViewChange }: TopBarProps) {
     <header className="topbar">
       <nav className="view-tabs" aria-label="Workspace views">
         <button
-          className={activeView === '2d' ? 'view-tab view-tab-active' : 'view-tab'}
+          className={activeView === 'field' ? 'view-tab view-tab-active' : 'view-tab'}
           type="button"
-          onClick={() => onViewChange('2d')}
-        >
-          <CircleDot size={15} />
-          2D
-        </button>
-        <button
-          className={activeView === '3d' ? 'view-tab view-tab-active' : 'view-tab'}
-          type="button"
-          onClick={() => onViewChange('3d')}
+          onClick={() => onViewChange('field')}
         >
           <Box size={15} />
-          3D
+          Field
         </button>
         <button
           className={activeView === 'graph' ? 'view-tab view-tab-active' : 'view-tab'}

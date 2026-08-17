@@ -1,4 +1,4 @@
-export type ViewMode = '2d' | '3d' | 'graph' | 'controller';
+export type ViewMode = 'field' | 'graph' | 'controller';
 
 export type RobotId = 'sentry' | 'infantry' | 'hero';
 
@@ -46,7 +46,6 @@ export interface CameraState {
   readonly targetXM: number;
   readonly targetYM: number;
   readonly zoom: number;
-  readonly followRobot: boolean;
 }
 
 export interface ReplayFrame {

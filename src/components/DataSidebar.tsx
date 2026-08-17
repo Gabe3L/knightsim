@@ -95,8 +95,7 @@ const fieldOverlayStatus = (overlay: ResolvedFieldOverlay): string => {
 
 const viewLabel = (view: ViewMode): string => {
   switch (view) {
-    case '2d': return '2D field data';
-    case '3d': return '3D field data';
+    case 'field': return 'Field data';
     case 'graph': return 'Line graph data';
     case 'controller': return 'Controller data';
   }
@@ -141,7 +140,7 @@ export function DataSidebar({
   onToggleOverlayVisibility,
 }: DataSidebarProps) {
   const [dropActive, setDropActive] = useState(false);
-  const fieldView = view === '2d' || view === '3d';
+  const fieldView = view === 'field';
   const graphItems = useMemo(() => graphSignals.flatMap((config) => {
     const descriptor = graphSignalById(config.id);
     return descriptor ? [{ config, descriptor }] : [];

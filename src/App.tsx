@@ -25,8 +25,7 @@ import {
   type GraphSignalConfig,
 } from './telemetry/graphSignals';
 import type { CameraState, RobotCategory, RobotId, ViewMode } from './types';
-import { Field2D } from './views/Field2D';
-import { Field3D } from './views/Field3D';
+import { Field } from './views/Field';
 import { LineGraph } from './views/LineGraph';
 import { ControllerView } from './views/ControllerView';
 
@@ -40,6 +39,11 @@ const COMPACT_SIDEBAR_WIDTH_WITH_WINDOW_CONTROLS = 96;
 const COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS = 64;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
+const DEFAULT_CAMERA: CameraState = {
+  targetXM: ARCC_2026_FIELD.size.lengthM / 2,
+  targetYM: ARCC_2026_FIELD.size.widthM / 2,
+  zoom: 1,
+};
 
 export function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -47,7 +51,7 @@ export function App() {
   const minSidebarWidth = usesWindowsSidebarLayout
     ? COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS
     : COMPACT_SIDEBAR_WIDTH_WITH_WINDOW_CONTROLS;
-  const [activeView, setActiveView] = useState<ViewMode>('2d');
+  const [activeView, setActiveView] = useState<ViewMode>('field');
   const [controllerInputIds, setControllerInputIds] = useState<readonly string[]>([]);
   const [graphSignals, setGraphSignals] = useState<readonly GraphSignalConfig[]>([]);
   const [robotCategories, setRobotCategories] = useState<Readonly<Record<RobotId, RobotCategory>>>({
@@ -64,12 +68,6 @@ export function App() {
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
   const dataSidebarResizingRef = useRef(false);
   const dataSidebarDragStart = useRef({ pointerX: 0, width: 0 });
-  const [camera, setCamera] = useState<CameraState>({
-    targetXM: ARCC_2026_FIELD.size.lengthM / 2,
-    targetYM: ARCC_2026_FIELD.size.widthM / 2,
-    zoom: 1,
-    followRobot: false,
-  });
   const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
   const robotModels = useRobotModels();
   const { state: fieldOverlayWorkspace, dispatch: dispatchFieldOverlay } = useFieldOverlayWorkspace();
@@ -245,7 +243,7 @@ export function App() {
         onAddFieldOverlay={(id) => {
           dispatchFieldOverlay({ type: 'add', id });
           dispatchFieldOverlay({ type: 'expand-sidebar' });
-          setActiveView('2d');
+          setActiveView('field');
         }}
         onOpenSettings={() => setSettingsOpen(true)}
         onResize={resizeSidebar}
@@ -260,16 +258,10 @@ export function App() {
         />
         <main className="workspace">
           <div
-            className={activeView === '2d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
-            aria-hidden={activeView !== '2d'}
+            className={activeView === 'field' ? 'workspace-view workspace-view-active' : 'workspace-view'}
+            aria-hidden={activeView !== 'field'}
           >
-            <Field2D robot={categorizedRobot} camera={camera} overlays={fieldOverlays} onCameraChange={setCamera} />
-          </div>
-          <div
-            className={activeView === '3d' ? 'workspace-view workspace-view-active' : 'workspace-view'}
-            aria-hidden={activeView !== '3d'}
-          >
-            <Field3D robot={categorizedRobot} camera={camera} overlays={fieldOverlays} model={robotModels.modelForRobot(robot.robotId)} />
+            <Field robot={categorizedRobot} camera={DEFAULT_CAMERA} overlays={fieldOverlays} model={robotModels.modelForRobot(robot.robotId)} />
           </div>
           <div
             className={activeView === 'graph' ? 'workspace-view workspace-view-active' : 'workspace-view'}

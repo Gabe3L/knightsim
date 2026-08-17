@@ -371,7 +371,7 @@ export function SettingsDialog({
                   </div>
                 </div>
 
-                <SettingRow label="Robot model" description="GLB model used by the 3D field viewer.">
+                <SettingRow label="Robot model" description="GLB model used by the Field viewer.">
                   <div className="model-select-row">
                     <select
                       className="settings-select model-dropdown"
@@ -459,7 +459,7 @@ export function SettingsDialog({
                   </div>
                 ) : (
                   <div className="model-inline-empty">
-                    <Box size={18} /> Import an uncompressed glTF 2.0 binary to preview this robot in 3D.
+                    <Box size={18} /> Import an uncompressed glTF 2.0 binary to preview this robot in the Field view.
                   </div>
                 )}
               </section>
@@ -627,7 +627,7 @@ export function SettingsDialog({
                 <div className="keybinding-row">
                   <div className="keybinding-copy">
                     <strong>Toggle field overlays</strong>
-                    <span>Open or collapse the field-overlay sidebar in 2D and 3D views.</span>
+                    <span>Open or collapse the field-overlay sidebar in Field view.</span>
                   </div>
                   <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command plus Option' : 'Control plus Alt'} plus B`}>
                     <kbd>{window.knightSim?.platform === 'darwin' ? 'Command' : 'Ctrl'}</kbd>

@@ -103,18 +103,6 @@ test('visibility, removal, and ordering update the shared overlay list', () => {
   assert.deepEqual(removed.items.map((item) => item.id), ['infantry.odometry.lidar']);
 });
 
-test('2D to 3D to 2D switching does not scope or recreate overlay configuration', () => {
-  const state = reduce(
-    defaultFieldOverlayWorkspaceState(),
-    { type: 'add', id: 'infantry.odometry.apriltag.12' },
-    { type: 'toggle-visibility', id: 'infantry.odometry.apriltag.12' },
-  );
-  const views = ['2d', '3d', '2d'];
-  const configsSeenByEachRenderer = views.map(() => state.items);
-  assert.ok(configsSeenByEachRenderer.every((items) => items === state.items));
-  assert.equal(state.items[0].visible, false);
-});
-
 test('temporarily missing source data retains an unavailable overlay entry', () => {
   const state = fieldOverlayWorkspaceReducer(defaultFieldOverlayWorkspaceState(), {
     type: 'add',

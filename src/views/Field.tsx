@@ -33,7 +33,7 @@ import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
 import { robotRenderProfile } from "../telemetry/robotCategories";
 import type { CameraState, RobotModelRecord, RobotTelemetry } from "../types";
 
-interface Field3DProps {
+interface FieldProps {
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
   readonly model: RobotModelRecord | null;
@@ -442,7 +442,7 @@ const UploadedRobot = memo(function UploadedRobot({
   );
 });
 
-function Robot({ robot, model }: Pick<Field3DProps, "robot" | "model">) {
+function Robot({ robot, model }: Pick<FieldProps, "robot" | "model">) {
   return (
     <group
       name={`robot:${robot.category}`}
@@ -566,7 +566,7 @@ function FieldOverlayPrimitive({
           ) : null}
           {descriptor.tagId !== undefined ? (
             <Html center position={[worldX(pose.xM), layerY + 0.23, worldZ(pose.yM)]}>
-              <span className="field-overlay-3d-label" style={{ color }}>TAG {descriptor.tagId}</span>
+              <span className="field-overlay-label" style={{ color }}>TAG {descriptor.tagId}</span>
             </Html>
           ) : null}
         </>
@@ -575,7 +575,7 @@ function FieldOverlayPrimitive({
   );
 }
 
-function FieldOverlays3D({ overlays }: Pick<Field3DProps, 'overlays'>) {
+function FieldOverlays({ overlays }: Pick<FieldProps, 'overlays'>) {
   return overlays.map((overlay, index) => (
     <FieldOverlayPrimitive key={overlay.id} overlay={overlay} layerIndex={index} />
   ));
@@ -827,7 +827,7 @@ const Arena = memo(function Arena() {
   );
 });
 
-function AdaptiveReplayQuality({ robot }: Pick<Field3DProps, "robot">) {
+function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   const regress = useThree((state) => state.performance.regress);
   const initialDpr = useThree((state) => state.viewport.initialDpr);
 
@@ -838,10 +838,10 @@ function AdaptiveReplayQuality({ robot }: Pick<Field3DProps, "robot">) {
   return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
-export function Field3D({ robot, camera, model, overlays }: Field3DProps) {
+export function Field({ robot, camera, model, overlays }: FieldProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   return (
-    <div className="field-stage field-stage-3d">
+    <div className="field-stage">
       <Canvas
         shadows
         frameloop="demand"
@@ -868,7 +868,7 @@ export function Field3D({ robot, camera, model, overlays }: Field3DProps) {
         />
         <Arena />
         <Robot robot={robot} model={model} />
-        <FieldOverlays3D overlays={overlays} />
+        <FieldOverlays overlays={overlays} />
         <AdaptiveReplayQuality robot={robot} />
         <OrbitControls
           makeDefault
@@ -885,7 +885,7 @@ export function Field3D({ robot, camera, model, overlays }: Field3DProps) {
         <span className="eyebrow">PERSPECTIVE CAMERA</span>
         <strong>ARCC 2026 · METRES</strong>
       </div>
-      <div className="three-hint">
+      <div className="field-hint">
         <Crosshair size={13} /> Orbit · scroll to zoom · right-drag to pan
       </div>
     </div>
