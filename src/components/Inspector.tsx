@@ -27,6 +27,7 @@ interface InspectorProps {
   readonly collapsed?: boolean;
   readonly onAddControllerInput: (id: string) => void;
   readonly onAddFieldOverlay: (id: string) => void;
+  readonly onAddGraphSignal: (id: string) => void;
 }
 
 interface TelemetryField {
@@ -187,6 +188,7 @@ export function Inspector({
   collapsed = false,
   onAddControllerInput,
   onAddFieldOverlay,
+  onAddGraphSignal,
 }: InspectorProps) {
   const [expandedRobots, setExpandedRobots] = useState<ReadonlySet<string>>(() => new Set(['infantry']));
   const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set(['infantry:inputs']));
@@ -309,21 +311,24 @@ export function Inspector({
                                 title={field.controllerInputId
                                   ? 'Drag onto Controller Inputs or double-click to monitor'
                                   : field.graphSignalId
-                                  ? 'Drag onto Line Graph'
+                                  ? 'Drag into Graph Signals or double-click to graph'
                                   : field.fieldOverlayId
                                     ? 'Drag onto Field Overlays or double-click to display'
                                     : undefined}
-                                tabIndex={field.controllerInputId || field.fieldOverlayId ? 0 : undefined}
+                                tabIndex={field.controllerInputId || field.graphSignalId || field.fieldOverlayId ? 0 : undefined}
                                 onDoubleClick={field.controllerInputId
                                   ? () => onAddControllerInput(field.controllerInputId!)
+                                  : field.graphSignalId
+                                    ? () => onAddGraphSignal(field.graphSignalId!)
                                   : field.fieldOverlayId
                                     ? () => onAddFieldOverlay(field.fieldOverlayId!)
                                     : undefined}
-                                onKeyDown={field.controllerInputId || field.fieldOverlayId
+                                onKeyDown={field.controllerInputId || field.graphSignalId || field.fieldOverlayId
                                   ? (event) => {
                                     if (event.key !== 'Enter') return;
                                     event.preventDefault();
                                     if (field.controllerInputId) onAddControllerInput(field.controllerInputId);
+                                    else if (field.graphSignalId) onAddGraphSignal(field.graphSignalId);
                                     else onAddFieldOverlay(field.fieldOverlayId!);
                                   }
                                   : undefined}

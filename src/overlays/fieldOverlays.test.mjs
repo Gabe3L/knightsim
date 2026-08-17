@@ -6,6 +6,7 @@ import {
   defaultFieldOverlayWorkspaceState,
   fieldOverlayWorkspaceReducer,
   isFieldSidebarShortcut,
+  isRightSidebarShortcut,
   isLeftSidebarShortcut,
   parseFieldOverlayWorkspace,
   readFieldOverlayDragId,
@@ -14,7 +15,7 @@ import {
 
 const reduce = (state, ...actions) => actions.reduce(fieldOverlayWorkspaceReducer, state);
 
-test('Ctrl+Alt+B toggles field overlays except while typing', () => {
+test('Ctrl+Alt+B toggles the shared right sidebar except while typing', () => {
   const shortcut = {
     ctrlKey: true,
     altKey: true,
@@ -27,6 +28,7 @@ test('Ctrl+Alt+B toggles field overlays except while typing', () => {
   assert.equal(isFieldSidebarShortcut({ ...shortcut, target: { tagName: 'INPUT' } }), false);
   assert.equal(isFieldSidebarShortcut({ ...shortcut, target: { isContentEditable: true } }), false);
   assert.equal(isFieldSidebarShortcut({ ...shortcut, altKey: false }), false);
+  assert.equal(isRightSidebarShortcut(shortcut), true);
 });
 
 test('Command+Option+B toggles field overlays on macOS without changing Windows shortcuts', () => {

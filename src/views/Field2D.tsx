@@ -2,6 +2,7 @@ import { LocateFixed, ZoomIn, ZoomOut } from 'lucide-react';
 import { useMemo } from 'react';
 import { ARCC_2026_FIELD, teamColor } from '../field/fieldSpec';
 import type { ResolvedFieldOverlay } from '../overlays/fieldOverlays';
+import { robotRenderProfile } from '../telemetry/robotCategories';
 import type { CameraState, RobotTelemetry } from '../types';
 
 interface Field2DProps {
@@ -123,6 +124,7 @@ const barrierPoints = (
 };
 
 export function Field2D({ robot, camera, overlays, onCameraChange }: Field2DProps) {
+  const robotProfile = robotRenderProfile(robot.category);
   const viewBox = useMemo(() => {
     const width = 12.7 / camera.zoom;
     const height = 8.7 / camera.zoom;
@@ -308,10 +310,11 @@ export function Field2D({ robot, camera, overlays, onCameraChange }: Field2DProp
         <g
           transform={`translate(${robot.xM} ${fieldY(robot.yM)}) rotate(${-robot.yawDeg})`}
           filter="url(#robot-glow)"
-          className="robot-glyph"
+          className={`robot-glyph robot-glyph-${robot.category}`}
+          data-robot-category={robot.category}
         >
-          <circle r="0.34" fill="#ff4655" fillOpacity=".14" stroke="#ff5b66" strokeWidth=".025" />
-          <rect x="-0.23" y="-0.2" width="0.46" height="0.4" rx=".055" fill="#df3341" stroke="#ff9299" strokeWidth=".03" />
+          <circle r="0.34" fill={robotProfile.halo} fillOpacity=".14" stroke={robotProfile.haloStroke} strokeWidth=".025" />
+          <rect x="-0.23" y="-0.2" width="0.46" height="0.4" rx=".055" fill={robotProfile.body} stroke={robotProfile.bodyStroke} strokeWidth=".03" />
           <path d="M .08 -.11 L .32 0 L .08 .11 Z" fill="#fff" />
           <circle r=".055" fill="#0c1118" />
         </g>

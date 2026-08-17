@@ -14,13 +14,19 @@ import {
 } from 'react';
 import {
   GRAPH_SIGNAL_DRAG_TYPE,
+  graphColorForCategory,
   graphSignalById,
+  type GraphSignalConfig,
   type GraphSignalDescriptor,
 } from '../telemetry/graphSignals';
 import type { ReplayState } from '../types';
 
 interface LineGraphProps {
   readonly replay: ReplayState;
+  readonly signals: readonly GraphSignalConfig[];
+  readonly onAddSignal: (id: string) => void;
+  readonly onClearSignals: () => void;
+  readonly onRemoveSignal: (id: string) => void;
   readonly onSeek: (timeS: number) => void;
 }
 
@@ -96,9 +102,15 @@ function pathFor(
   }).join(' ');
 }
 
-export function LineGraph({ replay, onSeek }: LineGraphProps) {
+export function LineGraph({
+  replay,
+  signals,
+  onAddSignal,
+  onClearSignals,
+  onRemoveSignal,
+  onSeek,
+}: LineGraphProps) {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [selectedSignalIds, setSelectedSignalIds] = useState<readonly string[]>([]);
   const [dropActive, setDropActive] = useState(false);
   const [hoverTimeS, setHoverTimeS] = useState<number | null>(null);
   const [chartSize, setChartSize] = useState<ChartSize>({ width: 900, height: 500 });
@@ -122,10 +134,14 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
   }, []);
 
   const selectedSignals = useMemo(() => (
-    selectedSignalIds
-      .map(graphSignalById)
+    signals
+      .map((signal) => graphSignalById(signal.id))
       .filter((descriptor): descriptor is GraphSignalDescriptor => descriptor !== null)
-  ), [selectedSignalIds]);
+  ), [signals]);
+  const signalColorById = useMemo(() => new Map(signals.map((signal) => [
+    signal.id,
+    graphColorForCategory(signal.colorCategory),
+  ])), [signals]);
 
   const times = useMemo(() => {
     const sampleCount = Math.max(2, Math.min(720, Math.ceil(replay.durationS * 6) + 1));
@@ -192,11 +208,7 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
     setDropActive(false);
     const signalId = event.dataTransfer.getData(GRAPH_SIGNAL_DRAG_TYPE);
     if (!graphSignalById(signalId)) return;
-    setSelectedSignalIds((current) => current.includes(signalId) ? current : [...current, signalId]);
-  };
-
-  const removeSignal = (signalId: string): void => {
-    setSelectedSignalIds((current) => current.filter((id) => id !== signalId));
+    onAddSignal(signalId);
   };
 
   return (
@@ -221,7 +233,7 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
           className="line-graph-clear"
           type="button"
           disabled={selectedSignals.length === 0}
-          onClick={() => setSelectedSignalIds([])}
+          onClick={onClearSignals}
         >
           <Trash2 size={13} /> Clear
         </button>
@@ -231,7 +243,7 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
         <div className="line-graph-legend" aria-label="Graphed telemetry">
           {selectedSignals.map((descriptor) => (
             <div className="line-graph-legend-item" key={descriptor.id}>
-              <i style={{ background: descriptor.color }} />
+              <i style={{ background: signalColorById.get(descriptor.id) ?? descriptor.color }} />
               <span className="line-graph-legend-name">
                 <strong>{descriptor.robotName} · {descriptor.label}</strong>
                 <small>{descriptor.topic}</small>
@@ -239,7 +251,7 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
               <span className="line-graph-legend-value">
                 {descriptor.format(descriptor.sampleAt(displayTimeS))}
               </span>
-              <button type="button" onClick={() => removeSignal(descriptor.id)} aria-label={`Remove ${descriptor.robotName} ${descriptor.label}`}>
+              <button type="button" onClick={() => onRemoveSignal(descriptor.id)} aria-label={`Remove ${descriptor.robotName} ${descriptor.label}`}>
                 <X size={12} />
               </button>
             </div>
@@ -306,10 +318,10 @@ export function LineGraph({ replay, onSeek }: LineGraphProps) {
                         <path
                           d={pathFor(times, series.values, replay.durationS, lane.min, lane.max, plotX, y, plotWidth, laneHeight)}
                           fill="none"
-                          stroke={series.descriptor.color}
+                          stroke={signalColorById.get(series.descriptor.id) ?? series.descriptor.color}
                           className="graph-series-line"
                         />
-                        <circle cx={currentX} cy={selectedY} r="3.2" fill={series.descriptor.color} className="graph-current-point" />
+                        <circle cx={currentX} cy={selectedY} r="3.2" fill={signalColorById.get(series.descriptor.id) ?? series.descriptor.color} className="graph-current-point" />
                       </g>
                     );
                   })}

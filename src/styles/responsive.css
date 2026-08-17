@@ -9,7 +9,7 @@
     grid-template-columns:
       min(var(--sidebar-width, 292px), 240px)
       minmax(0, 1fr)
-      min(var(--field-sidebar-width, 0px), 210px);
+      min(var(--data-sidebar-width, 286px), 230px);
   }
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding-inline: 10px; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 11px; }
@@ -24,12 +24,10 @@
     grid-template-columns:
       min(var(--sidebar-width, 292px), 210px)
       minmax(0, 1fr)
-      min(var(--field-sidebar-width, 0px), 180px);
+      min(var(--data-sidebar-width, 286px), 200px);
   }
-  .field-overlay-sidebar-header { grid-template-columns: 27px minmax(0, 1fr) 27px; gap: 5px; padding-inline: 7px; }
-  .field-overlay-sidebar-icon { width: 26px; height: 26px; }
-  .field-overlay-row { gap: 5px; padding-right: 3px; }
-  .field-overlay-order-actions { display: none; }
+  .data-sidebar-header { grid-template-columns: 27px minmax(0, 1fr); gap: 5px; padding-inline: 7px; }
+  .data-sidebar-icon { width: 26px; height: 26px; }
 }
 
 @media (max-height: 770px) {

@@ -2,6 +2,8 @@ export type ViewMode = '2d' | '3d' | 'graph' | 'controller';
 
 export type RobotId = 'sentry' | 'infantry' | 'hero';
 
+export type RobotCategory = 'ghost' | 'enemy' | 'infantry' | 'sentry' | 'hero';
+
 export type ModelAxis = 'x' | 'y' | 'z';
 
 export interface RobotModelOrientation {
@@ -32,6 +34,7 @@ export interface RobotPose {
 
 export interface RobotTelemetry extends RobotPose {
   readonly robotId: RobotId;
+  readonly category: RobotCategory;
   readonly hp: number;
   readonly maxHp: number;
   readonly heat: number;

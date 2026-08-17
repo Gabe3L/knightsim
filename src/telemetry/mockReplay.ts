@@ -24,6 +24,7 @@ export const telemetryAt = (timeS: number): RobotTelemetry => {
 
   return {
     robotId: 'infantry',
+    category: 'infantry',
     xM: lerp(start.xM, end.xM, progress),
     yM: lerp(start.yM, end.yM, progress),
     yawDeg: lerp(start.yawDeg, end.yawDeg, progress),

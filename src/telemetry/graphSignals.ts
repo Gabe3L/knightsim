@@ -3,6 +3,41 @@ import { telemetryAt } from './mockReplay';
 
 export const GRAPH_SIGNAL_DRAG_TYPE = 'application/x-knightsim-graph-signal';
 
+export type GraphColorCategory = 'mint' | 'blue' | 'violet' | 'amber' | 'coral' | 'rose';
+
+export interface GraphSignalConfig {
+  readonly id: string;
+  readonly colorCategory: GraphColorCategory;
+}
+
+export interface GraphColorCategoryDescriptor {
+  readonly id: GraphColorCategory;
+  readonly label: string;
+  readonly color: string;
+}
+
+export const GRAPH_COLOR_CATEGORIES: readonly GraphColorCategoryDescriptor[] = [
+  { id: 'mint', label: 'Mint', color: '#62e7bc' },
+  { id: 'blue', label: 'Blue', color: '#52a7ff' },
+  { id: 'violet', label: 'Violet', color: '#a98cff' },
+  { id: 'amber', label: 'Amber', color: '#f1c75b' },
+  { id: 'coral', label: 'Coral', color: '#f48a68' },
+  { id: 'rose', label: 'Rose', color: '#e96d99' },
+];
+
+const graphColorByCategory = new Map(GRAPH_COLOR_CATEGORIES.map((category) => [
+  category.id,
+  category.color,
+]));
+
+export const graphColorForCategory = (category: GraphColorCategory): string => (
+  graphColorByCategory.get(category) ?? GRAPH_COLOR_CATEGORIES[0]!.color
+);
+
+export const defaultGraphColorCategory = (index: number): GraphColorCategory => (
+  GRAPH_COLOR_CATEGORIES[index % GRAPH_COLOR_CATEGORIES.length]!.id
+);
+
 export interface GraphSignalDescriptor {
   readonly id: string;
   readonly robotId: RobotId;

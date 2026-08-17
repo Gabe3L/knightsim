@@ -278,7 +278,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return Boolean(element.closest?.('[contenteditable="true"], [role="textbox"]'));
 }
 
-export function isFieldSidebarShortcut(event: Pick<
+export function isRightSidebarShortcut(event: Pick<
   KeyboardEvent,
   'altKey' | 'code' | 'ctrlKey' | 'metaKey' | 'repeat' | 'target'
 >, platform: string = 'win32'): boolean {
@@ -291,6 +291,10 @@ export function isFieldSidebarShortcut(event: Pick<
     && !event.repeat
     && !isEditableTarget(event.target);
 }
+
+// Kept as an alias for persisted tests and integrations from the original
+// field-only panel. The shortcut now controls the shared right sidebar.
+export const isFieldSidebarShortcut = isRightSidebarShortcut;
 
 export function isLeftSidebarShortcut(event: Pick<
   KeyboardEvent,

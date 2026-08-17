@@ -13,6 +13,7 @@ interface SidebarProps {
   readonly width: number;
   readonly onAddControllerInput: (id: string) => void;
   readonly onAddFieldOverlay: (id: string) => void;
+  readonly onAddGraphSignal: (id: string) => void;
   readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
   readonly onResizeEnd: () => void;
@@ -29,6 +30,7 @@ export function Sidebar({
   width,
   onAddControllerInput,
   onAddFieldOverlay,
+  onAddGraphSignal,
   onOpenSettings,
   onResize,
   onResizeEnd,
@@ -81,6 +83,7 @@ export function Sidebar({
           collapsed={compact}
           onAddControllerInput={onAddControllerInput}
           onAddFieldOverlay={onAddFieldOverlay}
+          onAddGraphSignal={onAddGraphSignal}
         />
       </div>
 

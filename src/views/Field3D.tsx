@@ -30,6 +30,7 @@ import { ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
+import { robotRenderProfile } from "../telemetry/robotCategories";
 import type { CameraState, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface Field3DProps {
@@ -326,12 +327,13 @@ function HighGroundDeck({
   );
 }
 
-function PlaceholderRobot() {
+function PlaceholderRobot({ category }: Pick<RobotTelemetry, "category">) {
+  const profile = robotRenderProfile(category);
   return (
     <>
       <Box args={[0.52, 0.18, 0.46]} position={[0, 0.125, 0]} castShadow>
         <meshStandardMaterial
-          color="#e23b49"
+          color={profile.body}
           roughness={0.42}
           metalness={0.55}
         />
@@ -347,7 +349,7 @@ function PlaceholderRobot() {
         <coneGeometry args={[0.09, 0.22, 4]} />
         <meshStandardMaterial
           color="#fff"
-          emissive="#ff4655"
+          emissive={profile.emissive}
           emissiveIntensity={1.5}
         />
       </mesh>
@@ -374,6 +376,7 @@ function PlaceholderRobot() {
 
 interface ModelErrorBoundaryProps {
   readonly cacheKey: string;
+  readonly category: RobotTelemetry['category'];
   readonly children: ReactNode;
 }
 
@@ -401,7 +404,7 @@ class ModelErrorBoundary extends Component<
   }
 
   override render(): ReactNode {
-    return this.state.failed ? <PlaceholderRobot /> : this.props.children;
+    return this.state.failed ? <PlaceholderRobot category={this.props.category} /> : this.props.children;
   }
 }
 
@@ -442,18 +445,19 @@ const UploadedRobot = memo(function UploadedRobot({
 function Robot({ robot, model }: Pick<Field3DProps, "robot" | "model">) {
   return (
     <group
+      name={`robot:${robot.category}`}
       position={[worldX(robot.xM), 0.035, worldZ(robot.yM)]}
       rotation={[0, (robot.yawDeg * Math.PI) / 180, 0]}
       scale={[-1, 1, 1]}
     >
       {model && window.knightSim?.robotModels ? (
-        <ModelErrorBoundary cacheKey={model.id}>
-          <Suspense fallback={<PlaceholderRobot />}>
+        <ModelErrorBoundary cacheKey={model.id} category={robot.category}>
+          <Suspense fallback={<PlaceholderRobot category={robot.category} />}>
             <UploadedRobot model={model} />
           </Suspense>
         </ModelErrorBoundary>
       ) : (
-        <PlaceholderRobot />
+        <PlaceholderRobot category={robot.category} />
       )}
     </group>
   );

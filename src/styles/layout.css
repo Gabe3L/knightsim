@@ -1,6 +1,6 @@
 .app-shell {
   display: grid;
-  grid-template-columns: var(--sidebar-width, 292px) minmax(0, 1fr) var(--field-sidebar-width, 0px);
+  grid-template-columns: var(--sidebar-width, 292px) minmax(0, 1fr) var(--data-sidebar-width, 286px);
   width: 100%;
   height: 100%;
   background:
@@ -10,8 +10,8 @@
 
 .app-shell.sidebar-is-resizing,
 .app-shell.sidebar-is-resizing *,
-.app-shell.field-sidebar-is-resizing,
-.app-shell.field-sidebar-is-resizing * { cursor: col-resize !important; }
+.app-shell.data-sidebar-is-resizing,
+.app-shell.data-sidebar-is-resizing * { cursor: col-resize !important; }
 
 .app-main {
   display: grid;
