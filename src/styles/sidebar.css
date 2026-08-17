@@ -2,7 +2,7 @@
   position: relative;
   z-index: 10;
   display: grid;
-  grid-template-rows: 42px 62px minmax(0, 1fr) 58px;
+  grid-template-rows: 42px 64px minmax(0, 1fr) 58px;
   min-width: 0;
   min-height: 0;
   overflow: visible;
@@ -18,7 +18,7 @@
   -webkit-app-region: drag;
 }
 
-.app-shell-windows .sidebar { grid-template-rows: 72px minmax(0, 1fr) 64px; }
+.app-shell-windows .sidebar { grid-template-rows: 64px minmax(0, 1fr) 64px; }
 .app-shell-windows .window-controls-bar { display: none; }
 .app-shell-windows .sidebar-brand-row { -webkit-app-region: drag; }
 .app-shell-windows .telemetry-tree { padding-top: 9px; padding-bottom: 18px; }
