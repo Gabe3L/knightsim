@@ -529,12 +529,7 @@ function FieldOverlayPrimitive({
       {pose ? (
         <>
           <group position={[worldX(pose.xM), layerY, worldZ(pose.yM)]}>
-            {descriptor.kind === 'ground-truth' ? (
-              <mesh rotation={[0, Math.PI / 4, 0]}>
-                <boxGeometry args={[0.37, 0.025, 0.37]} />
-                <meshBasicMaterial color={color} wireframe transparent opacity={opacity} depthWrite={false} />
-              </mesh>
-            ) : descriptor.kind === 'fused' ? (
+            descriptor.kind === 'fused' ? (
               <>
                 <mesh rotation={[-Math.PI / 2, 0, 0]}>
                   <ringGeometry args={[0.28, 0.34, 32]} />
@@ -550,7 +545,7 @@ function FieldOverlayPrimitive({
                 <boxGeometry args={[0.44, 0.035, 0.36]} />
                 <meshBasicMaterial color={color} wireframe transparent opacity={opacity} depthWrite={false} />
               </mesh>
-            )}
+            )
           </group>
           {headingEnd ? (
             <Line

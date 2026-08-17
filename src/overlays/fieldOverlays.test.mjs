@@ -118,7 +118,6 @@ test('overlay list, color, visibility, order, and sidebar state survive persiste
   const state = reduce(
     defaultFieldOverlayWorkspaceState(),
     { type: 'add', id: 'infantry.odometry.imu' },
-    { type: 'add', id: 'infantry.odometry.ground-truth' },
     { type: 'toggle-visibility', id: 'infantry.odometry.imu' },
     { type: 'toggle-sidebar' },
   );

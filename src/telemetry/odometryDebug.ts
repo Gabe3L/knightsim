@@ -95,12 +95,6 @@ export function odometryDebugAt(timeS: number): readonly FieldOverlaySample[] {
       id: 'infantry.odometry.fused',
       available: false,
       unavailableReason: 'Odometry stream is temporarily disconnected',
-    },
-    {
-      id: 'infantry.odometry.ground-truth',
-      available: true,
-      pose: truth,
-      status: 'reference',
-    },
+    }
   ];
 }

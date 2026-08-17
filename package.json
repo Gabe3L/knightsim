@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently -k \"vite\" \"tsc -p electron/tsconfig.json --watch\" \"wait-on tcp:5173 file:dist-electron/main.cjs && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
     "build": "tsc -b && vite build && tsc -p electron/tsconfig.json",
-    "test": "node --test src/overlays/fieldOverlays.test.mjs",
+    "test": "node --test src/overlays/fieldOverlays.test.mjs src/telemetry/topicDrag.test.mjs",
     "preview": "vite preview",
     "start": "electron .",
     "typecheck": "tsc -b --pretty false && tsc -p electron/tsconfig.json --pretty false"

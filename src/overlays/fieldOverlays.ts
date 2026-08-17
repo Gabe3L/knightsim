@@ -6,7 +6,7 @@ export const DEFAULT_FIELD_SIDEBAR_WIDTH = 286;
 export const MIN_FIELD_SIDEBAR_WIDTH = 224;
 export const MAX_FIELD_SIDEBAR_WIDTH = 420;
 
-export type FieldOverlayKind = 'april-tag' | 'lidar' | 'imu' | 'fused' | 'ground-truth';
+export type FieldOverlayKind = 'april-tag' | 'lidar' | 'imu' | 'fused';
 export type MeasurementStatus = 'accepted' | 'rejected' | 'predicted' | 'reference';
 
 export interface OverlayPose {
@@ -108,14 +108,7 @@ export const FIELD_OVERLAY_SOURCES: readonly FieldOverlaySourceDescriptor[] = [
     source: 'Odometry · Fused',
     kind: 'fused',
     defaultColor: '#ef4764',
-  },
-  {
-    id: 'infantry.odometry.ground-truth',
-    name: 'Ground truth',
-    source: 'Simulation · Reference',
-    kind: 'ground-truth',
-    defaultColor: '#f2f5f8',
-  },
+  }
 ];
 
 const sourceById = new Map(FIELD_OVERLAY_SOURCES.map((source) => [source.id, source]));

@@ -52,6 +52,11 @@
   font-weight: 560;
 }
 .topic-node-toggle:hover { color: #e0e5eb; background: #171e27; }
+.topic-node-toggle[draggable="true"] { cursor: grab; }
+.topic-node-toggle[draggable="true"]:active { cursor: grabbing; }
+.topic-node-toggle[draggable="true"]::after { content: '⋮⋮'; justify-self: end; color: #7d5260; font-size: 10px; font-style: normal; letter-spacing: -3px; opacity: 0; transition: opacity .12s ease; }
+.topic-node-toggle[draggable="true"]:hover::after { opacity: 1; }
+.topic-node-toggle[draggable="true"] { grid-template-columns: 14px minmax(0, 1fr) 14px; }
 .topic-node.expanded > .topic-node-toggle { color: #d5dbe3; }
 .telemetry-fields { margin: 0; padding: 1px 0 4px; }
 .telemetry-field { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto; min-height: 28px; align-items: center; gap: 5px; padding: 0 15px 0 58px; }

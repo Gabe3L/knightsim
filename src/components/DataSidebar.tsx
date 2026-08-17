@@ -37,8 +37,10 @@ import {
   type GraphSignalDescriptor,
 } from '../telemetry/graphSignals';
 import { ROBOT_CATEGORIES } from '../telemetry/robotCategories';
+import { readTelemetryTopicDrag } from '../telemetry/topicDrag';
 import {
   FIELD_OVERLAY_DRAG_TYPE,
+  fieldOverlaySourceById,
   readFieldOverlayDragId,
   type ResolvedFieldOverlay,
 } from '../overlays/fieldOverlays';
@@ -176,13 +178,29 @@ export function DataSidebar({
     if (!supportsDrag(event)) return;
     event.preventDefault();
     setDropActive(false);
+    const topic = readTelemetryTopicDrag(event.dataTransfer);
     if (fieldView) {
+      if (topic) {
+        topic.fieldOverlayIds.filter((id) => fieldOverlaySourceById(id) !== null).forEach(onAddOverlay);
+        onExpand();
+        return;
+      }
       const id = readFieldOverlayDragId(event.dataTransfer);
       if (id) onAddOverlay(id);
     } else if (view === 'graph') {
+      if (topic) {
+        topic.graphSignalIds.filter((id) => graphSignalById(id) !== null).forEach(onAddGraphSignal);
+        onExpand();
+        return;
+      }
       const id = event.dataTransfer.getData(GRAPH_SIGNAL_DRAG_TYPE);
       if (graphSignalById(id)) onAddGraphSignal(id);
     } else {
+      if (topic) {
+        topic.controllerInputIds.filter((id) => controllerInputById(id) !== null).forEach(onAddControllerInput);
+        onExpand();
+        return;
+      }
       const id = readControllerInputDragId(event.dataTransfer);
       if (id) onAddControllerInput(id);
     }

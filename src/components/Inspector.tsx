@@ -19,6 +19,11 @@ import {
   controllerInputsForRobot,
 } from '../telemetry/controllerInputs';
 import { odometryDebugAt } from '../telemetry/odometryDebug';
+import {
+  createTelemetryTopicDragPayload,
+  hasTelemetryTopicDragData,
+  writeTelemetryTopicDrag,
+} from '../telemetry/topicDrag';
 import type { RobotId, RobotTelemetry } from '../types';
 
 interface InspectorProps {
@@ -247,6 +252,19 @@ export function Inspector({
     event.dataTransfer.setData('text/plain', fieldOverlayId);
   };
 
+  const startTopicDrag = (
+    event: DragEvent<HTMLButtonElement>,
+    robotName: string,
+    topic: TelemetryTopic,
+  ): void => {
+    event.dataTransfer.effectAllowed = 'copy';
+    writeTelemetryTopicDrag(
+      event.dataTransfer,
+      createTelemetryTopicDragPayload(topic.fields),
+      `${robotName} / ${topic.label}`,
+    );
+  };
+
   if (collapsed) {
     return (
       <div className="inspector inspector-collapsed" aria-label="Robots">
@@ -288,14 +306,21 @@ export function Inspector({
                   {item.topics.map((topic) => {
                     const topicKey = `${item.id}:${topic.id}`;
                     const topicExpanded = expandedTopics.has(topicKey);
+                    const topicDragPayload = createTelemetryTopicDragPayload(topic.fields);
+                    const topicDraggable = hasTelemetryTopicDragData(topicDragPayload);
                     return (
                       <div className={topicExpanded ? 'topic-node expanded' : 'topic-node'} key={topic.id}>
                         <button
                           className="topic-node-toggle"
                           type="button"
+                          draggable={topicDraggable}
                           aria-expanded={topicExpanded}
                           aria-controls={`${item.id}-${topic.id}-fields`}
                           onClick={() => setExpandedTopics((current) => toggleKey(current, topicKey))}
+                          onDragStart={topicDraggable
+                            ? (event) => startTopicDrag(event, item.name, topic)
+                            : undefined}
+                          title={topicDraggable ? 'Drag to add every compatible field in this topic' : undefined}
                         >
                           <ChevronRight className="tree-chevron" size={14} />
                           <span>{topic.label}</span>

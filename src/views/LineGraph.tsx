@@ -20,6 +20,7 @@ import {
   type GraphSignalDescriptor,
 } from '../telemetry/graphSignals';
 import type { ReplayState } from '../types';
+import { readTelemetryTopicDrag } from '../telemetry/topicDrag';
 
 interface LineGraphProps {
   readonly replay: ReplayState;
@@ -206,6 +207,11 @@ export function LineGraph({
   const handleDrop = (event: DragEvent<HTMLDivElement>): void => {
     event.preventDefault();
     setDropActive(false);
+    const topic = readTelemetryTopicDrag(event.dataTransfer);
+    if (topic) {
+      topic.graphSignalIds.filter((id) => graphSignalById(id) !== null).forEach(onAddSignal);
+      return;
+    }
     const signalId = event.dataTransfer.getData(GRAPH_SIGNAL_DRAG_TYPE);
     if (!graphSignalById(signalId)) return;
     onAddSignal(signalId);
