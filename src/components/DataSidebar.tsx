@@ -398,7 +398,7 @@ export function DataSidebar({
                       <div className={input ? 'data-controller-slot data-controller-slot-filled' : 'data-controller-slot'} key={slot.control}>
                         <span>
                           <strong>{slot.label}</strong>
-                          <small>{input ? `${input.robotName} · ${input.kind}` : `Drop ${slot.kind} input`}</small>
+                          <small>{slot.kind}</small>
                         </span>
                         {input && value !== undefined ? <output>{input.format(value)}</output> : <em>Empty</em>}
                         {input ? (

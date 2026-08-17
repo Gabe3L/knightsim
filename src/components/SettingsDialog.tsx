@@ -335,8 +335,8 @@ export function SettingsDialog({
           {page !== 'keybindings' ? (
             <div className="robot-picker-shell">
               <div className="robot-picker-label">
-                <span>Configure robot</span>
-                <small>Settings are stored separately for each profile.</small>
+                <span>Select robot</span>
+                <small>Settings are separate for each robot.</small>
               </div>
               <div className="robot-picker" role="group" aria-label="Robot profile">
                 {ROBOTS.map((robot) => (
@@ -369,7 +369,7 @@ export function SettingsDialog({
                   <Box size={16} />
                   <div>
                     <h3>Appearance</h3>
-                    <p>Choose how {selectedRobot.name} is represented in replay and field views.</p>
+                    <p>Select model for the {selectedRobot.name} robot.</p>
                   </div>
                 </div>
 
@@ -461,7 +461,7 @@ export function SettingsDialog({
                   </div>
                 ) : (
                   <div className="model-inline-empty">
-                    <Box size={18} /> Import an uncompressed glTF 2.0 binary to preview this robot in the Field view.
+                    <Box size={18} /> Import an glTF 2.0 binary to view on the Field.
                   </div>
                 )}
               </section>
@@ -535,7 +535,7 @@ export function SettingsDialog({
                   <KeyRound size={16} />
                   <div>
                     <h3>SSH connection</h3>
-                    <p>Credentials and address used to reach {selectedRobot.name} for deployment and diagnostics.</p>
+                    <p>Credentials and address used to reach the {selectedRobot.name} robot.</p>
                   </div>
                 </div>
                 <SettingRow label="Host" description="Hostname, mDNS name, or IPv4 address.">
@@ -547,18 +547,18 @@ export function SettingsDialog({
                 <SettingRow label="Username" description="Linux account used for the remote session.">
                   <input className="settings-input" type="text" value={connectivity.username} autoComplete="off" onChange={(event) => updateConnectivity('username', event.currentTarget.value)} />
                 </SettingRow>
-                <SettingRow label="Authentication" description="Use a local SSH key when possible.">
+                <SettingRow label="Authentication" description="Use a private key when possible.">
                   <select className="settings-select" value={connectivity.authentication} onChange={(event) => updateConnectivity('authentication', event.currentTarget.value as AuthenticationMethod)}>
                     <option value="key">Private key</option>
                     <option value="password">Password</option>
                   </select>
                 </SettingRow>
                 {connectivity.authentication === 'key' ? (
-                  <SettingRow label="Private key" description="Path to an OpenSSH private key on this computer.">
+                  <SettingRow label="Private key" description="Path to a private key on this computer.">
                     <div className="input-with-icon"><FileKey size={14} /><input type="text" value={connectivity.privateKeyPath} spellCheck={false} onChange={(event) => updateConnectivity('privateKeyPath', event.currentTarget.value)} /></div>
                   </SettingRow>
                 ) : (
-                  <SettingRow label="Password" description="Kept in memory only and never stored by KnightSim.">
+                  <SettingRow label="Password" description="Password is not stored by KnightSim.">
                     <input className="settings-input" type="password" value={connectivity.password} autoComplete="new-password" placeholder="Enter password" onChange={(event) => updateConnectivity('password', event.currentTarget.value)} />
                   </SettingRow>
                 )}
@@ -569,7 +569,7 @@ export function SettingsDialog({
                   <ShieldCheck size={16} />
                   <div>
                     <h3>Connection behavior</h3>
-                    <p>Timeout, verification, and recovery options for unstable field networks.</p>
+                    <p>Timeout, verification, and recovery options for unstable connections.</p>
                   </div>
                 </div>
                 <SettingRow label="Connection timeout" description="Stop an SSH attempt after this interval.">
@@ -612,12 +612,12 @@ export function SettingsDialog({
                   <Keyboard size={16} />
                   <div>
                     <h3>Navigation</h3>
-                    <p>Keyboard shortcuts for moving around the KnightSim workspace.</p>
+                    <p>Shortcuts for navigating the workspace.</p>
                   </div>
                 </div>
                 <div className="keybinding-row">
                   <div className="keybinding-copy">
-                    <strong>Toggle sidebar</strong>
+                    <strong>Toggle left sidebar</strong>
                     <span>Switch the left sidebar between its narrow rail and last expanded width.</span>
                   </div>
                   <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command' : 'Control'} plus B`}>
@@ -628,8 +628,8 @@ export function SettingsDialog({
                 </div>
                 <div className="keybinding-row">
                   <div className="keybinding-copy">
-                    <strong>Toggle field overlays</strong>
-                    <span>Open or collapse the field-overlay sidebar in Field view.</span>
+                    <strong>Toggle right sidebar</strong>
+                    <span>Switch the right sidebar between its narrow rail and last expanded width.</span>
                   </div>
                   <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command plus Option' : 'Control plus Alt'} plus B`}>
                     <kbd>{window.knightSim?.platform === 'darwin' ? 'Command' : 'Ctrl'}</kbd>

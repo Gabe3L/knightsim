@@ -954,13 +954,6 @@ export function Field({ active, robot, camera, model, overlays }: FieldProps) {
         <AdaptiveReplayQuality robot={robot} />
         <FieldCameraFlightControls active={active} camera={camera} />
       </Canvas>
-      <div className="field-overlay field-overlay-left">
-        <span className="eyebrow">PERSPECTIVE CAMERA</span>
-        <strong>ARCC 2026 · METRES</strong>
-      </div>
-      <div className="field-hint">
-        <Crosshair size={13} /> WASD to fly · E/Q up/down · orbit · scroll to zoom
-      </div>
     </div>
   );
 }

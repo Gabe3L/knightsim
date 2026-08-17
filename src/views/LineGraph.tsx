@@ -234,7 +234,7 @@ export function LineGraph({
             <small>{selectedSignals.length === 0 ? 'No signals' : `${selectedSignals.length} signal${selectedSignals.length === 1 ? '' : 's'} · ${formatTime(displayTimeS)}`}</small>
           </span>
         </div>
-        <div className="line-graph-drop-hint"><MousePointer2 size={13} /> Drag numeric telemetry here</div>
+        <div className="line-graph-drop-hint">Drag data here</div>
         <button
           className="line-graph-clear"
           type="button"
