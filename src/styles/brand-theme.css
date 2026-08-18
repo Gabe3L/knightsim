@@ -94,9 +94,7 @@ body { background: #09080d; }
 
 .data-sidebar-icon,
 .field-overlay-sidebar-icon,
-.controller-input-sidebar-icon,
-.line-graph-title-icon,
-.controller-stage-title > span {
+.controller-input-sidebar-icon {
   border-color: rgba(197, 200, 208, .28);
   color: #d2d5dc;
   background: rgba(197, 200, 208, .075);
@@ -106,8 +104,7 @@ body { background: #09080d; }
 .data-structure-card,
 .data-drop-zone,
 .field-overlay-row,
-.controller-input-row,
-.line-graph-legend-item {
+.controller-input-row {
   border-color: #2d2936;
   background: #131119;
 }
@@ -161,9 +158,8 @@ body { background: #09080d; }
     radial-gradient(circle at 50% -25%, rgba(239, 71, 100, .085), transparent 48%),
     #09080d;
 }
-.line-graph-toolbar { border-color: #292631; background: rgba(15, 13, 20, .9); }
-.line-graph-legend { border-color: #27232e; background: rgba(12, 10, 16, .8); }
-.line-graph-chart { border-color: #2d2936; background: rgba(10, 8, 13, .94); }
+.line-graph-stage { border-color: #2d2936; }
+.line-graph-chart { background: rgba(10, 8, 13, .94); }
 .graph-plot-background { fill: #0d0b12; stroke: #2c2834; }
 .graph-grid-line { stroke: #292531; }
 .graph-time-grid { stroke: #211e28; }
@@ -175,9 +171,7 @@ body { background: #09080d; }
     radial-gradient(circle at 50% 32%, rgba(197, 200, 208, .07), transparent 43%),
     linear-gradient(180deg, #0d0b12, #09080d);
 }
-.controller-stage-header { border-color: #292631; background: rgba(15, 13, 20, .9); }
-.controller-live-status-active { border-color: rgba(239, 71, 100, .3); color: #f17b8f; background: rgba(239, 71, 100, .07); }
-.controller-live-status-active svg { filter: drop-shadow(0 0 4px rgba(239, 71, 100, .58)); }
+.controller-stage { border-color: #2d2936; }
 .controller-canvas::after { border-color: rgba(197, 200, 208, .2); }
 .controller-ambient-glow { background: rgba(197, 200, 208, .075); }
 .remote-record-mark { fill: var(--accent); }

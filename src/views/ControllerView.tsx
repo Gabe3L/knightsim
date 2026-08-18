@@ -1,4 +1,3 @@
-import { Gamepad2, Radio } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   controllerInputById,
@@ -37,27 +36,8 @@ export function ControllerView({ currentTimeS, selectedInputIds }: ControllerVie
   const leftActive = leftMapped && (Math.abs(leftX) > 0.06 || Math.abs(leftY) > 0.06);
   const rightActive = rightMapped && (Math.abs(rightX) > 0.06 || Math.abs(rightY) > 0.06);
   const flightMode = value('flight-mode');
-  const robotNames = Array.from(new Set(inputs.map((input) => input.robotName)));
-
   return (
     <section className="controller-stage" aria-label="Controller input monitor">
-      <header className="controller-stage-header">
-        <div className="controller-stage-title">
-          <span><Gamepad2 size={17} /></span>
-          <div>
-            <strong>Remote controller</strong>
-            <small>
-              {inputs.length === 0
-                ? 'Waiting for input channels'
-                : `${inputs.length} mapped · ${robotNames.join(', ')}`}
-            </small>
-          </div>
-        </div>
-        <div className={inputs.length > 0 ? 'controller-live-status controller-live-status-active' : 'controller-live-status'}>
-          <Radio size={12} /> {inputs.length > 0 ? 'Live input' : 'No source'}
-        </div>
-      </header>
-
       <div className="controller-canvas">
         <div className="controller-ambient-glow" aria-hidden="true" />
         <svg

@@ -277,8 +277,6 @@ export function App() {
               replay={replay}
               signals={graphSignals}
               onAddSignal={addGraphSignal}
-              onClearSignals={() => setGraphSignals([])}
-              onRemoveSignal={(id) => setGraphSignals((current) => current.filter((item) => item.id !== id))}
               onSeek={seek}
             />
           </div>

@@ -32,6 +32,7 @@
 
 @media (max-height: 770px) {
   .app-main { grid-template-rows: 58px minmax(0, 1fr); }
+  .workspace { --timeline-overlap: 62px; --graph-scale-offset: 52px; --graph-content-inset: 26px; }
   .timeline { min-height: 52px; }
   .panel-heading { min-height: 48px; }
   .robot-card { margin: 8px 10px; padding: 8px; }

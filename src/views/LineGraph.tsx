@@ -1,8 +1,6 @@
 import {
   LineChart,
   MousePointer2,
-  Trash2,
-  X,
 } from 'lucide-react';
 import {
   useEffect,
@@ -26,8 +24,6 @@ interface LineGraphProps {
   readonly replay: ReplayState;
   readonly signals: readonly GraphSignalConfig[];
   readonly onAddSignal: (id: string) => void;
-  readonly onClearSignals: () => void;
-  readonly onRemoveSignal: (id: string) => void;
   readonly onSeek: (timeS: number) => void;
 }
 
@@ -107,8 +103,6 @@ export function LineGraph({
   replay,
   signals,
   onAddSignal,
-  onClearSignals,
-  onRemoveSignal,
   onSeek,
 }: LineGraphProps) {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -178,7 +172,6 @@ export function LineGraph({
   const plotHeight = Math.max(1, height - CHART_MARGIN.top - CHART_MARGIN.bottom);
   const laneCount = Math.max(1, lanes.length);
   const laneHeight = Math.max(24, (plotHeight - LANE_GAP * (laneCount - 1)) / laneCount);
-  const displayTimeS = hoverTimeS ?? replay.currentTimeS;
   const currentX = plotX + (replay.currentTimeS / Math.max(replay.durationS, 0.0001)) * plotWidth;
   const hoverX = hoverTimeS === null
     ? null
@@ -226,45 +219,6 @@ export function LineGraph({
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <header className="line-graph-toolbar">
-        <div className="line-graph-title">
-          <span className="line-graph-title-icon"><LineChart size={16} /></span>
-          <span>
-            <strong>Line Graph</strong>
-            <small>{selectedSignals.length === 0 ? 'No signals' : `${selectedSignals.length} signal${selectedSignals.length === 1 ? '' : 's'} · ${formatTime(displayTimeS)}`}</small>
-          </span>
-        </div>
-        <div className="line-graph-drop-hint">Drag data here</div>
-        <button
-          className="line-graph-clear"
-          type="button"
-          disabled={selectedSignals.length === 0}
-          onClick={onClearSignals}
-        >
-          <Trash2 size={13} /> Clear
-        </button>
-      </header>
-
-      {selectedSignals.length > 0 ? (
-        <div className="line-graph-legend" aria-label="Graphed telemetry">
-          {selectedSignals.map((descriptor) => (
-            <div className="line-graph-legend-item" key={descriptor.id}>
-              <i style={{ background: signalColorById.get(descriptor.id) ?? descriptor.color }} />
-              <span className="line-graph-legend-name">
-                <strong>{descriptor.robotName} · {descriptor.label}</strong>
-                <small>{descriptor.topic}</small>
-              </span>
-              <span className="line-graph-legend-value">
-                {descriptor.format(descriptor.sampleAt(displayTimeS))}
-              </span>
-              <button type="button" onClick={() => onRemoveSignal(descriptor.id)} aria-label={`Remove ${descriptor.robotName} ${descriptor.label}`}>
-                <X size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : null}
-
       <div className="line-graph-chart" ref={chartRef}>
         {selectedSignals.length === 0 ? (
           <div className="line-graph-empty" aria-hidden="true">
