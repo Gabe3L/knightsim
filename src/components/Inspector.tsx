@@ -187,6 +187,18 @@ function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
   return next;
 }
 
+function isFieldDisplayed(
+  field: TelemetryField,
+  displayedControllerInputs: ReadonlySet<string>,
+  displayedGraphSignals: ReadonlySet<string>,
+  displayedFieldOverlays: ReadonlySet<string>,
+): boolean {
+  if (field.controllerInputId) return displayedControllerInputs.has(field.controllerInputId);
+  if (field.graphSignalId) return displayedGraphSignals.has(field.graphSignalId);
+  if (field.fieldOverlayId) return displayedFieldOverlays.has(field.fieldOverlayId);
+  return false;
+}
+
 export function Inspector({
   robot,
   currentTimeS,
@@ -307,23 +319,72 @@ export function Inspector({
                     const topicExpanded = expandedTopics.has(topicKey);
                     const topicDragPayload = createTelemetryTopicDragPayload(topic.fields);
                     const topicDraggable = topicDragPayload.graphSignalIds.length > 0;
+                    const displayableFields = topic.fields.filter((field) => (
+                      field.controllerInputId || field.graphSignalId || field.fieldOverlayId
+                    ));
+                    const displayedFieldCount = displayableFields.filter((field) => isFieldDisplayed(
+                      field,
+                      displayedControllerInputs,
+                      displayedGraphSignals,
+                      displayedFieldOverlays,
+                    )).length;
+                    const allFieldsDisplayed = displayedFieldCount === displayableFields.length;
+                    const someFieldsDisplayed = displayedFieldCount > 0 && !allFieldsDisplayed;
+                    const displayLocation = topic.id === 'inputs'
+                      ? 'on controller'
+                      : topic.id === 'odometry'
+                        ? 'on field'
+                        : 'on graph';
+
+                    const toggleTopicDisplay = (): void => {
+                      const shouldDisplay = !allFieldsDisplayed;
+                      displayableFields.forEach((field) => {
+                        const displayed = isFieldDisplayed(
+                          field,
+                          displayedControllerInputs,
+                          displayedGraphSignals,
+                          displayedFieldOverlays,
+                        );
+                        if (displayed === shouldDisplay) return;
+                        if (field.controllerInputId) onToggleControllerInput(field.controllerInputId);
+                        else if (field.graphSignalId) onToggleGraphSignal(field.graphSignalId);
+                        else if (field.fieldOverlayId) onToggleFieldOverlay(field.fieldOverlayId);
+                      });
+                    };
+
                     return (
                       <div className={topicExpanded ? 'topic-node expanded' : 'topic-node'} key={topic.id}>
-                        <button
-                          className="topic-node-toggle"
-                          type="button"
-                          draggable={topicDraggable}
-                          aria-expanded={topicExpanded}
-                          aria-controls={`${item.id}-${topic.id}-fields`}
-                          onClick={() => setExpandedTopics((current) => toggleKey(current, topicKey))}
-                          onDragStart={topicDraggable
-                            ? (event) => startTopicDrag(event, item.name, topic)
-                            : undefined}
-                          title={topicDraggable ? 'Drag to graph every numeric field in this topic' : undefined}
-                        >
-                          <ChevronRight className="tree-chevron" size={14} />
-                          <span>{topic.label}</span>
-                        </button>
+                        <div className="topic-node-header">
+                          <button
+                            className="topic-node-toggle"
+                            type="button"
+                            draggable={topicDraggable}
+                            aria-expanded={topicExpanded}
+                            aria-controls={`${item.id}-${topic.id}-fields`}
+                            onClick={() => setExpandedTopics((current) => toggleKey(current, topicKey))}
+                            onDragStart={topicDraggable
+                              ? (event) => startTopicDrag(event, item.name, topic)
+                              : undefined}
+                            title={topicDraggable ? 'Drag to graph every numeric field in this topic' : undefined}
+                          >
+                            <ChevronRight className="tree-chevron" size={14} />
+                            <span>{topic.label}</span>
+                          </button>
+                          {displayableFields.length > 0 ? (
+                            <button
+                              className={someFieldsDisplayed
+                                ? 'topic-visibility-toggle mixed'
+                                : 'topic-visibility-toggle'}
+                              type="button"
+                              aria-label={`${allFieldsDisplayed ? 'Hide' : 'Show'} all ${topic.label} fields ${displayLocation}`}
+                              aria-pressed={someFieldsDisplayed ? 'mixed' : allFieldsDisplayed}
+                              title={`${allFieldsDisplayed ? 'Hide' : 'Show'} all ${displayLocation}`}
+                              onClick={toggleTopicDisplay}
+                            >
+                              {allFieldsDisplayed ? <Eye size={14} /> : <EyeOff size={14} />}
+                            </button>
+                          ) : null}
+                        </div>
 
                         {topicExpanded ? (
                           <dl className="telemetry-fields" id={`${item.id}-${topic.id}-fields`}>
@@ -332,13 +393,12 @@ export function Inspector({
                               const displayable = Boolean(
                                 field.controllerInputId || field.graphSignalId || field.fieldOverlayId,
                               );
-                              const displayed = field.controllerInputId
-                                ? displayedControllerInputs.has(field.controllerInputId)
-                                : field.graphSignalId
-                                  ? displayedGraphSignals.has(field.graphSignalId)
-                                  : field.fieldOverlayId
-                                    ? displayedFieldOverlays.has(field.fieldOverlayId)
-                                    : false;
+                              const displayed = isFieldDisplayed(
+                                field,
+                                displayedControllerInputs,
+                                displayedGraphSignals,
+                                displayedFieldOverlays,
+                              );
                               const displayLocation = field.fieldOverlayId
                                 ? 'on field'
                                 : field.graphSignalId

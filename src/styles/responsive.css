@@ -17,6 +17,8 @@
   .view-tab { gap: 0; padding-inline: 7px; font-size: 13px; }
   .view-tab svg { display: none; }
   .robot-link { padding-inline: 7px; font-size: 9px; }
+  .field-mode-option { min-width: 38px; padding-inline: 7px; }
+  .controller-mode-option { min-width: 37px; padding-inline: 6px; }
   .field-hint { width: 32px; justify-content: center; padding-inline: 0; }
   .field-hint span { display: none; }
   .tree-status { padding-inline: 4px; }
@@ -31,6 +33,10 @@
       minmax(0, 1fr);
   }
   .topbar-context { visibility: hidden; }
+  .field-mode-selector { gap: 1px; padding: 2px; }
+  .field-mode-option { min-width: 34px; height: 27px; padding-inline: 5px; font-size: 10px; }
+  .controller-mode-selector { gap: 1px; padding: 2px; }
+  .controller-mode-option { min-width: 32px; height: 27px; padding-inline: 4px; font-size: 9px; }
   .robot-link { width: 28px; justify-content: center; padding-inline: 0; font-size: 0; }
 }
 

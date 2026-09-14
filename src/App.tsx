@@ -18,7 +18,7 @@ import {
   graphSignalById,
   type GraphSignalConfig,
 } from './telemetry/graphSignals';
-import type { CameraState, ViewMode } from './types';
+import type { CameraState, ControllerMode, FieldMode, ViewMode } from './types';
 import { Field } from './views/Field';
 import { LineGraph } from './views/LineGraph';
 import { ControllerView } from './views/ControllerView';
@@ -46,6 +46,8 @@ export function App() {
     ? COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS
     : COMPACT_SIDEBAR_WIDTH_WITH_WINDOW_CONTROLS;
   const [activeView, setActiveView] = useState<ViewMode>('field');
+  const [fieldMode, setFieldMode] = useState<FieldMode>('3v3');
+  const [controllerMode, setControllerMode] = useState<ControllerMode>('dji');
   const [controllerInputIds, setControllerInputIds] = useState<readonly string[]>([]);
   const [graphSignals, setGraphSignals] = useState<readonly GraphSignalConfig[]>([]);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
@@ -215,8 +217,12 @@ export function App() {
           activeView={activeView}
           connected={robot.connected}
           controllerInputCount={controllerInputIds.length}
+          controllerMode={controllerMode}
+          fieldMode={fieldMode}
           graphSignalCount={graphSignals.length}
           playing={replay.playing}
+          onControllerModeChange={setControllerMode}
+          onFieldModeChange={setFieldMode}
           onViewChange={setActiveView}
         />
         <main className="workspace">
@@ -228,6 +234,7 @@ export function App() {
               active={activeView === 'field' && !settingsOpen}
               robot={robot}
               camera={DEFAULT_CAMERA}
+              mode={fieldMode}
               overlays={fieldOverlays}
               model={robotModels.modelForRobot(robot.robotId)}
             />
@@ -247,7 +254,11 @@ export function App() {
             className={activeView === 'controller' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== 'controller'}
           >
-            <ControllerView currentTimeS={replay.currentTimeS} selectedInputIds={controllerInputIds} />
+            <ControllerView
+              controllerMode={controllerMode}
+              currentTimeS={replay.currentTimeS}
+              selectedInputIds={controllerInputIds}
+            />
           </div>
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />

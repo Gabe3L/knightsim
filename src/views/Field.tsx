@@ -29,18 +29,19 @@ import {
   SRGBColorSpace,
   Vector3,
 } from "three";
-import { ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
+import { ARCC_2026_1V1_FIELD, ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
 import { fieldCameraActionForCode, type FieldCameraAction } from "../keybindings";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
 import { robotRenderProfile } from "../telemetry/robotCategories";
-import type { CameraState, RobotModelRecord, RobotTelemetry } from "../types";
+import type { CameraState, FieldMode, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface FieldProps {
   readonly active: boolean;
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
+  readonly mode: FieldMode;
   readonly model: RobotModelRecord | null;
   readonly overlays: readonly ResolvedFieldOverlay[];
 }
@@ -50,6 +51,8 @@ interface FieldProps {
 // side and screen-right remains the blue/high-x side from that viewpoint.
 const worldX = (xM: number): number => 6 - xM;
 const worldZ = (yM: number): number => yM - 4;
+const modeWorldX = (xM: number, mode: FieldMode): number => (mode === '1v1' ? 2.5 : 6) - xM;
+const modeWorldZ = (yM: number, mode: FieldMode): number => yM - (mode === '1v1' ? 2.5 : 4);
 
 const fieldWoodColor = "#424242";
 const fieldFloorColor = "#7a7a7a";
@@ -447,11 +450,11 @@ const UploadedRobot = memo(function UploadedRobot({
   );
 });
 
-function Robot({ robot, model }: Pick<FieldProps, "robot" | "model">) {
+function Robot({ robot, model, mode }: Pick<FieldProps, "robot" | "model" | "mode">) {
   return (
     <group
       name={`robot:${robot.category}`}
-      position={[worldX(robot.xM), 0.035, worldZ(robot.yM)]}
+      position={[modeWorldX(robot.xM, mode), 0.035, modeWorldZ(robot.yM, mode)]}
       rotation={[0, (robot.yawDeg * Math.PI) / 180, 0]}
       scale={[-1, 1, 1]}
     >
@@ -471,9 +474,11 @@ function Robot({ robot, model }: Pick<FieldProps, "robot" | "model">) {
 function FieldOverlayPrimitive({
   overlay,
   layerIndex,
+  mode,
 }: {
   readonly overlay: ResolvedFieldOverlay;
   readonly layerIndex: number;
+  readonly mode: FieldMode;
 }) {
   if (!overlay.visible || !overlay.sample.available) return null;
   const { descriptor, sample, color } = overlay;
@@ -493,7 +498,7 @@ function FieldOverlayPrimitive({
       const localY = Math.sin(theta) * sample.covariance!.minorM;
       const xM = pose.xM + localX * Math.cos(angle) - localY * Math.sin(angle);
       const yM = pose.yM + localX * Math.sin(angle) + localY * Math.cos(angle);
-      return [worldX(xM), layerY, worldZ(yM)];
+      return [modeWorldX(xM, mode), layerY, modeWorldZ(yM, mode)];
     })
     : [];
 
@@ -502,7 +507,7 @@ function FieldOverlayPrimitive({
       {sample.path && sample.path.length > 1 ? (
         <Line
           points={sample.path.map((point): [number, number, number] => [
-            worldX(point.xM), layerY, worldZ(point.yM),
+            modeWorldX(point.xM, mode), layerY, modeWorldZ(point.yM, mode),
           ])}
           color={color}
           lineWidth={2}
@@ -516,8 +521,8 @@ function FieldOverlayPrimitive({
       {pose && sample.residualToFused ? (
         <Line
           points={[
-            [worldX(pose.xM), layerY, worldZ(pose.yM)],
-            [worldX(sample.residualToFused.xM), layerY, worldZ(sample.residualToFused.yM)],
+            [modeWorldX(pose.xM, mode), layerY, modeWorldZ(pose.yM, mode)],
+            [modeWorldX(sample.residualToFused.xM, mode), layerY, modeWorldZ(sample.residualToFused.yM, mode)],
           ]}
           color={color}
           lineWidth={1}
@@ -533,7 +538,7 @@ function FieldOverlayPrimitive({
       ) : null}
       {pose ? (
         <>
-          <group position={[worldX(pose.xM), layerY, worldZ(pose.yM)]}>
+          <group position={[modeWorldX(pose.xM, mode), layerY, modeWorldZ(pose.yM, mode)]}>
             descriptor.kind === 'fused' ? (
               <>
                 <mesh rotation={[-Math.PI / 2, 0, 0]}>
@@ -555,8 +560,8 @@ function FieldOverlayPrimitive({
           {headingEnd ? (
             <Line
               points={[
-                [worldX(pose.xM), layerY + 0.025, worldZ(pose.yM)],
-                [worldX(headingEnd.xM), layerY + 0.025, worldZ(headingEnd.yM)],
+                [modeWorldX(pose.xM, mode), layerY + 0.025, modeWorldZ(pose.yM, mode)],
+                [modeWorldX(headingEnd.xM, mode), layerY + 0.025, modeWorldZ(headingEnd.yM, mode)],
               ]}
               color={color}
               lineWidth={descriptor.kind === 'fused' ? 4 : 2.5}
@@ -565,7 +570,7 @@ function FieldOverlayPrimitive({
             />
           ) : null}
           {descriptor.tagId !== undefined ? (
-            <Html center position={[worldX(pose.xM), layerY + 0.23, worldZ(pose.yM)]}>
+            <Html center position={[modeWorldX(pose.xM, mode), layerY + 0.23, modeWorldZ(pose.yM, mode)]}>
               <span className="field-overlay-label" style={{ color }}>TAG {descriptor.tagId}</span>
             </Html>
           ) : null}
@@ -575,9 +580,9 @@ function FieldOverlayPrimitive({
   );
 }
 
-function FieldOverlays({ overlays }: Pick<FieldProps, 'overlays'>) {
+function FieldOverlays({ overlays, mode }: Pick<FieldProps, 'overlays' | 'mode'>) {
   return overlays.map((overlay, index) => (
-    <FieldOverlayPrimitive key={overlay.id} overlay={overlay} layerIndex={index} />
+    <FieldOverlayPrimitive key={overlay.id} overlay={overlay} layerIndex={index} mode={mode} />
   ));
 }
 
@@ -827,6 +832,93 @@ const Arena = memo(function Arena() {
   );
 });
 
+const OneVOneArena = memo(function OneVOneArena() {
+  const { size, wall } = ARCC_2026_1V1_FIELD;
+  const halfLength = size.lengthM / 2;
+  const halfWidth = size.widthM / 2;
+
+  return (
+    <>
+      <ambientLight intensity={1.25} />
+      <directionalLight
+        position={[-3, 10, 5]}
+        intensity={2.7}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+      <hemisphereLight args={["#b7d4ff", "#15181d", 0.8]} />
+
+      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[size.lengthM, size.widthM]} />
+        <meshStandardMaterial color={fieldFloorColor} roughness={0.95} />
+      </mesh>
+
+      {ARCC_2026_1V1_FIELD.zones.map((zone) => (
+        <group key={zone.id}>
+          <mesh
+            position={[
+              modeWorldX(zone.xM + zone.widthM / 2, '1v1'),
+              0.006,
+              modeWorldZ(zone.yM + zone.depthM / 2, '1v1'),
+            ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[zone.widthM, zone.depthM]} />
+            <meshStandardMaterial color={teamColor(zone.team)} transparent opacity={0.08} roughness={0.9} />
+          </mesh>
+          <Line
+            points={[
+              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
+              [modeWorldX(zone.xM + zone.widthM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
+              [modeWorldX(zone.xM + zone.widthM, '1v1'), 0.012, modeWorldZ(zone.yM + zone.depthM, '1v1')],
+              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM + zone.depthM, '1v1')],
+              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
+            ]}
+            color={teamColor(zone.team)}
+            lineWidth={2}
+            transparent
+            opacity={0.72}
+          />
+        </group>
+      ))}
+
+      {ARCC_2026_1V1_FIELD.bunkers.map((bunker) => (
+        <Box
+          key={bunker.id}
+          args={[bunker.lengthM, bunker.heightM, bunker.depthM]}
+          position={[
+            modeWorldX(bunker.center.xM, '1v1'),
+            bunker.heightM / 2,
+            modeWorldZ(bunker.center.yM, '1v1'),
+          ]}
+          rotation={[0, -(bunker.rotationDeg * Math.PI) / 180, 0]}
+          castShadow
+          receiveShadow
+        >
+          <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
+        </Box>
+      ))}
+
+      <PerimeterWall
+        position={[0, wall.heightM / 2, -halfWidth - wall.thicknessM / 2]}
+        args={[size.lengthM + 2 * wall.thicknessM, wall.heightM, wall.thicknessM]}
+      />
+      <PerimeterWall
+        position={[0, wall.heightM / 2, halfWidth + wall.thicknessM / 2]}
+        args={[size.lengthM + 2 * wall.thicknessM, wall.heightM, wall.thicknessM]}
+      />
+      <PerimeterWall
+        position={[-halfLength - wall.thicknessM / 2, wall.heightM / 2, 0]}
+        args={[wall.thicknessM, wall.heightM, size.widthM]}
+      />
+      <PerimeterWall
+        position={[halfLength + wall.thicknessM / 2, wall.heightM / 2, 0]}
+        args={[wall.thicknessM, wall.heightM, size.widthM]}
+      />
+    </>
+  );
+});
+
 function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   const regress = useThree((state) => state.performance.regress);
   const initialDpr = useThree((state) => state.viewport.initialDpr);
@@ -845,7 +937,7 @@ const isEditableTarget = (target: EventTarget | null): boolean => (
   && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 );
 
-function FieldCameraFlightControls({ active, camera: cameraState }: Pick<FieldProps, 'active' | 'camera'>) {
+function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
   const sceneCamera = useThree((state) => state.camera);
   const invalidate = useThree((state) => state.invalidate);
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
@@ -907,10 +999,15 @@ function FieldCameraFlightControls({ active, camera: cameraState }: Pick<FieldPr
 
   return (
     <OrbitControls
+      key={mode}
       ref={controlsRef}
       makeDefault
-      target={[worldX(cameraState.targetXM), 0, worldZ(cameraState.targetYM)]}
-      minDistance={4.5}
+      target={[
+        modeWorldX(mode === '1v1' ? 2.5 : cameraState.targetXM, mode),
+        0,
+        modeWorldZ(mode === '1v1' ? 2.5 : cameraState.targetYM, mode),
+      ]}
+      minDistance={mode === '1v1' ? 3 : 4.5}
       maxDistance={25}
       maxPolarAngle={Math.PI / 2.05}
       enableDamping
@@ -920,11 +1017,15 @@ function FieldCameraFlightControls({ active, camera: cameraState }: Pick<FieldPr
   );
 }
 
-export function Field({ active, robot, camera, model, overlays }: FieldProps) {
+export function Field({ active, robot, camera, mode, model, overlays }: FieldProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
+  const targetXM = mode === '1v1' ? 2.5 : camera.targetXM;
+  const targetYM = mode === '1v1' ? 2.5 : camera.targetYM;
+  const framingScale = mode === '1v1' ? 0.72 : 1;
   return (
     <div className="field-stage">
       <Canvas
+        key={mode}
         shadows
         frameloop="demand"
         dpr={[1, 1.5]}
@@ -943,16 +1044,16 @@ export function Field({ active, robot, camera, model, overlays }: FieldProps) {
           near={0.05}
           far={100}
           position={[
-            worldX(camera.targetXM),
-            8.4 * distanceScale,
-            worldZ(camera.targetYM) - 8.8 * distanceScale,
+            modeWorldX(targetXM, mode),
+            8.4 * distanceScale * framingScale,
+            modeWorldZ(targetYM, mode) - 8.8 * distanceScale * framingScale,
           ]}
         />
-        <Arena />
-        <Robot robot={robot} model={model} />
-        <FieldOverlays overlays={overlays} />
+        {mode === '1v1' ? <OneVOneArena /> : <Arena />}
+        <Robot robot={robot} model={model} mode={mode} />
+        <FieldOverlays overlays={overlays} mode={mode} />
         <AdaptiveReplayQuality robot={robot} />
-        <FieldCameraFlightControls active={active} camera={camera} />
+        <FieldCameraFlightControls active={active} camera={camera} mode={mode} />
       </Canvas>
     </div>
   );

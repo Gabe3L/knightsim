@@ -89,6 +89,24 @@ export interface FieldSpec {
   readonly provenance: readonly string[];
 }
 
+export interface OneVOneFieldSpec {
+  readonly id: 'arcc-2026-1v1';
+  readonly name: string;
+  readonly units: 'metres';
+  readonly size: { readonly lengthM: number; readonly widthM: number };
+  readonly wall: { readonly heightM: number; readonly thicknessM: number };
+  readonly zones: readonly FieldZone[];
+  readonly bunkers: readonly {
+    readonly id: string;
+    readonly center: Point2M;
+    readonly lengthM: number;
+    readonly depthM: number;
+    readonly heightM: number;
+    readonly rotationDeg: number;
+  }[];
+  readonly provenance: readonly string[];
+}
+
 const mm = (value: number): number => value / 1000;
 
 const makeRoad = (team: 'red' | 'blue'): RoadTile[] => {
@@ -127,6 +145,63 @@ const northBarrierEndM = 6;
 const northBarrierLengthM = mm(2025.4);
 
 const mirrorX = (xM: number): number => 12 - xM;
+
+/**
+ * ARCC 2026 1v1 battlefield, transcribed from manual Figures 4-1–4-4.
+ * Coordinates use the lower-left inner field corner as (0, 0).
+ */
+export const ARCC_2026_1V1_FIELD = {
+  id: 'arcc-2026-1v1',
+  name: 'ARCC 2026 · 1v1 Battlefield',
+  units: 'metres',
+  size: { lengthM: 5, widthM: 5 },
+  wall: { heightM: mm(420), thicknessM: perimeterWallThicknessM },
+  zones: [
+    {
+      id: 'red-starting-zone',
+      kind: 'starting-resupply',
+      team: 'red',
+      label: 'Red starting zone',
+      xM: 0,
+      yM: 4,
+      widthM: 1,
+      depthM: 1,
+    },
+    {
+      id: 'blue-starting-zone',
+      kind: 'starting-resupply',
+      team: 'blue',
+      label: 'Blue starting zone',
+      xM: 4,
+      yM: 0,
+      widthM: 1,
+      depthM: 1,
+    },
+  ],
+  bunkers: [
+    {
+      id: 'red-side-bunker',
+      center: { xM: 1.64, yM: 2.45 },
+      lengthM: 1.2,
+      depthM: mm(400),
+      heightM: mm(420),
+      rotationDeg: 45,
+    },
+    {
+      id: 'blue-side-bunker',
+      center: { xM: 3.36, yM: 2.55 },
+      lengthM: 1.2,
+      depthM: mm(400),
+      heightM: mm(420),
+      rotationDeg: 45,
+    },
+  ],
+  provenance: [
+    '2026 ARCC Rules: Events, §4.2, printed pages 32–35.',
+    'Figures 4-1–4-3: 5 × 5 m field, mirrored 1 × 1 m starting zones, and bunker placement.',
+    'Figure 4-4: 1200 × 400 × 420 mm bunker dimensions.',
+  ],
+} as const satisfies OneVOneFieldSpec;
 
 /**
  * ARCC 2026 3v3 battlefield, transcribed from manual Figures 3-1–3-10.

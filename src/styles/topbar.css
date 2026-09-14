@@ -36,6 +36,20 @@
 .view-tab-placeholder { color: #626d7a; cursor: default; }
 .view-tab-placeholder:hover { color: #626d7a; background: transparent; }
 
+.field-mode-selector { grid-column: 3; display: flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #2e2a35; border-radius: 9px; background: rgba(10, 8, 14, .78); box-shadow: inset 0 1px 2px rgba(0,0,0,.28); justify-self: end; }
+.field-mode-option { min-width: 43px; height: 28px; padding: 0 9px; border: 0; border-radius: 6px; color: #77717f; background: transparent; font-size: 11px; font-weight: 740; letter-spacing: .035em; cursor: pointer; transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease; }
+.field-mode-option:hover { color: #d0cdd5; background: #18151e; }
+.field-mode-option:active { transform: translateY(1px); }
+.field-mode-option-active { color: #f5f2f7; background: #2a2531; box-shadow: inset 0 1px rgba(255,255,255,.055), 0 2px 7px rgba(0,0,0,.32); }
+.field-mode-option-active:first-child { color: #f0c5ce; }
+.field-mode-option-active:last-child { color: #d8d9de; }
+
+.controller-mode-selector { grid-column: 3; display: flex; align-items: center; gap: 2px; padding: 3px; border: 1px solid #2e2a35; border-radius: 9px; background: rgba(10, 8, 14, .78); box-shadow: inset 0 1px 2px rgba(0,0,0,.28); justify-self: end; }
+.controller-mode-option { min-width: 43px; height: 28px; padding: 0 8px; border: 0; border-radius: 6px; color: #77717f; background: transparent; font-size: 10.5px; font-weight: 740; letter-spacing: .025em; cursor: pointer; transition: color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease; }
+.controller-mode-option:hover { color: #d0cdd5; background: #18151e; }
+.controller-mode-option:active { transform: translateY(1px); }
+.controller-mode-option-active { color: #f5f2f7; background: #2a2531; box-shadow: inset 0 1px rgba(255,255,255,.055), 0 2px 7px rgba(0,0,0,.32); }
+
 .topbar-status { display: flex; min-width: 0; align-items: center; gap: 7px; justify-self: end; }
 .robot-link,
 .playback-state { display: inline-flex; height: 27px; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid #2e2a35; border-radius: 7px; color: #8f8996; background: rgba(19, 17, 24, .72); font-size: 10px; font-weight: 710; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
