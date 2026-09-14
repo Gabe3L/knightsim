@@ -80,6 +80,7 @@ export function Sidebar({
         <img className="brand-logo" src={logo} alt="" aria-hidden="true" />
         <div className="sidebar-brand-copy">
           <div className="brand-title">KnightSim</div>
+          <div className="brand-subtitle">QKRT Simulator</div>
         </div>
       </div>
 

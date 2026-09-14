@@ -32,9 +32,9 @@
 .graph-current-point { stroke: #10080b; stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: none; }
 
 .line-graph-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 24px; color: #727f8d; text-align: center; pointer-events: none; }
-.line-graph-empty > span { display: grid; width: 54px; height: 54px; margin-bottom: 14px; place-items: center; border: 1px dashed #344251; border-radius: 12px; color: #d47a8d; background: rgba(239,71,100,.04); }
-.line-graph-empty strong { color: #c7d0da; font-size: 15px; font-weight: 650; }
-.line-graph-empty p { max-width: 380px; margin: 7px 0 0; color: #687582; font-size: 12px; line-height: 1.5; }
+.line-graph-empty > span { display: grid; width: 56px; height: 56px; margin-bottom: 15px; place-items: center; border: 1px dashed #403747; border-radius: 14px; color: #e06c83; background: linear-gradient(145deg, rgba(239,71,100,.09), rgba(197,200,208,.035)); box-shadow: 0 14px 34px rgba(0,0,0,.2); }
+.line-graph-empty strong { color: #daddE3; font-size: 15px; font-weight: 680; letter-spacing: -.005em; }
+.line-graph-empty p { max-width: 430px; margin: 8px 0 0; color: #7e7785; font-size: 12px; line-height: 1.55; }
 
 .line-graph-drop-active { border-color: rgba(239,71,100,.6); box-shadow: inset 0 0 0 1px rgba(239,71,100,.15), 0 0 26px rgba(239,71,100,.08); }
 .line-graph-drop-overlay { position: absolute; z-index: 5; inset: var(--graph-content-inset, 21px) 1px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px dashed rgba(239,71,100,.7); border-radius: 8px; color: #ffdce2; background: rgba(47, 17, 29, .78); backdrop-filter: blur(5px); font-size: 14px; font-weight: 650; pointer-events: none; }

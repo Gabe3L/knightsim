@@ -1,3 +1,4 @@
+import { MousePointer2 } from 'lucide-react';
 import { useMemo } from 'react';
 import {
   controllerInputById,

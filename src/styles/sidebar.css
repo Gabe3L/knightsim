@@ -38,8 +38,8 @@
 }
 
 .brand-logo { display: block; width: 22px; height: 46px; justify-self: center; object-fit: contain; }
-.brand-title { font-size: 23px; font-weight: 720; letter-spacing: -.01em; }
-.brand-subtitle { margin-top: 1px; color: #697382; font-size: 13px; font-weight: 650; letter-spacing: .075em; text-transform: uppercase; }
+.brand-title { font-size: 20px; font-weight: 720; letter-spacing: -.015em; line-height: 1; }
+.brand-subtitle { margin-top: 5px; color: #716b79; font-size: 9px; font-weight: 720; letter-spacing: .13em; line-height: 1; text-transform: uppercase; }
 .sidebar-brand-copy { min-width: 0; overflow: hidden; white-space: nowrap; }
 .sidebar-body { min-height: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #293440 transparent; }
 
@@ -70,6 +70,8 @@
 }
 
 .sidebar-settings:hover { color: #eef3f8; border-color: #2a3440; background: #171e28; }
+.sidebar-settings:active { transform: translateY(1px); }
+.sidebar-settings:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -1px; }
 .sidebar-compact .sidebar-brand-row { grid-template-columns: 34px; justify-content: center; padding-inline: 12px; }
 .sidebar-compact .sidebar-brand-copy { display: none; }
 .sidebar-compact .sidebar-footer { padding-inline: 8px; }

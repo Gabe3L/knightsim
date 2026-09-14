@@ -213,6 +213,10 @@ export function App() {
       <div className="app-main">
         <TopBar
           activeView={activeView}
+          connected={robot.connected}
+          controllerInputCount={controllerInputIds.length}
+          graphSignalCount={graphSignals.length}
+          playing={replay.playing}
           onViewChange={setActiveView}
         />
         <main className="workspace">

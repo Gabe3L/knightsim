@@ -1,4 +1,5 @@
 import { Pause, Play, RotateCcw, SkipBack } from 'lucide-react';
+import type { CSSProperties } from 'react';
 import type { ReplayState } from '../types';
 
 interface TimelineProps {
@@ -20,13 +21,13 @@ export function Timeline({ replay, onSeek, onTogglePlaying, onSpeedChange }: Tim
   return (
     <footer className="timeline">
       <div className="transport-controls">
-        <button className="transport-secondary" type="button" onClick={() => onSeek(0)} aria-label="Restart replay">
+        <button className="transport-secondary" type="button" onClick={() => onSeek(0)} aria-label="Restart replay" title="Restart replay">
           <RotateCcw size={15} />
         </button>
-        <button className="transport-secondary" type="button" onClick={() => onSeek(Math.max(0, replay.currentTimeS - 5))} aria-label="Back five seconds">
+        <button className="transport-secondary" type="button" onClick={() => onSeek(Math.max(0, replay.currentTimeS - 5))} aria-label="Back five seconds" title="Back 5 seconds">
           <SkipBack size={15} />
         </button>
-        <button className="play-button" type="button" onClick={onTogglePlaying} aria-label={replay.playing ? 'Pause replay' : 'Play replay'}>
+        <button className="play-button" type="button" onClick={onTogglePlaying} aria-label={replay.playing ? 'Pause replay' : 'Play replay'} title={replay.playing ? 'Pause replay' : 'Play replay'}>
           {replay.playing ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" />}
         </button>
       </div>
@@ -36,10 +37,14 @@ export function Timeline({ replay, onSeek, onTogglePlaying, onSpeedChange }: Tim
         <span>/ {formatTime(replay.durationS)}</span>
       </div>
 
-      <div className="scrubber-wrap">
+      <div
+        className="scrubber-wrap"
+        style={{ '--timeline-progress': `${progress}%` } as CSSProperties}
+      >
         <div className="scrubber-fill" style={{ width: `${progress}%` }} />
         <div className="event-tick tick-a" />
         <div className="event-tick tick-b" />
+        <div className="scrubber-head" aria-hidden="true" />
         <input
           className="scrubber"
           type="range"

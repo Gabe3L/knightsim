@@ -1,6 +1,14 @@
 .field-stage { position: absolute; inset: 0; overflow: hidden; background: #090d13; }
 .field-overlay { position: absolute; z-index: 3; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #b8c0cb; background: rgba(8,11,16,.72); backdrop-filter: blur(10px); box-shadow: 0 6px 18px rgba(0,0,0,.14); pointer-events: none; }
-.field-overlay-left { left: 13px; top: 13px; padding: 8px 10px; }
-.field-overlay-left strong { display: block; margin-top: 4px; font: 650 14px/1.2 var(--font-ui); font-variant-numeric: tabular-nums; }
-.field-hint { position: absolute; right: 13px; top: 13px; display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #82909e; background: rgba(8,11,16,.72); font-size: 13px; pointer-events: none; }
+.field-overlay-left { left: 13px; top: 13px; min-width: 188px; padding: 9px 11px 10px; }
+.field-overlay-left strong { display: block; margin-top: 6px; color: #eef0f4; font: 640 13px/1.2 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.field-overlay-left strong b { padding-inline: 4px; color: #5f5966; font-weight: 500; }
+.field-robot-status { display: flex; align-items: center; gap: 6px; color: #9b95a2; font: 720 9px/1 var(--font-ui); letter-spacing: .1em; text-transform: uppercase; }
+.field-robot-status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.field-robot-status.online { color: var(--silver); }
+.field-robot-status.online i { box-shadow: 0 0 8px rgba(197, 200, 208, .58); }
+.field-robot-status.offline { color: #ff6a77; }
+.field-robot-status.offline i { box-shadow: 0 0 8px rgba(255, 91, 103, .58); }
+.field-hint { position: absolute; right: 13px; top: 13px; display: flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #8f8996; background: rgba(8,11,16,.72); box-shadow: 0 6px 18px rgba(0,0,0,.12); backdrop-filter: blur(10px); font-size: 11px; font-weight: 610; letter-spacing: .01em; pointer-events: none; }
+.field-hint svg { color: #c5c8d0; }
 .field-overlay-label { padding: 2px 5px; border: 1px solid currentColor; border-radius: 4px; color: inherit; background: rgba(8, 11, 16, .82); font: 700 12px/1.2 var(--font-ui); white-space: nowrap; pointer-events: none; }

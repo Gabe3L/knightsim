@@ -1,6 +1,5 @@
 import {
   LineChart,
-  MousePointer2,
 } from 'lucide-react';
 import {
   useEffect,
@@ -221,10 +220,10 @@ export function LineGraph({
     >
       <div className="line-graph-chart" ref={chartRef}>
         {selectedSignals.length === 0 ? (
-          <div className="line-graph-empty" aria-hidden="true">
-            <span><LineChart size={27} /></span>
-            <strong>Build a graph from telemetry</strong>
-            <p>Expand a robot in the sidebar, then drag any field with a grip handle onto this canvas.</p>
+          <div className="line-graph-empty" role="status">
+            <span aria-hidden="true"><LineChart size={27} /></span>
+            <strong>Select a telemetry signal</strong>
+            <p>Open a robot in the sidebar and select the eye beside a numeric field. You can also drag a field or an entire topic onto this canvas.</p>
           </div>
         ) : (
           <svg

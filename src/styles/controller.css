@@ -85,10 +85,14 @@
 .remote-input-active .remote-record-mark { fill: #1b070d; }
 .remote-input-active .remote-shutter-mark { stroke: #1b070d; }
 
-.controller-empty-callout { position: absolute; z-index: 2; bottom: 18px; left: 50%; display: flex; width: min(430px, calc(100% - 36px)); align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid rgba(239,71,100,.18); border-radius: 9px; background: rgba(10,16,21,.88); box-shadow: 0 12px 34px rgba(0,0,0,.28); backdrop-filter: blur(9px); transform: translateX(-50%); }
-.controller-empty-callout > span { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border: 1px dashed #3a4b51; border-radius: 8px; color: #d47a8d; background: rgba(239,71,100,.05); }
-.controller-empty-callout strong { color: #cbd4dd; font-size: 13px; font-weight: 660; }
-.controller-empty-callout p { margin: 3px 0 0; color: #71808c; font-size: 11.5px; line-height: 1.4; }
+.controller-empty-callout { position: absolute; z-index: 2; bottom: 18px; left: 50%; display: flex; width: min(465px, calc(100% - 36px)); align-items: center; gap: 11px; padding: 11px 13px; border: 1px solid rgba(239,71,100,.22); border-radius: 10px; background: rgba(15,11,17,.9); box-shadow: 0 16px 40px rgba(0,0,0,.34), inset 0 1px rgba(255,255,255,.025); backdrop-filter: blur(11px); transform: translateX(-50%); animation: controller-callout-in .24s ease-out both; }
+.controller-empty-callout > span { display: grid; width: 35px; height: 35px; flex: 0 0 auto; place-items: center; border: 1px dashed #4a3642; border-radius: 9px; color: #e06c83; background: rgba(239,71,100,.07); }
+.controller-empty-callout strong { color: #d9dce2; font-size: 13px; font-weight: 670; }
+.controller-empty-callout p { margin: 4px 0 0; color: #837b89; font-size: 11.5px; line-height: 1.4; }
+
+@keyframes controller-callout-in {
+  from { opacity: 0; transform: translate(-50%, 5px); }
+}
 
 .controller-input-sidebar {
   position: relative;
