@@ -10,7 +10,6 @@ body { background: #09080d; }
 }
 
 .sidebar,
-.data-sidebar,
 .field-overlay-sidebar,
 .controller-input-sidebar {
   border-color: #2c2934;
@@ -18,7 +17,6 @@ body { background: #09080d; }
 }
 
 .sidebar-brand-row,
-.data-sidebar-header,
 .field-overlay-sidebar-header,
 .controller-input-sidebar-header {
   border-color: #302c39;
@@ -44,7 +42,6 @@ body { background: #09080d; }
 
 .window-controls-bar,
 .sidebar-footer,
-.data-sidebar-toolbar,
 .field-overlay-sidebar-toolbar,
 .controller-input-sidebar-toolbar {
   border-color: #292631;
@@ -92,7 +89,6 @@ body { background: #09080d; }
   box-shadow: 0 0 8px rgba(197, 200, 208, .5);
 }
 
-.data-sidebar-icon,
 .field-overlay-sidebar-icon,
 .controller-input-sidebar-icon {
   border-color: rgba(197, 200, 208, .28);
@@ -101,33 +97,10 @@ body { background: #09080d; }
   box-shadow: inset 0 0 12px rgba(197, 200, 208, .035);
 }
 
-.data-structure-card,
-.data-drop-zone,
 .field-overlay-row,
 .controller-input-row {
   border-color: #2d2936;
   background: #131119;
-}
-
-.data-structure-card > header,
-.data-drop-zone > header {
-  border-color: #302c38;
-  background: #191620;
-}
-
-.data-structure-card > header svg,
-.data-drop-zone > header svg { color: var(--silver); }
-.data-drop-empty > svg { color: var(--accent); }
-
-.data-controller-slot-filled {
-  border-color: rgba(239, 71, 100, .25);
-  background: rgba(239, 71, 100, .045);
-}
-
-.data-robot-identity select:focus-visible,
-.data-color-category select:focus-visible {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(239, 71, 100, .12);
 }
 
 .sidebar-resize-handle:hover::after,
@@ -139,14 +112,6 @@ body { background: #09080d; }
 .field-overlay-sidebar-collapsed .field-overlay-sidebar-resize-handle::after {
   background: var(--accent);
   box-shadow: 0 0 10px rgba(239, 71, 100, .48);
-}
-
-.data-sidebar-grip:hover,
-.data-sidebar-grip:focus-visible,
-.data-sidebar-is-resizing .data-sidebar-grip {
-  border-color: rgba(239, 71, 100, .5);
-  color: var(--accent);
-  box-shadow: 0 0 14px rgba(239, 71, 100, .16);
 }
 
 .field-stage { background: #09080d; }
@@ -262,7 +227,6 @@ body { background: #09080d; }
   .view-tab,
   .play-button,
   .sidebar-settings,
-  .data-structure-card,
   .field-overlay-row,
   .controller-input-row { transition: color .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease, transform .16s ease; }
   .play-button:hover { transform: translateY(-1px); box-shadow: 0 0 25px rgba(239, 71, 100, .3); }

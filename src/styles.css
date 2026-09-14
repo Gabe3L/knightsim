@@ -5,8 +5,6 @@
 @import "./styles/sidebar.css";
 @import "./styles/topbar.css";
 @import "./styles/field.css";
-@import "./styles/field-overlays.css";
-@import "./styles/data-sidebar.css";
 @import "./styles/inspector.css";
 @import "./styles/graph.css";
 @import "./styles/controller.css";

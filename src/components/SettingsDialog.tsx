@@ -626,19 +626,6 @@ export function SettingsDialog({
                     <kbd>B</kbd>
                   </div>
                 </div>
-                <div className="keybinding-row">
-                  <div className="keybinding-copy">
-                    <strong>Toggle right sidebar</strong>
-                    <span>Switch the right sidebar between its narrow rail and last expanded width.</span>
-                  </div>
-                  <div className="keybinding-keys" aria-label={`${window.knightSim?.platform === 'darwin' ? 'Command plus Option' : 'Control plus Alt'} plus B`}>
-                    <kbd>{window.knightSim?.platform === 'darwin' ? 'Command' : 'Ctrl'}</kbd>
-                    <span>+</span>
-                    <kbd>{window.knightSim?.platform === 'darwin' ? 'Option' : 'Alt'}</kbd>
-                    <span>+</span>
-                    <kbd>B</kbd>
-                  </div>
-                </div>
               </section>
               <section className="settings-group">
                 <div className="settings-group-heading">

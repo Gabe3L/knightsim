@@ -3,3 +3,4 @@
 .field-overlay-left { left: 13px; top: 13px; padding: 8px 10px; }
 .field-overlay-left strong { display: block; margin-top: 4px; font: 650 14px/1.2 var(--font-ui); font-variant-numeric: tabular-nums; }
 .field-hint { position: absolute; right: 13px; top: 13px; display: flex; align-items: center; gap: 6px; padding: 7px 9px; border: 1px solid rgba(81,94,110,.35); border-radius: 6px; color: #82909e; background: rgba(8,11,16,.72); font-size: 13px; pointer-events: none; }
+.field-overlay-label { padding: 2px 5px; border: 1px solid currentColor; border-radius: 4px; color: inherit; background: rgba(8, 11, 16, .82); font: 700 12px/1.2 var(--font-ui); white-space: nowrap; pointer-events: none; }

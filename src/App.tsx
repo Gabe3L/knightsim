@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DataSidebar } from './components/DataSidebar';
 import { Sidebar } from './components/Sidebar';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
@@ -9,10 +8,6 @@ import { useReplay } from './hooks/useReplay';
 import { useFieldOverlayWorkspace } from './hooks/useFieldOverlayWorkspace';
 import { useRobotModels } from './hooks/useRobotModels';
 import {
-  COLLAPSED_FIELD_SIDEBAR_WIDTH,
-  MAX_FIELD_SIDEBAR_WIDTH,
-  isFieldSidebarCollapsed,
-  isRightSidebarShortcut,
   isLeftSidebarShortcut,
   resolveFieldOverlays,
 } from './overlays/fieldOverlays';
@@ -21,10 +16,9 @@ import { controllerInputById } from './telemetry/controllerInputs';
 import {
   defaultGraphColorCategory,
   graphSignalById,
-  type GraphColorCategory,
   type GraphSignalConfig,
 } from './telemetry/graphSignals';
-import type { CameraState, RobotCategory, RobotId, ViewMode } from './types';
+import type { CameraState, ViewMode } from './types';
 import { Field } from './views/Field';
 import { LineGraph } from './views/LineGraph';
 import { ControllerView } from './views/ControllerView';
@@ -54,27 +48,15 @@ export function App() {
   const [activeView, setActiveView] = useState<ViewMode>('field');
   const [controllerInputIds, setControllerInputIds] = useState<readonly string[]>([]);
   const [graphSignals, setGraphSignals] = useState<readonly GraphSignalConfig[]>([]);
-  const [robotCategories, setRobotCategories] = useState<Readonly<Record<RobotId, RobotCategory>>>({
-    sentry: 'sentry',
-    infantry: 'infantry',
-    hero: 'hero',
-  });
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [sidebarResizing, setSidebarResizing] = useState(false);
-  const [dataSidebarResizing, setDataSidebarResizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
-  const dataSidebarResizingRef = useRef(false);
-  const dataSidebarDragStart = useRef({ pointerX: 0, width: 0 });
   const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
   const robotModels = useRobotModels();
   const { state: fieldOverlayWorkspace, dispatch: dispatchFieldOverlay } = useFieldOverlayWorkspace();
-  const categorizedRobot = useMemo(() => ({
-    ...robot,
-    category: robotCategories[robot.robotId],
-  }), [robot, robotCategories]);
   const fieldOverlays = useMemo(() => resolveFieldOverlays(
     fieldOverlayWorkspace.items,
     odometryDebugAt(replay.currentTimeS),
@@ -132,27 +114,6 @@ export function App() {
     });
   }, [minSidebarWidth]);
 
-  const startDataSidebarResize = useCallback((pointerX: number) => {
-    dataSidebarDragStart.current = { pointerX, width: fieldOverlayWorkspace.sidebarWidth };
-    dataSidebarResizingRef.current = true;
-    setDataSidebarResizing(true);
-  }, [fieldOverlayWorkspace.sidebarWidth]);
-
-  const resizeDataSidebar = useCallback((pointerX: number) => {
-    if (!dataSidebarResizingRef.current) return;
-    const nextWidth = dataSidebarDragStart.current.width
-      + dataSidebarDragStart.current.pointerX
-      - pointerX;
-    dispatchFieldOverlay({ type: 'set-sidebar-width', width: nextWidth });
-  }, [dispatchFieldOverlay]);
-
-  const stopDataSidebarResize = useCallback(() => {
-    if (!dataSidebarResizingRef.current) return;
-    dataSidebarResizingRef.current = false;
-    dispatchFieldOverlay({ type: 'finish-sidebar-resize' });
-    setDataSidebarResizing(false);
-  }, [dispatchFieldOverlay]);
-
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent): void => resizeSidebar(event.clientX);
     window.addEventListener('pointermove', handlePointerMove);
@@ -168,41 +129,23 @@ export function App() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
       const platform = window.knightSim?.platform ?? 'win32';
-      if (isRightSidebarShortcut(event, platform)) {
-        event.preventDefault();
-        dispatchFieldOverlay({ type: 'toggle-sidebar' });
-      } else if (isLeftSidebarShortcut(event, platform)) {
+      if (isLeftSidebarShortcut(event, platform)) {
         event.preventDefault();
         toggleSidebar();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [dispatchFieldOverlay, toggleSidebar]);
+  }, [toggleSidebar]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
     return () => window.cancelAnimationFrame(frame);
-  }, [activeView, fieldOverlayWorkspace.sidebarWidth]);
+  }, [activeView, sidebarWidth]);
 
   const resizeSidebarByKeyboard = useCallback((nextWidth: number) => {
     setSidebarWidth(clamp(nextWidth, minSidebarWidth, MAX_SIDEBAR_WIDTH));
   }, [minSidebarWidth]);
-
-  const resizeDataSidebarByKeyboard = useCallback((nextWidth: number) => {
-    dispatchFieldOverlay({ type: 'set-sidebar-width', width: nextWidth });
-    dispatchFieldOverlay({ type: 'finish-sidebar-resize' });
-  }, [dispatchFieldOverlay]);
-
-  const addControllerInput = useCallback((id: string) => {
-    const descriptor = controllerInputById(id);
-    if (!descriptor) return;
-    setControllerInputIds((current) => [
-      ...current.filter((currentId) => controllerInputById(currentId)?.control !== descriptor.control),
-      descriptor.id,
-    ]);
-    setActiveView('controller');
-  }, []);
 
   const addGraphSignal = useCallback((id: string) => {
     if (!graphSignalById(id)) return;
@@ -212,10 +155,29 @@ export function App() {
     setActiveView('graph');
   }, []);
 
-  const setGraphSignalColor = useCallback((id: string, colorCategory: GraphColorCategory) => {
-    setGraphSignals((current) => current.map((item) => (
-      item.id === id ? { ...item, colorCategory } : item
-    )));
+  const toggleControllerInput = useCallback((id: string) => {
+    const descriptor = controllerInputById(id);
+    if (!descriptor) return;
+    setControllerInputIds((current) => current.includes(id)
+      ? current.filter((currentId) => currentId !== id)
+      : [
+        ...current.filter((currentId) => controllerInputById(currentId)?.control !== descriptor.control),
+        id,
+      ]);
+    setActiveView('controller');
+  }, []);
+
+  const toggleGraphSignal = useCallback((id: string) => {
+    if (!graphSignalById(id)) return;
+    setGraphSignals((current) => current.some((item) => item.id === id)
+      ? current.filter((item) => item.id !== id)
+      : [...current, { id, colorCategory: defaultGraphColorCategory(current.length) }]);
+    setActiveView('graph');
+  }, []);
+
+  const toggleFieldOverlay = useCallback((id: string) => {
+    dispatchFieldOverlay({ type: 'toggle-visibility', id });
+    setActiveView('field');
   }, []);
 
   return (
@@ -224,27 +186,24 @@ export function App() {
         'app-shell',
         usesWindowsSidebarLayout && 'app-shell-windows',
         sidebarResizing && 'sidebar-is-resizing',
-        dataSidebarResizing && 'data-sidebar-is-resizing',
       ].filter(Boolean).join(' ')}
       style={{
         '--sidebar-width': `${sidebarWidth}px`,
-        '--data-sidebar-width': `${fieldOverlayWorkspace.sidebarWidth}px`,
       } as React.CSSProperties}
     >
       <Sidebar
         compact={sidebarWidth < COMPACT_SIDEBAR_WIDTH}
         maxWidth={MAX_SIDEBAR_WIDTH}
         minWidth={minSidebarWidth}
-        robot={categorizedRobot}
+        robot={robot}
         currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
-        onAddControllerInput={addControllerInput}
-        onAddGraphSignal={addGraphSignal}
-        onAddFieldOverlay={(id) => {
-          dispatchFieldOverlay({ type: 'add', id });
-          dispatchFieldOverlay({ type: 'expand-sidebar' });
-          setActiveView('field');
-        }}
+        controllerInputIds={controllerInputIds}
+        graphSignalIds={graphSignals.map((signal) => signal.id)}
+        overlays={fieldOverlays}
+        onToggleControllerInput={toggleControllerInput}
+        onToggleGraphSignal={toggleGraphSignal}
+        onToggleFieldOverlay={toggleFieldOverlay}
         onOpenSettings={() => setSettingsOpen(true)}
         onResize={resizeSidebar}
         onResizeEnd={stopSidebarResize}
@@ -263,7 +222,7 @@ export function App() {
           >
             <Field
               active={activeView === 'field' && !settingsOpen}
-              robot={categorizedRobot}
+              robot={robot}
               camera={DEFAULT_CAMERA}
               overlays={fieldOverlays}
               model={robotModels.modelForRobot(robot.robotId)}
@@ -289,41 +248,6 @@ export function App() {
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
-      <DataSidebar
-        view={activeView}
-          collapsed={isFieldSidebarCollapsed(fieldOverlayWorkspace.sidebarWidth)}
-          controllerInputIds={controllerInputIds}
-          currentTimeS={replay.currentTimeS}
-          graphSignals={graphSignals}
-          maxWidth={MAX_FIELD_SIDEBAR_WIDTH}
-          minWidth={COLLAPSED_FIELD_SIDEBAR_WIDTH}
-          overlays={fieldOverlays}
-          robot={categorizedRobot}
-          width={fieldOverlayWorkspace.sidebarWidth}
-          onAddControllerInput={addControllerInput}
-          onAddGraphSignal={addGraphSignal}
-          onAddOverlay={(id) => dispatchFieldOverlay({ type: 'add', id })}
-          onClearControllerInputs={() => setControllerInputIds([])}
-          onClearGraphSignals={() => setGraphSignals([])}
-          onClearOverlays={() => dispatchFieldOverlay({ type: 'clear-all' })}
-          onCollapse={() => dispatchFieldOverlay({ type: 'toggle-sidebar' })}
-          onExpand={() => dispatchFieldOverlay({ type: 'expand-sidebar' })}
-          onHideAllOverlays={() => dispatchFieldOverlay({ type: 'hide-all' })}
-          onMoveOverlay={(id, direction) => dispatchFieldOverlay({ type: 'move', id, direction })}
-          onRemoveControllerInput={(id) => setControllerInputIds((current) => current.filter((currentId) => currentId !== id))}
-          onRemoveGraphSignal={(id) => setGraphSignals((current) => current.filter((item) => item.id !== id))}
-          onRemoveOverlay={(id) => dispatchFieldOverlay({ type: 'remove', id })}
-          onResize={resizeDataSidebar}
-          onResizeEnd={stopDataSidebarResize}
-          onResizeKeyboard={resizeDataSidebarByKeyboard}
-          onResizeStart={startDataSidebarResize}
-          onSetGraphColor={setGraphSignalColor}
-          onSetRobotCategory={(category) => setRobotCategories((current) => ({
-            ...current,
-            [robot.robotId]: category,
-          }))}
-        onToggleOverlayVisibility={(id) => dispatchFieldOverlay({ type: 'toggle-visibility', id })}
-      />
       {settingsOpen ? (
         <SettingsDialog
           busy={robotModels.busy}

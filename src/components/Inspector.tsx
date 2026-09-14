@@ -2,6 +2,8 @@ import { useMemo, useState, type DragEvent } from 'react';
 import {
   Bot,
   ChevronRight,
+  Eye,
+  EyeOff,
   Gauge,
   GripVertical,
 } from 'lucide-react';
@@ -10,18 +12,13 @@ import {
   graphSignalById,
   graphSignalValueAt,
 } from '../telemetry/graphSignals';
+import { FIELD_OVERLAY_SOURCES, type ResolvedFieldOverlay } from '../overlays/fieldOverlays';
 import {
-  FIELD_OVERLAY_DRAG_TYPE,
-  FIELD_OVERLAY_SOURCES,
-} from '../overlays/fieldOverlays';
-import {
-  CONTROLLER_INPUT_DRAG_TYPE,
   controllerInputsForRobot,
 } from '../telemetry/controllerInputs';
 import { odometryDebugAt } from '../telemetry/odometryDebug';
 import {
   createTelemetryTopicDragPayload,
-  hasTelemetryTopicDragData,
   writeTelemetryTopicDrag,
 } from '../telemetry/topicDrag';
 import type { RobotId, RobotTelemetry } from '../types';
@@ -30,9 +27,12 @@ interface InspectorProps {
   readonly robot: RobotTelemetry;
   readonly currentTimeS: number;
   readonly collapsed?: boolean;
-  readonly onAddControllerInput: (id: string) => void;
-  readonly onAddFieldOverlay: (id: string) => void;
-  readonly onAddGraphSignal: (id: string) => void;
+  readonly controllerInputIds: readonly string[];
+  readonly graphSignalIds: readonly string[];
+  readonly overlays: readonly ResolvedFieldOverlay[];
+  readonly onToggleControllerInput: (id: string) => void;
+  readonly onToggleFieldOverlay: (id: string) => void;
+  readonly onToggleGraphSignal: (id: string) => void;
 }
 
 interface TelemetryField {
@@ -191,12 +191,23 @@ export function Inspector({
   robot,
   currentTimeS,
   collapsed = false,
-  onAddControllerInput,
-  onAddFieldOverlay,
-  onAddGraphSignal,
+  controllerInputIds,
+  graphSignalIds,
+  overlays,
+  onToggleControllerInput,
+  onToggleFieldOverlay,
+  onToggleGraphSignal,
 }: InspectorProps) {
   const [expandedRobots, setExpandedRobots] = useState<ReadonlySet<string>>(() => new Set(['infantry']));
-  const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set(['infantry:inputs']));
+  const [expandedTopics, setExpandedTopics] = useState<ReadonlySet<string>>(() => new Set([
+    'infantry:inputs',
+    'infantry:odometry',
+  ]));
+  const displayedControllerInputs = useMemo(() => new Set(controllerInputIds), [controllerInputIds]);
+  const displayedGraphSignals = useMemo(() => new Set(graphSignalIds), [graphSignalIds]);
+  const displayedFieldOverlays = useMemo(() => new Set(
+    overlays.filter((overlay) => overlay.visible).map((overlay) => overlay.id),
+  ), [overlays]);
 
   const robots = useMemo<readonly RobotNode[]>(() => [
     {
@@ -238,18 +249,6 @@ export function Inspector({
     event.dataTransfer.effectAllowed = 'copy';
     event.dataTransfer.setData(GRAPH_SIGNAL_DRAG_TYPE, graphSignalId);
     event.dataTransfer.setData('text/plain', graphSignalId);
-  };
-
-  const startControllerInputDrag = (event: DragEvent<HTMLDivElement>, controllerInputId: string): void => {
-    event.dataTransfer.effectAllowed = 'copy';
-    event.dataTransfer.setData(CONTROLLER_INPUT_DRAG_TYPE, controllerInputId);
-    event.dataTransfer.setData('text/plain', controllerInputId);
-  };
-
-  const startFieldOverlayDrag = (event: DragEvent<HTMLDivElement>, fieldOverlayId: string): void => {
-    event.dataTransfer.effectAllowed = 'copy';
-    event.dataTransfer.setData(FIELD_OVERLAY_DRAG_TYPE, fieldOverlayId);
-    event.dataTransfer.setData('text/plain', fieldOverlayId);
   };
 
   const startTopicDrag = (
@@ -307,7 +306,7 @@ export function Inspector({
                     const topicKey = `${item.id}:${topic.id}`;
                     const topicExpanded = expandedTopics.has(topicKey);
                     const topicDragPayload = createTelemetryTopicDragPayload(topic.fields);
-                    const topicDraggable = hasTelemetryTopicDragData(topicDragPayload);
+                    const topicDraggable = topicDragPayload.graphSignalIds.length > 0;
                     return (
                       <div className={topicExpanded ? 'topic-node expanded' : 'topic-node'} key={topic.id}>
                         <button
@@ -320,7 +319,7 @@ export function Inspector({
                           onDragStart={topicDraggable
                             ? (event) => startTopicDrag(event, item.name, topic)
                             : undefined}
-                          title={topicDraggable ? 'Drag to add every compatible field in this topic' : undefined}
+                          title={topicDraggable ? 'Drag to graph every numeric field in this topic' : undefined}
                         >
                           <ChevronRight className="tree-chevron" size={14} />
                           <span>{topic.label}</span>
@@ -328,50 +327,64 @@ export function Inspector({
 
                         {topicExpanded ? (
                           <dl className="telemetry-fields" id={`${item.id}-${topic.id}-fields`}>
-                            {topic.fields.map((field) => (
-                              <div
-                                className={field.controllerInputId || field.graphSignalId || field.fieldOverlayId ? 'telemetry-field telemetry-field-draggable' : 'telemetry-field'}
-                                draggable={Boolean(field.controllerInputId || field.graphSignalId || field.fieldOverlayId)}
-                                key={field.label}
-                                title={field.controllerInputId
-                                  ? 'Drag onto Controller Inputs or double-click to monitor'
-                                  : field.graphSignalId
-                                  ? 'Drag into Graph Signals or double-click to graph'
+                            {topic.fields.map((field) => {
+                              const graphDraggable = Boolean(field.graphSignalId);
+                              const displayable = Boolean(
+                                field.controllerInputId || field.graphSignalId || field.fieldOverlayId,
+                              );
+                              const displayed = field.controllerInputId
+                                ? displayedControllerInputs.has(field.controllerInputId)
+                                : field.graphSignalId
+                                  ? displayedGraphSignals.has(field.graphSignalId)
                                   : field.fieldOverlayId
-                                    ? 'Drag onto Field Overlays or double-click to display'
+                                    ? displayedFieldOverlays.has(field.fieldOverlayId)
+                                    : false;
+                              const displayLocation = field.fieldOverlayId
+                                ? 'on field'
+                                : field.graphSignalId
+                                  ? 'on graph'
+                                  : 'on controller';
+                              const toggleDisplay = (): void => {
+                                if (field.controllerInputId) onToggleControllerInput(field.controllerInputId);
+                                else if (field.graphSignalId) onToggleGraphSignal(field.graphSignalId);
+                                else if (field.fieldOverlayId) onToggleFieldOverlay(field.fieldOverlayId);
+                              };
+
+                              return (
+                                <div
+                                  className={[
+                                    'telemetry-field',
+                                    graphDraggable && 'telemetry-field-draggable',
+                                    displayable && 'telemetry-field-displayable',
+                                    displayed && 'telemetry-field-displayed',
+                                  ].filter(Boolean).join(' ')}
+                                  draggable={graphDraggable}
+                                  key={field.label}
+                                  title={graphDraggable ? 'Drag into Graph Signals' : undefined}
+                                  onDragStart={field.graphSignalId
+                                    ? (event) => startSignalDrag(event, field.graphSignalId!)
                                     : undefined}
-                                tabIndex={field.controllerInputId || field.graphSignalId || field.fieldOverlayId ? 0 : undefined}
-                                onDoubleClick={field.controllerInputId
-                                  ? () => onAddControllerInput(field.controllerInputId!)
-                                  : field.graphSignalId
-                                    ? () => onAddGraphSignal(field.graphSignalId!)
-                                  : field.fieldOverlayId
-                                    ? () => onAddFieldOverlay(field.fieldOverlayId!)
-                                    : undefined}
-                                onKeyDown={field.controllerInputId || field.graphSignalId || field.fieldOverlayId
-                                  ? (event) => {
-                                    if (event.key !== 'Enter') return;
-                                    event.preventDefault();
-                                    if (field.controllerInputId) onAddControllerInput(field.controllerInputId);
-                                    else if (field.graphSignalId) onAddGraphSignal(field.graphSignalId);
-                                    else onAddFieldOverlay(field.fieldOverlayId!);
-                                  }
-                                  : undefined}
-                                onDragStart={field.controllerInputId
-                                  ? (event) => startControllerInputDrag(event, field.controllerInputId!)
-                                  : field.graphSignalId
-                                  ? (event) => startSignalDrag(event, field.graphSignalId!)
-                                  : field.fieldOverlayId
-                                    ? (event) => startFieldOverlayDrag(event, field.fieldOverlayId!)
-                                    : undefined}
-                              >
-                                <span className="field-branch">
-                                  {field.controllerInputId || field.graphSignalId || field.fieldOverlayId ? <GripVertical size={11} /> : '—'}
-                                </span>
-                                <dt>{field.label}</dt>
-                                <dd>{field.value}</dd>
-                              </div>
-                            ))}
+                                >
+                                  <span className="field-branch">
+                                    {graphDraggable ? <GripVertical size={11} /> : '—'}
+                                  </span>
+                                  <dt>{field.label}</dt>
+                                  <dd>{field.value}</dd>
+                                  {displayable ? (
+                                    <button
+                                      className="field-visibility-toggle"
+                                      type="button"
+                                      aria-label={`${displayed ? 'Hide' : 'Show'} ${field.label} ${displayLocation}`}
+                                      aria-pressed={displayed}
+                                      title={`${displayed ? 'Hide' : 'Show'} ${displayLocation}`}
+                                      onClick={toggleDisplay}
+                                    >
+                                      {displayed ? <Eye size={13} /> : <EyeOff size={13} />}
+                                    </button>
+                                  ) : null}
+                                </div>
+                              );
+                            })}
                           </dl>
                         ) : null}
                       </div>

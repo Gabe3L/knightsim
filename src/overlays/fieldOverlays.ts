@@ -1,10 +1,4 @@
-export const FIELD_OVERLAY_DRAG_TYPE = 'application/x-knightsim-field-overlay';
-export const FIELD_OVERLAY_STORAGE_KEY = 'knightsim:field-overlay-workspace:v1';
-
-export const COLLAPSED_FIELD_SIDEBAR_WIDTH = 12;
-export const DEFAULT_FIELD_SIDEBAR_WIDTH = 286;
-export const MIN_FIELD_SIDEBAR_WIDTH = 224;
-export const MAX_FIELD_SIDEBAR_WIDTH = 420;
+export const FIELD_OVERLAY_STORAGE_KEY = 'knightsim:field-overlay-workspace:v2';
 
 export type FieldOverlayKind = 'april-tag' | 'lidar' | 'imu' | 'fused';
 export type MeasurementStatus = 'accepted' | 'rejected' | 'predicted' | 'reference';
@@ -53,23 +47,11 @@ export interface ResolvedFieldOverlay extends FieldOverlayConfig {
 }
 
 export interface FieldOverlayWorkspaceState {
-  readonly version: 1;
+  readonly version: 2;
   readonly items: readonly FieldOverlayConfig[];
-  readonly sidebarWidth: number;
-  readonly expandedSidebarWidth: number;
 }
 
-export type FieldOverlayWorkspaceAction =
-  | { readonly type: 'add'; readonly id: string }
-  | { readonly type: 'remove'; readonly id: string }
-  | { readonly type: 'toggle-visibility'; readonly id: string }
-  | { readonly type: 'hide-all' }
-  | { readonly type: 'clear-all' }
-  | { readonly type: 'move'; readonly id: string; readonly direction: -1 | 1 }
-  | { readonly type: 'set-sidebar-width'; readonly width: number }
-  | { readonly type: 'finish-sidebar-resize' }
-  | { readonly type: 'toggle-sidebar' }
-  | { readonly type: 'expand-sidebar' };
+export type FieldOverlayWorkspaceAction = { readonly type: 'toggle-visibility'; readonly id: string };
 
 export const FIELD_OVERLAY_SOURCES: readonly FieldOverlaySourceDescriptor[] = [
   {
@@ -118,37 +100,19 @@ export const fieldOverlaySourceById = (id: string): FieldOverlaySourceDescriptor
 );
 
 export const defaultFieldOverlayWorkspaceState = (): FieldOverlayWorkspaceState => ({
-  version: 1,
-  items: [],
-  sidebarWidth: DEFAULT_FIELD_SIDEBAR_WIDTH,
-  expandedSidebarWidth: DEFAULT_FIELD_SIDEBAR_WIDTH,
+  version: 2,
+  items: FIELD_OVERLAY_SOURCES.map((source) => ({
+    id: source.id,
+    visible: true,
+    color: source.defaultColor,
+  })),
 });
-
-export const isFieldSidebarCollapsed = (width: number): boolean => (
-  width < MIN_FIELD_SIDEBAR_WIDTH
-);
-
-const clampSidebarWidth = (width: number): number => Math.max(
-  COLLAPSED_FIELD_SIDEBAR_WIDTH,
-  Math.min(MAX_FIELD_SIDEBAR_WIDTH, width),
-);
 
 export function fieldOverlayWorkspaceReducer(
   state: FieldOverlayWorkspaceState,
   action: FieldOverlayWorkspaceAction,
 ): FieldOverlayWorkspaceState {
   switch (action.type) {
-    case 'add': {
-      if (state.items.some((item) => item.id === action.id)) return state;
-      const source = fieldOverlaySourceById(action.id);
-      if (!source) return state;
-      return {
-        ...state,
-        items: [...state.items, { id: source.id, visible: true, color: source.defaultColor }],
-      };
-    }
-    case 'remove':
-      return { ...state, items: state.items.filter((item) => item.id !== action.id) };
     case 'toggle-visibility':
       return {
         ...state,
@@ -156,39 +120,6 @@ export function fieldOverlayWorkspaceReducer(
           item.id === action.id ? { ...item, visible: !item.visible } : item
         )),
       };
-    case 'hide-all':
-      return { ...state, items: state.items.map((item) => ({ ...item, visible: false })) };
-    case 'clear-all':
-      return { ...state, items: [] };
-    case 'move': {
-      const currentIndex = state.items.findIndex((item) => item.id === action.id);
-      const nextIndex = currentIndex + action.direction;
-      if (currentIndex < 0 || nextIndex < 0 || nextIndex >= state.items.length) return state;
-      const items = [...state.items];
-      const [item] = items.splice(currentIndex, 1);
-      if (!item) return state;
-      items.splice(nextIndex, 0, item);
-      return { ...state, items };
-    }
-    case 'set-sidebar-width':
-      return { ...state, sidebarWidth: clampSidebarWidth(action.width) };
-    case 'finish-sidebar-resize': {
-      if (state.sidebarWidth < MIN_FIELD_SIDEBAR_WIDTH) {
-        return { ...state, sidebarWidth: COLLAPSED_FIELD_SIDEBAR_WIDTH };
-      }
-      return {
-        ...state,
-        expandedSidebarWidth: state.sidebarWidth,
-      };
-    }
-    case 'toggle-sidebar':
-      return isFieldSidebarCollapsed(state.sidebarWidth)
-        ? { ...state, sidebarWidth: state.expandedSidebarWidth }
-        : { ...state, sidebarWidth: COLLAPSED_FIELD_SIDEBAR_WIDTH, expandedSidebarWidth: state.sidebarWidth };
-    case 'expand-sidebar':
-      return isFieldSidebarCollapsed(state.sidebarWidth)
-        ? { ...state, sidebarWidth: state.expandedSidebarWidth }
-        : state;
   }
 }
 
@@ -210,24 +141,16 @@ export function parseFieldOverlayWorkspace(value: unknown): FieldOverlayWorkspac
   const defaults = defaultFieldOverlayWorkspaceState();
   if (typeof value !== 'object' || value === null) return defaults;
   const stored = value as Partial<FieldOverlayWorkspaceState>;
-  const ids = new Set<string>();
-  const items = Array.isArray(stored.items)
+  const storedItems = Array.isArray(stored.items)
     ? stored.items
       .map(validStoredItem)
-      .filter((item): item is FieldOverlayConfig => {
-        if (!item || ids.has(item.id)) return false;
-        ids.add(item.id);
-        return true;
-      })
+      .filter((item): item is FieldOverlayConfig => Boolean(item))
     : [];
-  const sidebarWidth = typeof stored.sidebarWidth === 'number' && Number.isFinite(stored.sidebarWidth)
-    ? clampSidebarWidth(stored.sidebarWidth)
-    : defaults.sidebarWidth;
-  const expandedSidebarWidth = typeof stored.expandedSidebarWidth === 'number'
-    && Number.isFinite(stored.expandedSidebarWidth)
-    ? Math.max(MIN_FIELD_SIDEBAR_WIDTH, Math.min(MAX_FIELD_SIDEBAR_WIDTH, stored.expandedSidebarWidth))
-    : defaults.expandedSidebarWidth;
-  return { version: 1, items, sidebarWidth, expandedSidebarWidth };
+  const storedItemById = new Map(storedItems.map((item) => [item.id, item]));
+  return {
+    version: 2,
+    items: defaults.items.map((item) => storedItemById.get(item.id) ?? item),
+  };
 }
 
 export function resolveFieldOverlays(
@@ -250,15 +173,6 @@ export function resolveFieldOverlays(
   });
 }
 
-interface DragDataReader {
-  readonly getData: (format: string) => string;
-}
-
-export function readFieldOverlayDragId(dataTransfer: DragDataReader): string | null {
-  const id = dataTransfer.getData(FIELD_OVERLAY_DRAG_TYPE);
-  return fieldOverlaySourceById(id)?.id ?? null;
-}
-
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!target || typeof target !== 'object') return false;
   const element = target as {
@@ -270,24 +184,6 @@ function isEditableTarget(target: EventTarget | null): boolean {
   if (element.tagName && ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName.toUpperCase())) return true;
   return Boolean(element.closest?.('[contenteditable="true"], [role="textbox"]'));
 }
-
-export function isRightSidebarShortcut(event: Pick<
-  KeyboardEvent,
-  'altKey' | 'code' | 'ctrlKey' | 'metaKey' | 'repeat' | 'target'
->, platform: string = 'win32'): boolean {
-  const primaryModifierPressed = platform === 'darwin' ? event.metaKey : event.ctrlKey;
-  const otherPrimaryModifierPressed = platform === 'darwin' ? event.ctrlKey : event.metaKey;
-  return primaryModifierPressed
-    && event.altKey
-    && !otherPrimaryModifierPressed
-    && event.code === 'KeyB'
-    && !event.repeat
-    && !isEditableTarget(event.target);
-}
-
-// Kept as an alias for persisted tests and integrations from the original
-// field-only panel. The shortcut now controls the shared right sidebar.
-export const isFieldSidebarShortcut = isRightSidebarShortcut;
 
 export function isLeftSidebarShortcut(event: Pick<
   KeyboardEvent,

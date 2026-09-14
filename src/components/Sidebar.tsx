@@ -1,6 +1,7 @@
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { Settings2 } from 'lucide-react';
 import logo from '../assets/logo.png';
+import type { ResolvedFieldOverlay } from '../overlays/fieldOverlays';
 import type { RobotTelemetry } from '../types';
 import { Inspector } from './Inspector';
 
@@ -11,9 +12,12 @@ interface SidebarProps {
   readonly robot: RobotTelemetry;
   readonly currentTimeS: number;
   readonly width: number;
-  readonly onAddControllerInput: (id: string) => void;
-  readonly onAddFieldOverlay: (id: string) => void;
-  readonly onAddGraphSignal: (id: string) => void;
+  readonly controllerInputIds: readonly string[];
+  readonly graphSignalIds: readonly string[];
+  readonly overlays: readonly ResolvedFieldOverlay[];
+  readonly onToggleControllerInput: (id: string) => void;
+  readonly onToggleFieldOverlay: (id: string) => void;
+  readonly onToggleGraphSignal: (id: string) => void;
   readonly onOpenSettings: () => void;
   readonly onResize: (pointerX: number) => void;
   readonly onResizeEnd: () => void;
@@ -28,9 +32,12 @@ export function Sidebar({
   minWidth,
   robot,
   width,
-  onAddControllerInput,
-  onAddFieldOverlay,
-  onAddGraphSignal,
+  controllerInputIds,
+  graphSignalIds,
+  overlays,
+  onToggleControllerInput,
+  onToggleFieldOverlay,
+  onToggleGraphSignal,
   onOpenSettings,
   onResize,
   onResizeEnd,
@@ -81,9 +88,12 @@ export function Sidebar({
           robot={robot}
           currentTimeS={currentTimeS}
           collapsed={compact}
-          onAddControllerInput={onAddControllerInput}
-          onAddFieldOverlay={onAddFieldOverlay}
-          onAddGraphSignal={onAddGraphSignal}
+          controllerInputIds={controllerInputIds}
+          graphSignalIds={graphSignalIds}
+          overlays={overlays}
+          onToggleControllerInput={onToggleControllerInput}
+          onToggleFieldOverlay={onToggleFieldOverlay}
+          onToggleGraphSignal={onToggleGraphSignal}
         />
       </div>
 
