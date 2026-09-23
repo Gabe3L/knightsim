@@ -11,6 +11,7 @@ export type RobotCategory = 'ghost' | 'enemy' | 'infantry' | 'sentry' | 'hero';
 export type ModelAxis = 'x' | 'y' | 'z';
 
 export interface RobotModelOrientation {
+  readonly scale: number;
   readonly rotationDeg: Record<ModelAxis, number>;
   readonly flipped: Record<ModelAxis, boolean>;
 }

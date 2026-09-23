@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { FIELD_CAMERA_KEYBINDINGS } from '../keybindings';
 import type { ModelAxis, RobotId, RobotModelLibrary, RobotModelOrientation } from '../types';
 import '../styles/settings.css';
+import { ModelScaleControls } from './ModelScaleControls';
 
 interface SettingsDialogProps {
   readonly busy: boolean;
@@ -176,6 +177,7 @@ const flip = (orientation: RobotModelOrientation, axis: ModelAxis): RobotModelOr
 });
 
 const RESET_ORIENTATION: RobotModelOrientation = {
+  scale: 1,
   rotationDeg: { x: 0, y: 0, z: 0 },
   flipped: { x: false, y: false, z: false },
 };
@@ -415,6 +417,7 @@ export function SettingsDialog({
                         <Trash2 size={14} />
                       </button>
                     </div>
+                    <ModelScaleControls key={activeModel.id} model={activeModel} busy={busy} onUpdate={onUpdateOrientation} />
                     <div className="orientation-controls" aria-label={`${activeModel.name} orientation`}>
                       <div className="orientation-group">
                         <span>Rotate 90°</span>
@@ -451,9 +454,10 @@ export function SettingsDialog({
                       </div>
                       <button
                         className="reset-orientation"
+                        title="Reset rotation and flips (keep scale)"
                         type="button"
                         disabled={busy}
-                        onClick={() => onUpdateOrientation(activeModel.id, RESET_ORIENTATION)}
+                        onClick={() => onUpdateOrientation(activeModel.id, { ...RESET_ORIENTATION, scale: activeModel.orientation.scale })}
                       >
                         <RotateCcw size={13} /> Reset
                       </button>

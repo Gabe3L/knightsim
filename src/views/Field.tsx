@@ -424,8 +424,9 @@ const UploadedRobot = memo(function UploadedRobot({
   const url = window.knightSim?.robotModels.urlFor(model.id) ?? "";
   const { scene } = useGLTF(url, false, true, configureDracoLoader);
   const prepared = useMemo(() => prepareRobotModel(scene), [scene]);
-  const { rotationDeg, flipped } = model.orientation;
+  const { rotationDeg, flipped, scale = 1 } = model.orientation;
   const orientationKey = [
+    scale,
     rotationDeg.x,
     rotationDeg.y,
     rotationDeg.z,
@@ -442,7 +443,7 @@ const UploadedRobot = memo(function UploadedRobot({
           (rotationDeg.y * Math.PI) / 180,
           (rotationDeg.z * Math.PI) / 180,
         ]}
-        scale={[flipped.x ? -1 : 1, flipped.y ? -1 : 1, flipped.z ? -1 : 1]}
+        scale={[(flipped.x ? -1 : 1) * scale, (flipped.y ? -1 : 1) * scale, (flipped.z ? -1 : 1) * scale]}
       >
         <primitive object={prepared.object} />
       </group>

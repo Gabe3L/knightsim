@@ -14,6 +14,7 @@ type RobotId = 'sentry' | 'infantry' | 'hero';
 const ROBOT_IDS: readonly RobotId[] = ['sentry', 'infantry', 'hero'];
 
 interface RobotModelOrientation {
+  readonly scale: number;
   readonly rotationDeg: Record<Axis, number>;
   readonly flipped: Record<Axis, boolean>;
 }
@@ -81,6 +82,8 @@ function normalizeOrientation(value: unknown): RobotModelOrientation {
     return ((Math.round(candidate / 90) * 90) % 360 + 360) % 360;
   };
   return {
+    scale: typeof orientation.scale === 'number' && Number.isFinite(orientation.scale) && orientation.scale > 0
+      ? orientation.scale : 1,
     rotationDeg: { x: normalizeRotation('x'), y: normalizeRotation('y'), z: normalizeRotation('z') },
     flipped: {
       x: flipped.x === true,
