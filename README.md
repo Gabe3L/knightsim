@@ -19,6 +19,10 @@ npm start
 
 `npm start` rebuilds the app before launching Electron so it includes the latest source changes. Use `npm run dev` for live updates while editing.
 
+The production build runs Vite alongside the renderer/configuration type checks and Electron compilation. Both tasks must succeed; a failure stops the other task. Renderer and Vite-configuration checks reuse incremental state in `node_modules/.tmp`; `npx tsc -b --force` forces a fresh check. The shared robot-profile JSON is an explicit renderer input so edits invalidate that cache.
+
+Tailwind scans `src/` and `index.html` for classes instead of the entire project, keeping large model binaries out of CSS generation. If UI templates are added elsewhere, register their paths with `@source` in `src/styles.css`.
+
 ## Robot profiles
 
 Choose a robot from the **Field** dropdown. Preferences open on that robot; each profile has its own model assignment, tuning defaults, and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry and tuning values are illustrative, not manufacturer specifications.

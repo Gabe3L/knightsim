@@ -1,4 +1,6 @@
-@import "tailwindcss";
+/* Keep class detection out of model binaries, manuals, and other non-UI files. */
+@import "tailwindcss" source(".");
+@source "../index.html";
 
 @import "./styles/base.css";
 @import "./styles/layout.css";
