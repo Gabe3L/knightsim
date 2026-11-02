@@ -5,6 +5,9 @@ import {
   type ControllerInputDescriptor,
 } from '../telemetry/controllerInputs';
 import type { ControllerMode } from '../types';
+import { DualSenseController, type AlternativeControllerProps } from './DualSenseController';
+import { XboxController } from './XboxController';
+import { KeyboardGraphic } from './KeyboardGraphic';
 
 interface ControllerViewProps {
   readonly controllerMode: ControllerMode;
@@ -14,18 +17,6 @@ interface ControllerViewProps {
 
 const classNames = (...values: Array<string | false>): string => values.filter(Boolean).join(' ');
 
-interface AlternativeControllerProps {
-  readonly inputClass: (control: ControllerControl, active?: boolean) => string;
-  readonly leftActive: boolean;
-  readonly leftMapped: boolean;
-  readonly leftX: number;
-  readonly leftY: number;
-  readonly mapped: (...controls: readonly ControllerControl[]) => boolean;
-  readonly rightActive: boolean;
-  readonly rightMapped: boolean;
-  readonly rightX: number;
-  readonly rightY: number;
-}
 
 function KeyboardMouseController({
   inputClass,
@@ -37,38 +28,15 @@ function KeyboardMouseController({
   rightX,
   rightY,
 }: AlternativeControllerProps) {
-  const keyClass = (control: ControllerControl, active?: boolean): string => classNames(
-    'kbm-key',
-    inputClass(control, active === undefined ? undefined : mapped(control) && active),
-  );
-
   return (
     <div className="kbm-controller" role="img" aria-label="Keyboard and mouse controller input monitor">
-      <div className="kbm-keyboard">
-        <div className="kbm-function-row">
-          <span className={keyClass('record')}>R</span>
-          <span className={keyClass('shutter')}>F</span>
-          <span className={keyClass('return-home')}>H</span>
-          <span className={keyClass('pause')}>P</span>
-        </div>
-        <div className="kbm-movement-grid">
-          <span className={keyClass('left-stick-y', leftY > 0.06)}>W</span>
-          <span className={keyClass('left-stick-x', leftX < -0.06)}>A</span>
-          <span className={keyClass('left-stick-y', leftY < -0.06)}>S</span>
-          <span className={keyClass('left-stick-x', leftX > 0.06)}>D</span>
-        </div>
-        <div className="kbm-bottom-row">
-          <span className={keyClass('custom-1')}>SHIFT</span>
-          <span className={keyClass('power')}>SPACE</span>
-          <span className={keyClass('custom-2')}>CTRL</span>
-        </div>
-      </div>
+      <KeyboardGraphic {...{ inputClass, leftX, leftY, mapped }} />
 
       <svg className="kbm-mouse" viewBox="0 0 250 390" aria-hidden="true">
         <defs>
-          <linearGradient id="mouse-shell" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#e9edf0" />
-            <stop offset="1" stopColor="#aeb7bd" />
+          <linearGradient id="mouse-shell" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#f8f9ff" />
+            <stop offset="1" stopColor="#dce1ed" />
           </linearGradient>
         </defs>
         <path className="kbm-mouse-shell" d="M125 18 C58 18 29 72 29 157 V241 C29 326 67 371 125 371 C183 371 221 326 221 241 V157 C221 72 192 18 125 18 Z" />
@@ -102,96 +70,10 @@ function GamepadController({
   rightY,
   variant,
 }: AlternativeControllerProps & { readonly variant: 'xbox' | 'ps5' }) {
-  const isXbox = variant === 'xbox';
-  const leftStick = isXbox ? { x: 254, y: 252 } : { x: 276, y: 346 };
-  const rightStick = isXbox ? { x: 429, y: 350 } : { x: 444, y: 346 };
-  const faceLabels = isXbox ? ['Y', 'B', 'A', 'X'] : ['△', '○', '×', '□'];
-  const faceControls: readonly ControllerControl[] = ['record', 'shutter', 'return-home', 'pause'];
-
-  const stick = (
-    side: 'left' | 'right',
-    center: { readonly x: number; readonly y: number },
-    xValue: number,
-    yValue: number,
-    isMapped: boolean,
-    isActive: boolean,
-  ) => (
-    <g
-      className={classNames('remote-input gamepad-stick', isMapped && 'remote-input-mapped', isActive && 'remote-input-active')}
-      aria-label={`${side} joystick`}
-    >
-      <circle className="gamepad-stick-bezel" cx={center.x} cy={center.y} r="53" />
-      <circle className="gamepad-stick-well" cx={center.x} cy={center.y} r="42" />
-      <circle className="gamepad-stick-range" cx={center.x} cy={center.y} r="26" />
-      <circle className="gamepad-stick-knob" cx={center.x + xValue * 20} cy={center.y - yValue * 20} r="25" />
-    </g>
-  );
-
-  return (
-    <svg
-      className={classNames('controller-gamepad', `controller-gamepad-${variant}`)}
-      viewBox="0 0 720 600"
-      role="img"
-      aria-label={`${isXbox ? 'Xbox' : 'PlayStation 5'} controller input monitor`}
-    >
-      <defs>
-        <linearGradient id={`gamepad-shell-${variant}`} x1="0" y1="0" x2="0.8" y2="1">
-          <stop offset="0" stopColor={isXbox ? '#34383d' : '#f4f5f6'} />
-          <stop offset="1" stopColor={isXbox ? '#111418' : '#c9ced2'} />
-        </linearGradient>
-        <filter id={`gamepad-shadow-${variant}`} x="-30%" y="-30%" width="160%" height="190%">
-          <feDropShadow dx="0" dy="18" stdDeviation="18" floodColor="#000" floodOpacity="0.55" />
-        </filter>
-      </defs>
-      <ellipse className="remote-floor-shadow" cx="360" cy="520" rx="230" ry="26" />
-      <path
-        className="gamepad-shell"
-        style={{ fill: `url(#gamepad-shell-${variant})`, filter: `url(#gamepad-shadow-${variant})` }}
-        d={isXbox
-          ? 'M207 159 Q248 124 306 130 H414 Q472 124 513 159 Q556 197 581 282 L610 425 Q619 479 583 501 Q548 521 516 480 L448 394 H272 L204 480 Q172 521 137 501 Q101 479 110 425 L139 282 Q164 197 207 159 Z'
-          : 'M207 157 Q247 127 302 133 H418 Q473 127 513 157 Q552 187 577 269 L612 421 Q626 484 583 505 Q547 522 513 476 L453 397 H267 L207 476 Q173 522 137 505 Q94 484 108 421 L143 269 Q168 187 207 157 Z'}
-      />
-      {!isXbox ? <path className="gamepad-ps5-panel" d="M274 155 Q360 123 446 155 L430 337 Q360 370 290 337 Z" /> : null}
-
-      <g className={inputClass('custom-1')}>
-        <path className="gamepad-shoulder" d="M182 172 Q218 137 271 140 L262 168 Q218 168 190 197 Z" />
-        <text className="gamepad-shoulder-label" x="224" y="161" textAnchor="middle">L1</text>
-      </g>
-      <g className={inputClass('custom-2')}>
-        <path className="gamepad-shoulder" d="M458 140 Q511 137 547 172 L539 197 Q502 168 458 168 Z" />
-        <text className="gamepad-shoulder-label" x="496" y="161" textAnchor="middle">R1</text>
-      </g>
-
-      {stick('left', leftStick, leftX, leftY, leftMapped, leftActive)}
-      {stick('right', rightStick, rightX, rightY, rightMapped, rightActive)}
-
-      <g className={inputClass('gimbal-dial', mapped('gimbal-dial'))} aria-label="Directional pad">
-        <path className="gamepad-dpad" d={isXbox
-          ? 'M273 304 H294 V283 H320 V304 H341 V330 H320 V351 H294 V330 H273 Z'
-          : 'M202 239 H224 V217 H249 V239 H271 V264 H249 V286 H224 V264 H202 Z'}
-        />
-      </g>
-
-      {faceLabels.map((label, index) => {
-        const positions = [[504, 226], [543, 265], [504, 304], [465, 265]] as const;
-        const [x, y] = positions[index]!;
-        return (
-          <g className={inputClass(faceControls[index]!)} key={label}>
-            <circle className="gamepad-face-button" cx={x} cy={y} r="19" />
-            <text className="gamepad-face-label" x={x} y={y + 5} textAnchor="middle">{label}</text>
-          </g>
-        );
-      })}
-
-      <g className={inputClass('flight-mode', mapped('flight-mode'))}>
-        <rect className="gamepad-menu-button" x="320" y="235" width="31" height="18" rx="8" />
-      </g>
-      <g className={inputClass('power')}>
-        <circle className="gamepad-home-button" cx="380" cy="245" r="18" />
-        <text className="gamepad-home-label" x="380" y="250" textAnchor="middle">{isXbox ? 'X' : 'PS'}</text>
-      </g>
-    </svg>
-  );
+  if (variant === 'ps5') {
+    return <DualSenseController {...{ inputClass, leftActive, leftMapped, leftX, leftY, mapped, rightActive, rightMapped, rightX, rightY }} />;
+  }
+  return <XboxController {...{ inputClass, leftActive, leftMapped, leftX, leftY, mapped, rightActive, rightMapped, rightX, rightY }} />;
 }
 
 export function ControllerView({ controllerMode, currentTimeS, selectedInputIds }: ControllerViewProps) {

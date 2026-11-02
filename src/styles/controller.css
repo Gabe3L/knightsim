@@ -25,67 +25,127 @@
 /* Offset the smaller framed canvas so the controller retains its prior rendered size. */
 .controller-remote { position: relative; z-index: 1; display: block; width: min(calc(94% + 25px), 820px); height: min(calc(94% + var(--controller-scale-offset, 38px)), 670px); overflow: visible; }
 .controller-gamepad { position: relative; z-index: 1; display: block; width: min(92%, 820px); height: min(92%, 650px); overflow: visible; }
-.gamepad-shell { stroke: #59616a; stroke-width: 2.5; }
-.controller-gamepad-ps5 .gamepad-shell { stroke: #aeb5ba; }
-.gamepad-ps5-panel { fill: #23282e; stroke: #0d1014; stroke-width: 2; }
-.gamepad-shoulder { fill: #252a30; stroke: #69717a; stroke-width: 2; }
-.controller-gamepad-ps5 .gamepad-shoulder { fill: #e4e6e8; stroke: #9ca4aa; }
-.gamepad-shoulder-label { fill: #c7cdd2; font: 800 12px var(--font-ui); }
-.controller-gamepad-ps5 .gamepad-shoulder-label { fill: #3e454b; }
-.gamepad-stick-bezel { fill: #2c3238; stroke: #0b0e12; stroke-width: 3; }
-.gamepad-stick-well { fill: #0b0e12; stroke: #555e66; stroke-width: 2; }
-.gamepad-stick-range { fill: none; stroke: rgba(202,211,218,.2); stroke-dasharray: 3 5; }
-.gamepad-stick-knob { fill: #252b31; stroke: #727b83; stroke-width: 2.5; }
-.gamepad-dpad { fill: #20262b; stroke: #737c84; stroke-linejoin: round; stroke-width: 2; }
-.gamepad-face-button { fill: #242a30; stroke: #747e87; stroke-width: 2; }
-.gamepad-face-label { fill: #d7dce0; font: 800 14px var(--font-ui); }
-.controller-gamepad-xbox .gamepad-face-label { fill: #9fe07a; }
-.controller-gamepad-xbox .remote-input:nth-of-type(7) .gamepad-face-label { fill: #ef6969; }
-.gamepad-menu-button { fill: #252b31; stroke: #737b83; stroke-width: 1.5; }
-.gamepad-home-button { fill: #1c2126; stroke: #7a838b; stroke-width: 2; }
-.gamepad-home-label { fill: #d6dbe0; font: 800 10px var(--font-ui); }
-.remote-input-mapped .gamepad-shoulder,
-.remote-input-mapped .gamepad-stick-bezel,
-.remote-input-mapped .gamepad-dpad,
-.remote-input-mapped .gamepad-face-button,
-.remote-input-mapped .gamepad-menu-button,
-.remote-input-mapped .gamepad-home-button { stroke: #ef4764; stroke-width: 3; }
-.remote-input-active .gamepad-shoulder,
-.remote-input-active .gamepad-stick-knob,
-.remote-input-active .gamepad-face-button,
-.remote-input-active .gamepad-menu-button,
-.remote-input-active .gamepad-home-button { fill: #ef4764; stroke: #ffc2cd; }
-.remote-input-active .gamepad-face-label,
-.remote-input-active .gamepad-home-label { fill: #280910; }
+/* Xbox uses the same restrained shading and rounded outlines as DualSense. */
+.xbox-shell { stroke: #7b879e; stroke-width: 2.8; stroke-linejoin: round; }
+.xbox-grip { stroke: #293142; stroke-width: 1.5; stroke-linejoin: round; }
+.xbox-shell-highlight { fill: none; stroke: #79869e; stroke-width: 2; opacity: .6; stroke-linecap: round; }
+.xbox-bottom-seam { fill: none; stroke: #56627b; stroke-width: 1.5; }
+.xbox-trigger { fill: #242b3a; stroke: #111724; stroke-width: 2; }
+.xbox-bumper { fill: #343e50; stroke: #141c2b; stroke-width: 2; stroke-linejoin: round; }
+.xbox-bumper-label { fill: #abb5c9; font: 650 9px var(--font-ui); }
+.xbox-stick-surround { fill: #343d50; stroke: #65718a; stroke-width: 2; }
+.xbox-stick-socket { fill: #171e2c; stroke: #111724; stroke-width: 2; }
+.xbox-stick-cap { stroke: #111724; stroke-width: 2; }
+.xbox-stick-rim { fill: none; stroke: #687791; stroke-width: 2; }
+.xbox-stick-center { fill: #3b465b; stroke: #232c3e; stroke-width: 1.8; }
+.xbox-dpad-surround { fill: #212938; stroke: #59657e; stroke-width: 2; }
+.xbox-dpad { fill: #3f4a60; stroke: #7a879f; stroke-width: 2; stroke-linejoin: round; }
+.xbox-dpad-facet { fill: none; stroke: #66748c; stroke-width: 1.5; stroke-linejoin: round; }
+.xbox-dpad-cross { fill: #313b4e; stroke: #242d40; stroke-width: 1.5; stroke-linejoin: round; }
+.xbox-face-seat { fill: #1d2534; stroke: #5e6b83; stroke-width: 1.5; }
+.xbox-face-button { stroke: #7a879f; stroke-width: 2; }
+.xbox-face-label { font: 750 20px var(--font-ui); }
+.xbox-home-button { fill: #202837; stroke: #71809a; stroke-width: 2; }
+.xbox-home-disc { fill: #eef3fd; }
+.xbox-logo { fill: #30394b; }
+.xbox-menu-button { fill: #283244; stroke: #6b7991; stroke-width: 1.6; }
+.xbox-icon { fill: none; stroke: #c2cce0; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.controller-gamepad-xbox .remote-input-mapped { filter: drop-shadow(0 0 4px rgba(239,71,100,.5)); }
+.remote-input-mapped .xbox-bumper,
+.remote-input-mapped .xbox-stick-surround,
+.remote-input-mapped .xbox-dpad,
+.remote-input-mapped .xbox-face-button,
+.remote-input-mapped .xbox-menu-button,
+.remote-input-mapped .xbox-home-button { stroke: #ef4764; stroke-width: 2.5; }
+.remote-input-active .xbox-bumper,
+.remote-input-active .xbox-stick-center,
+.remote-input-active .xbox-dpad-cross,
+.remote-input-active .xbox-face-button,
+.remote-input-active .xbox-menu-button,
+.remote-input-active .xbox-home-button { fill: #ef4764; }
+.remote-input-active .xbox-face-label { fill: #350c17; }
+.remote-input-active .xbox-stick-cap { stroke: #ff9aaf; }
 
-.kbm-controller { position: relative; z-index: 1; display: grid; width: min(88%, 930px); grid-template-columns: minmax(390px, 1fr) minmax(150px, 220px); align-items: end; gap: clamp(28px, 6vw, 72px); }
-.kbm-keyboard { display: grid; gap: 13px; padding: 28px 32px 34px; border: 2px solid #505861; border-radius: 18px; background: linear-gradient(145deg, #2a3036, #101419); box-shadow: 0 24px 35px rgba(0,0,0,.48), inset 0 1px rgba(255,255,255,.08); transform: perspective(800px) rotateX(9deg); }
-.kbm-function-row,
-.kbm-bottom-row { display: flex; gap: 11px; }
-.kbm-function-row { justify-content: flex-end; }
-.kbm-movement-grid { display: grid; width: 186px; grid-template-columns: repeat(3, 54px); grid-template-rows: repeat(2, 52px); gap: 8px; }
-.kbm-movement-grid .kbm-key:nth-child(1) { grid-column: 2; }
-.kbm-movement-grid .kbm-key:nth-child(2) { grid-column: 1; grid-row: 2; }
-.kbm-movement-grid .kbm-key:nth-child(3) { grid-column: 2; grid-row: 2; }
-.kbm-movement-grid .kbm-key:nth-child(4) { grid-column: 3; grid-row: 2; }
-.kbm-key { display: grid; min-width: 52px; height: 50px; padding: 0 13px; place-items: center; border: 1px solid #59626c; border-bottom-width: 4px; border-radius: 7px; color: #aeb6bd; background: linear-gradient(180deg, #333a42, #20262c); box-shadow: 0 5px 8px rgba(0,0,0,.3); font: 750 12px/1 var(--font-ui); letter-spacing: .055em; }
-.kbm-bottom-row .kbm-key:nth-child(2) { flex: 1; }
-.kbm-key.remote-input-mapped { border-color: #ef4764; color: #f2abb8; box-shadow: 0 0 16px rgba(239,71,100,.28), 0 5px 8px rgba(0,0,0,.3); }
-.kbm-key.remote-input-active { border-bottom-width: 1px; color: #260810; background: #ef4764; box-shadow: 0 0 22px rgba(239,71,100,.48); transform: translateY(3px); }
-.kbm-mouse { display: block; width: 100%; max-height: 390px; overflow: visible; filter: drop-shadow(0 22px 20px rgba(0,0,0,.48)); }
-.kbm-mouse-shell { fill: url(#mouse-shell); stroke: #8d969d; stroke-width: 2.5; }
-.kbm-mouse > path.remote-input { fill: rgba(30,35,40,.06); stroke: transparent; stroke-width: 3; }
+/* Clean, evenly lit DualSense illustration with softly rounded outlines. */
+.dualsense-shell { stroke: #7f8ba3; stroke-width: 2.8; stroke-linejoin: round; }
+.dualsense-trim { stroke: #1c2332; stroke-width: 2.2; stroke-linejoin: round; }
+.dualsense-shell-highlight { fill: none; stroke: #fff; stroke-width: 2; opacity: .85; }
+.dualsense-shoulder { fill: #343c4e; stroke: #1c2332; stroke-width: 2; stroke-linejoin: round; }
+.dualsense-shoulder-label { fill: #9299a6; font: 600 9px var(--font-ui); }
+.dualsense-light-bar { fill: none; stroke: #5b8dff; stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 2px #326dff); }
+.dualsense-touchpad { stroke: #9ca9c2; stroke-width: 2; stroke-linejoin: round; }
+.dualsense-face-seat { fill: #c1cbdd; stroke: #f9faff; stroke-width: 1; }
+.dualsense-face-button,
+.dualsense-dpad-button { stroke: #929fb8; stroke-width: 2; stroke-linejoin: round; }
+.dualsense-face-symbol { fill: none; stroke: #7887a2; stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.dualsense-dpad-arrow { fill: #a9b1bf; }
+.dualsense-small-button { fill: #d8dde7; stroke: #939dac; stroke-width: 1.2; }
+.dualsense-small-icon { fill: none; stroke: #818b9c; stroke-width: 1.5; stroke-linecap: round; }
+.dualsense-speaker { fill: #05070b; stroke: #424752; stroke-width: .5; }
+.dualsense-player-indicator { fill: #b4d5ff; }
+.dualsense-stick-surround { fill: #343d50; stroke: #65718a; stroke-width: 2; }
+.dualsense-stick-socket { stroke: #090b10; stroke-width: 2; }
+.dualsense-stick-cap { stroke: #0c0f15; stroke-width: 2; }
+.dualsense-stick-rim { fill: none; stroke: #687791; stroke-width: 2; }
+.dualsense-stick-center { fill: #3b465b; stroke: #232c3e; stroke-width: 1.8; }
+.dualsense-ps-button { fill: #0a0d13; stroke: #4b515e; stroke-width: .75; stroke-linejoin: round; }
+.dualsense-mute-button { fill: #484e59; stroke: #10131b; stroke-width: 1.5; }
+.dualsense-microphone { fill: none; stroke: #6b7281; stroke-width: 1; stroke-linecap: round; }
+.controller-gamepad-ps5 .remote-input-mapped { filter: drop-shadow(0 0 4px rgba(239,71,100,.5)); }
+.remote-input-mapped .dualsense-face-button,
+.remote-input-mapped .dualsense-dpad-button,
+.remote-input-mapped .dualsense-stick-surround,
+.remote-input-mapped .dualsense-small-button,
+.remote-input-mapped .dualsense-shoulder,
+.remote-input-mapped .dualsense-ps-button { stroke: #ef4764; stroke-width: 2.5; }
+.remote-input-active .dualsense-face-button,
+.remote-input-active .dualsense-dpad-button,
+.remote-input-active .dualsense-stick-center,
+.remote-input-active .dualsense-small-button,
+.remote-input-active .dualsense-shoulder,
+.remote-input-active .dualsense-ps-button { fill: #ef4764; }
+.remote-input-active .dualsense-face-symbol { stroke: #350c17; }
+.remote-input-active .dualsense-stick-cap { stroke: #ff9aaf; }
+
+.kbm-controller { position: relative; z-index: 1; display: grid; width: min(92%, 1050px); min-width: 0; grid-template-columns: minmax(0, 4.4fr) minmax(0, 1fr); align-items: center; gap: clamp(18px, 3vw, 40px); }
+.kbm-keyboard { display: block; width: 100%; min-width: 0; overflow: visible; filter: drop-shadow(0 18px 15px rgba(0,0,0,.4)); }
+.keyboard-case-edge { fill: #1e2739; stroke: #172030; stroke-width: 2; }
+.keyboard-case { stroke: #7b879e; stroke-width: 2.5; }
+.keyboard-case-highlight { fill: none; stroke: #9aa7bf; stroke-width: 2; stroke-linecap: round; opacity: .6; }
+.keyboard-plate { fill: #1b2536; stroke: #111c2c; stroke-width: 2; }
+.keyboard-key-side { fill: #929fb8; stroke: #172132; stroke-width: 1.4; }
+.keyboard-key-top { stroke: #929fb8; stroke-width: 1.3; }
+.keyboard-key-highlight { fill: none; stroke: #fff; stroke-width: 1; opacity: .45; stroke-linecap: round; }
+.keyboard-key-legend { fill: #7887a2; font: 650 11px var(--font-ui); }
+.keyboard-key-legend-small { font-size: 8px; }
+.keyboard-key-slate .keyboard-key-side { fill: #333f53; }
+.keyboard-key-slate .keyboard-key-top { fill: #343e50; stroke: #65718a; }
+.keyboard-key-slate .keyboard-key-legend { fill: #e0e6f2; }
+.keyboard-homing-bar { fill: none; stroke: #798499; stroke-width: 1.5; stroke-linecap: round; }
+.keyboard-case-detail { fill: #a9b1bf; stroke: #a9b1bf; stroke-width: 1.5; stroke-linecap: round; }
+.kbm-keyboard .remote-input-mapped { filter: drop-shadow(0 0 3px rgba(239,71,100,.55)); }
+.keyboard-key.remote-input-mapped .keyboard-key-top { stroke: #ef4764; stroke-width: 2; }
+.keyboard-key.remote-input-active .keyboard-key-top { fill: #ef4764; stroke: #ffc2cd; transform: translateY(3px); }
+.keyboard-key.remote-input-active .keyboard-key-legend,
+.keyboard-key.remote-input-active .keyboard-homing-bar { fill: #350c17; transform: translateY(3px); }
+.keyboard-key.remote-input-active .keyboard-homing-bar { stroke: #350c17; }
+.keyboard-key.remote-input-active .keyboard-key-highlight { opacity: 0; }
+.kbm-mouse { display: block; width: 100%; max-height: 390px; overflow: visible; filter: drop-shadow(0 18px 15px rgba(0,0,0,.4)); }
+.kbm-mouse-shell { fill: url(#mouse-shell); stroke: #929fb8; stroke-width: 2.5; }
+.kbm-mouse > path.remote-input { fill: #eef1fa; stroke: #929fb8; stroke-width: 2; }
 .kbm-mouse > path.remote-input-mapped { fill: rgba(239,71,100,.09); stroke: #ef4764; }
 .kbm-mouse > path.remote-input-active { fill: #ef4764; stroke: #ffc2cd; }
-.kbm-mouse-divider { fill: none; stroke: #7f888f; stroke-width: 2; }
-.kbm-mouse-wheel { fill: #30363c; stroke: #0c1013; stroke-width: 2; }
-.kbm-wheel-tick { stroke: #929ba2; stroke-width: 2; }
-.kbm-mouse-motion-cross { fill: none; stroke: rgba(50,57,63,.22); stroke-width: 2; }
-.kbm-mouse-motion { fill: #323940; stroke: #69737b; stroke-width: 2; }
+.kbm-mouse-divider { fill: none; stroke: #929fb8; stroke-width: 2; }
+.kbm-mouse-wheel { fill: #30394c; stroke: #111724; stroke-width: 2; }
+.kbm-wheel-tick { stroke: #687791; stroke-width: 2; }
+.kbm-mouse-motion-cross { fill: none; stroke: #b4bdcf; stroke-width: 2; }
+.kbm-mouse-motion { fill: #3b465b; stroke: #65718a; stroke-width: 2; }
 .remote-input-mapped .kbm-mouse-wheel,
 .remote-input-mapped .kbm-mouse-motion { stroke: #ef4764; stroke-width: 3; }
+.remote-input-active .kbm-mouse-wheel,
 .remote-input-active .kbm-mouse-motion { fill: #ef4764; stroke: #ffc2cd; }
-.kbm-device-label { fill: #5e686f; font: 800 12px var(--font-ui); letter-spacing: .18em; }
+.kbm-device-label { fill: #7887a2; font: 800 12px var(--font-ui); letter-spacing: .18em; }
+.kbm-mouse .remote-input-mapped { filter: drop-shadow(0 0 4px rgba(239,71,100,.5)); }
 .remote-floor-shadow { fill: rgba(0, 3, 6, .48); filter: blur(9px); }
 .remote-shell { fill: url(#controller-shell); stroke: #aeb7bd; stroke-width: 2; }
 .remote-shell-highlight { fill: none; stroke: rgba(255,255,255,.94); stroke-linecap: round; stroke-width: 3; }
@@ -208,8 +268,7 @@
 
 @media (max-width: 1060px) {
   .controller-remote { --controller-scale-offset: 43px; }
-  .kbm-controller { width: min(92%, 780px); grid-template-columns: minmax(330px, 1fr) minmax(130px, 180px); gap: 24px; }
-  .kbm-keyboard { padding: 22px 24px 28px; }
+  .kbm-controller { width: 92%; gap: 20px; }
   .controller-input-sidebar { grid-template-rows: 58px 36px minmax(0, 1fr); }
   .controller-input-sidebar-toolbar > span { display: none; }
   .controller-input-sidebar-toolbar { justify-content: flex-end; }
