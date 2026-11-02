@@ -144,7 +144,7 @@ export const ARCC_2027_DRONE_FIELD = {
     'Floor extent is display padding, not a competition boundary. Base shell and armor outlines are illustrative.'],
 } as const;
 
-export const FIELD_SPECS = { '1v1': ARCC_2027_1V1_FIELD, '3v3': ARCC_2027_3V3_FIELD, drone: ARCC_2027_DRONE_FIELD } as const;
+export const FIELD_SPECS = { '1v1': ARCC_2027_1V1_FIELD, sentry: ARCC_2027_1V1_FIELD, '3v3': ARCC_2027_3V3_FIELD, drone: ARCC_2027_DRONE_FIELD } as const;
 export const fieldWorldX = (xM: number, mode: FieldMode): number => FIELD_SPECS[mode].size.lengthM / 2 - xM;
 export const fieldWorldZ = (yM: number, mode: FieldMode): number => yM - FIELD_SPECS[mode].size.widthM / 2;
 export const teamColor = (team: Team): string => team === 'red' ? '#ed202b' : team === 'blue' ? '#2439e9' : '#e7bd20';

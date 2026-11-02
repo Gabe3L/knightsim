@@ -323,7 +323,7 @@ export const FieldArena = memo(function FieldArena({ mode }: { readonly mode: Fi
         <planeGeometry args={[spec.floor.widthM, spec.floor.depthM]} />
         <meshStandardMaterial color={FLOOR} roughness={0.95} side={DoubleSide} />
       </mesh>
-      {mode === '3v3' ? <ThreeVThree /> : mode === '1v1' ? <OneVOne /> : <group name="drone-field">
+      {mode === '3v3' ? <ThreeVThree /> : mode === '1v1' || mode === 'sentry' ? <OneVOne /> : <group name="drone-field">
         {drone.zones.map((zone) => <Tape key={zone.id} {...zone} />)}
         <DroneBase />
       </group>}

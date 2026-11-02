@@ -301,7 +301,7 @@ export function SettingsDialog({
                   <Box size={16} />
                   <div>
                     <h3>Appearance</h3>
-                    <p>{selectedRobot.name} · {selectedRobot.mobility} · Placeholder {selectedRobot.dimensionsM.length} × {selectedRobot.dimensionsM.width} × {selectedRobot.dimensionsM.height} m (L × W × H).</p>
+                    <p>{selectedRobot.name} · {selectedRobot.mobility} · A black cube labeled with the robot name appears when no model is selected.</p>
                   </div>
                 </div>
 
@@ -314,7 +314,7 @@ export function SettingsDialog({
                       onChange={(event) => onSelect(selectedRobotId, event.currentTarget.value || null)}
                       aria-label={`${selectedRobot.name} robot model`}
                     >
-                      <option value="">{library.models.length === 0 ? 'No model imported' : 'Default placeholder'}</option>
+                      <option value="">Black cube ({selectedRobot.name})</option>
                       {library.models.map((model) => <option value={model.id} key={model.id}>{model.name}</option>)}
                     </select>
                     <button className="secondary-button" type="button" onClick={() => onImport(selectedRobotId)} disabled={busy || loading}>

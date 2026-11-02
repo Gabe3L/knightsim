@@ -2,7 +2,7 @@ import { REPLAY_DURATION_S, telemetryAt } from '../telemetry/mockReplay';
 import type { FieldMode, RobotId, RobotTelemetry } from '../types';
 
 export const FIELD_ROBOT_IDS: Readonly<Record<FieldMode, readonly RobotId[]>> = {
-  '1v1': ['infantry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'],
+  '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'],
 };
 
 type Waypoint = readonly [timeS: number, xM: number, yM: number, zM: number];
@@ -20,7 +20,7 @@ const routes: Readonly<Record<string, readonly Waypoint[]>> = {
 export function fieldRobotsAt(timeS: number, mode: FieldMode): readonly RobotTelemetry[] {
   const time = Math.max(0, Math.min(REPLAY_DURATION_S, Number.isFinite(timeS) ? timeS : 0));
   return FIELD_ROBOT_IDS[mode].map((id) => {
-    const route = routes[id]!;
+    const route = routes[mode === 'sentry' ? 'infantry' : id]!;
     const endIndex = Math.max(1, route.findIndex((point) => point[0] >= time));
     const start = route[endIndex - 1]!, end = route[endIndex]!;
     const t = (time - start[0]) / (end[0] - start[0]);

@@ -1,6 +1,6 @@
 export type ViewMode = 'field' | 'graph' | 'controller';
 
-export type FieldMode = '1v1' | '3v3' | 'drone';
+export type FieldMode = '1v1' | 'sentry' | '3v3' | 'drone';
 
 export type ControllerMode = 'kbm' | 'xbox' | 'ps5' | 'dji';
 

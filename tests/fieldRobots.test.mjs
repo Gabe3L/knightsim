@@ -17,11 +17,11 @@ function overlaps(a, b) {
 }
 
 test('all preview lineups stay within their field and ground routes avoid the new obstacles', () => {
-  for (const [mode, ids] of Object.entries({ '1v1': ['infantry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'] })) {
+  for (const [mode, ids] of Object.entries({ '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'] })) {
     const spec = FIELD_SPECS[mode];
     const obstacles = mode === '3v3' ? [...spec.barriers, ...spec.sideHighGrounds, spec.centralHighGround.deck]
       .map((r) => ({ x: r.xM + r.widthM / 2, y: r.yM + r.depthM / 2, width: r.widthM, depth: r.depthM, angle: 0 }))
-      : mode === '1v1' ? spec.bunkers.map((r) => ({ x: r.center.xM, y: r.center.yM, width: r.lengthM, depth: r.depthM, angle: r.rotationDeg * Math.PI / 180 })) : [];
+      : mode === '1v1' || mode === 'sentry' ? spec.bunkers.map((r) => ({ x: r.center.xM, y: r.center.yM, width: r.lengthM, depth: r.depthM, angle: r.rotationDeg * Math.PI / 180 })) : [];
     for (let time = 0; time <= 84; time += 0.25) {
       const robots = fieldRobotsAt(time, mode);
       assert.deepEqual(robots.map((r) => r.robotId), ids);
@@ -36,6 +36,21 @@ test('all preview lineups stay within their field and ground routes avoid the ne
         for (const obstacle of obstacles) assert.ok(!overlaps(box, obstacle), `${mode} ${robot.robotId} intersects obstacle at ${time}s`);
       }
     }
+  }
+});
+
+test('Sentry uses the 1v1 field and route with the Sentry telemetry profile', () => {
+  assert.equal(FIELD_SPECS.sentry, FIELD_SPECS['1v1']);
+  const profile = robotProfile('sentry');
+  for (let time = 0; time <= 84; time += 0.25) {
+    const [sentry] = fieldRobotsAt(time, 'sentry');
+    const [infantry] = fieldRobotsAt(time, '1v1');
+    assert.deepEqual([sentry.xM, sentry.yM, sentry.zM, sentry.yawDeg],
+      [infantry.xM, infantry.yM, infantry.zM, infantry.yawDeg]);
+    assert.equal(sentry.robotId, profile.id);
+    assert.equal(sentry.category, profile.category);
+    assert.equal(sentry.maxHp, profile.maxHp);
+    assert.equal(sentry.maxHeat, profile.maxHeat);
   }
 });
 

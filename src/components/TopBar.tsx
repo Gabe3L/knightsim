@@ -47,7 +47,7 @@ export function TopBar({
   onViewChange,
 }: TopBarProps) {
   const context = activeView === 'field'
-    ? { eyebrow: 'Field', label: `${fieldMode} Battlefield` }
+    ? { eyebrow: 'Field', label: `${fieldMode === 'sentry' ? 'Sentry' : fieldMode} Battlefield` }
     : activeView === 'graph'
       ? {
         eyebrow: 'Line Graph',
@@ -104,7 +104,7 @@ export function TopBar({
 
       {activeView === 'field' ? (
         <div className="field-mode-selector" role="group" aria-label="Field format">
-          {(['1v1', '3v3', 'drone'] as const).map((mode) => (
+          {(['1v1', 'sentry', '3v3', 'drone'] as const).map((mode) => (
             <button
               key={mode}
               className={fieldMode === mode ? 'field-mode-option field-mode-option-active' : 'field-mode-option'}
@@ -112,7 +112,7 @@ export function TopBar({
               aria-pressed={fieldMode === mode}
               onClick={() => onFieldModeChange(mode)}
             >
-              {mode === 'drone' ? 'Drone' : mode}
+              {mode === 'drone' ? 'Drone' : mode === 'sentry' ? 'Sentry' : mode}
             </button>
           ))}
         </div>

@@ -2,7 +2,6 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import { robotProfile } from '../robots/profiles';
 import {
   AdaptiveDpr,
-  Box,
   Center,
   Html,
   Line,
@@ -22,14 +21,13 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { Vector3 } from "three";
+import { CanvasTexture, SRGBColorSpace, Vector3 } from "three";
 import { FIELD_SPECS, fieldWorldX, fieldWorldZ, fieldCameraDistance, fieldCameraDirection } from "../field/fieldSpec";
 import { FieldArena } from "../field/FieldArena";
 import { fieldCameraActionForCode, type FieldCameraAction } from "../keybindings";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
-import { robotRenderProfile } from "../telemetry/robotCategories";
 import type { CameraState, FieldMode, RobotId, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface FieldProps {
@@ -47,45 +45,35 @@ const modeWorldZ = fieldWorldZ;
 
 function PlaceholderRobot({ robotId }: Pick<RobotTelemetry, "robotId">) {
   const robot = robotProfile(robotId);
-  const profile = robotRenderProfile(robot.category);
   const { length, width, height } = robot.dimensionsM;
+  const side = Math.max(length, width, height);
+  const label = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 512;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+
+    context.fillStyle = "#000000";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#ffffff";
+    context.font = "bold 80px sans-serif";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(robot.name, canvas.width / 2, canvas.height / 2, canvas.width - 64);
+
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  }, [robot.name]);
+
+  useEffect(() => () => label?.dispose(), [label]);
+
   return (
-    <group>
-      <Box args={[length * 0.8, height * 0.45, width * 0.7]} position={[0, height * 0.55, 0]} castShadow>
-        <meshStandardMaterial color={profile.body} roughness={0.42} metalness={0.55} />
-      </Box>
-      <Box args={[length * 0.4, height * 0.225, width * 0.4]} position={[0, height * 0.8875, 0]} castShadow>
-        <meshStandardMaterial color="#202936" roughness={0.34} metalness={0.68} />
-      </Box>
-      <mesh position={[length * 0.4, height * 0.6, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[width * 0.1, length * 0.2, 4]} />
-        <meshStandardMaterial color="#fff" emissive={profile.emissive} emissiveIntensity={1.5} />
-      </mesh>
-      {robot.mobility === 'tracked' ? [-1, 1].map((side) => (
-        <Box key={side} args={[length, height * 0.4, width * 0.2]}
-          position={[0, height * 0.2, side * width * (robot.mobility === 'aerial' ? 0.32 : 0.4)]}>
-          <meshStandardMaterial color="#151a21" roughness={0.9} />
-        </Box>
-      )) : [-1, 1].flatMap((front) => [-1, 1].map((side) => (
-        <group key={`${front}:${side}`} position={[front * length * 0.3, 0, side * width * (robot.mobility === 'aerial' ? 0.32 : 0.4)]}>
-          {robot.mobility === 'legged' ? (
-            <Box args={[length * 0.1, height * 0.6, width * 0.12]} position={[0, height * 0.3, 0]}>
-              <meshStandardMaterial color="#151a21" />
-            </Box>
-          ) : robot.mobility === 'aerial' ? (
-            <mesh position={[0, height * 0.1, 0]}>
-              <cylinderGeometry args={[Math.min(length, width) * 0.18, Math.min(length, width) * 0.18, height * 0.2, 20]} />
-              <meshStandardMaterial color="#a3bac5" />
-            </mesh>
-          ) : (
-            <mesh position={[0, height * 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[height * 0.18, height * 0.18, width * 0.2, 14]} />
-              <meshStandardMaterial color="#090b0f" roughness={0.8} />
-            </mesh>
-          )}
-        </group>
-      )))}
-    </group>
+    // Undo the robot's reflected X axis so the face labels stay readable.
+    <mesh position={[0, side / 2, 0]} scale={[-1, 1, 1]} castShadow>
+      <boxGeometry args={[side, side, side]} />
+      <meshBasicMaterial map={label} color={label ? "#ffffff" : "#000000"} toneMapped={false} />
+    </mesh>
   );
 }
 
@@ -388,7 +376,7 @@ function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<F
         0,
         modeWorldZ(mode === '3v3' ? cameraState.targetYM : FIELD_SPECS[mode].size.widthM / 2, mode),
       ]}
-      minDistance={mode === '1v1' ? 3 : 4.5}
+      minDistance={mode === '1v1' || mode === 'sentry' ? 3 : 4.5}
       maxDistance={mode === 'drone' ? 150 : 40}
       maxPolarAngle={Math.PI / 2.05}
       enableDamping
