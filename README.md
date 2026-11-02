@@ -41,10 +41,16 @@ Import self-contained glTF 2.0 `.glb` files. JSON metadata is limited to 32 MiB;
 
 Models live in Electron's user-data `robot-models` directory. Library updates are serialized and written through a temporary file plus rename. Invalid/unsupported libraries are reported instead of silently replaced. Back up and repair `library.json` if that error occurs. Orientation belongs to the library asset and is shared by every robot assigned that asset; import a separate copy for a different orientation.
 
+## Game fields
+
+The 1v1, 3v3, and Drone views follow the **November 1, 2026 Season 2 manual** in [`docs/manual.pdf`](docs/manual.pdf). The 3v3 model includes the new walls, high grounds, objectives, scoring areas, pipe chutes, bumpy roads, and limbo bars. The drone layout has its own base and launch zone, separated by the dimensioned 25 m and 6 m offsets. Camera framing adjusts to the field and window size.
+
+See [`docs/fields.md`](docs/fields.md) for the dimension audit, coordinate conventions, and the few illustrated details whose dimensions are not published in the manual.
+
 ## Current scope
 
-This is a visualization/replay workbench with **synthetic demonstration data**. Selecting a robot changes its preview and telemetry profile; it does not create a physics simulation. All examples follow the same demonstration route, authored for the 3v3 arena; the smaller arena does not constrain that route. Settings store configuration only: physics, collisions, flight dynamics, SSH connections, and hardware control are not implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
+This is a visualization/replay workbench with **synthetic demonstration data**. Selecting a robot changes its active telemetry profile and model preferences; it does not create a physics simulation. Each field uses its own preview routes: ground robots follow clear corridors, and the drone takes off from and returns to its starting zone. Settings store configuration only: physics, collisions, flight dynamics, SSH connections, and hardware control are not implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
 
-Real robot integration should provide timestamped `RobotTelemetry` samples through the replay hook and signal descriptors, with explicit units and stable robot IDs. Extend the overlay registry and sampling adapter for additional localization sources. Multiple profiles are supported, but the field currently previews one selected robot at a time.
+Real robot integration should provide timestamped `RobotTelemetry` samples through the replay hook and signal descriptors, with explicit units and stable robot IDs. Extend the overlay registry and sampling adapter for additional localization sources. The field previews the lineup for its format (Infantry, the three 3v3 robots, or Drone); the selector chooses the active telemetry profile.
 
 Rendering avoids replay updates in the hidden field and unmounts hidden graph/controller views. Graph curves are cached independently of the moving cursor. Playback ignores non-finite seeks/speeds and caps elapsed frame time after suspension to avoid jumping to the end of a recording.

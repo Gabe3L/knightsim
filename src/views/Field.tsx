@@ -11,7 +11,6 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Crosshair } from "lucide-react";
 import {
   Component,
   memo,
@@ -23,15 +22,9 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import {
-  BufferGeometry,
-  CanvasTexture,
-  DoubleSide,
-  Float32BufferAttribute,
-  SRGBColorSpace,
-  Vector3,
-} from "three";
-import { ARCC_2026_1V1_FIELD, ARCC_2026_FIELD, teamColor } from "../field/fieldSpec";
+import { Vector3 } from "three";
+import { FIELD_SPECS, fieldWorldX, fieldWorldZ, fieldCameraDistance, fieldCameraDirection } from "../field/fieldSpec";
+import { FieldArena } from "../field/FieldArena";
 import { fieldCameraActionForCode, type FieldCameraAction } from "../keybindings";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
@@ -49,294 +42,8 @@ interface FieldProps {
   readonly overlays: readonly ResolvedFieldOverlay[];
 }
 
-// The default camera looks from the near marker box toward the far ramps.
-// Mirror field x into Three's world x so screen-left remains the red/low-x
-// side and screen-right remains the blue/high-x side from that viewpoint.
-const worldX = (xM: number): number => 6 - xM;
-const worldZ = (yM: number): number => yM - 4;
-const modeWorldX = (xM: number, mode: FieldMode): number => (mode === '1v1' ? 2.5 : 6) - xM;
-const modeWorldZ = (yM: number, mode: FieldMode): number => yM - (mode === '1v1' ? 2.5 : 4);
-
-const fieldWoodColor = "#424242";
-const fieldFloorColor = "#7a7a7a";
-const fieldSheetColor = "#111318";
-const fieldLightBumpColor = "#5d5f61";
-const fieldDarkBumpColor = "#4d5054";
-
-function PerimeterWall({
-  position,
-  args,
-}: {
-  readonly position: [number, number, number];
-  readonly args: [number, number, number];
-}) {
-  return (
-    <Box args={args} position={position} castShadow receiveShadow>
-      <meshStandardMaterial
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-    </Box>
-  );
-}
-
-function ZoneOutline({
-  zone,
-}: {
-  readonly zone: (typeof ARCC_2026_FIELD.zones)[number];
-}) {
-  const tapeWidthM = ARCC_2026_FIELD.zoneTapeWidthM;
-  const innerDepthM = zone.depthM - 2 * tapeWidthM;
-  const color = teamColor(zone.team);
-
-  return (
-    <group>
-      {[zone.yM + tapeWidthM / 2, zone.yM + zone.depthM - tapeWidthM / 2].map(
-        (yM) => (
-          <mesh
-            key={`horizontal-${yM}`}
-            position={[worldX(zone.xM + zone.widthM / 2), 0.006, worldZ(yM)]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[zone.widthM, tapeWidthM]} />
-            <meshStandardMaterial color={color} roughness={0.9} />
-          </mesh>
-        ),
-      )}
-      {[zone.xM + tapeWidthM / 2, zone.xM + zone.widthM - tapeWidthM / 2].map(
-        (xM) => (
-          <mesh
-            key={`vertical-${xM}`}
-            position={[worldX(xM), 0.006, worldZ(zone.yM + zone.depthM / 2)]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[tapeWidthM, innerDepthM]} />
-            <meshStandardMaterial color={color} roughness={0.9} />
-          </mesh>
-        ),
-      )}
-    </group>
-  );
-}
-
-function MarkerFace({
-  marker,
-}: {
-  readonly marker: (typeof ARCC_2026_FIELD.markers)[number];
-}) {
-  const texture = useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext("2d");
-    if (context) {
-      context.fillStyle = "#05070a";
-      context.fillRect(0, 0, 256, 256);
-      context.strokeStyle = "#ffffff";
-      context.lineWidth = 16;
-      context.strokeRect(8, 8, 240, 240);
-      context.fillStyle = "#ffffff";
-      context.font = "700 132px Arial, sans-serif";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText(String(marker.id), 128, 136);
-    }
-    const next = new CanvasTexture(canvas);
-    next.colorSpace = SRGBColorSpace;
-    return next;
-  }, [marker.id]);
-
-  useEffect(() => () => texture.dispose(), [texture]);
-
-  return (
-    <mesh
-      position={[worldX(marker.xM), marker.zM, worldZ(marker.yM)]}
-      rotation={[0, (marker.facingDeg * Math.PI) / 180, 0]}
-    >
-      <planeGeometry args={[marker.sideM, marker.sideM]} />
-      <meshBasicMaterial map={texture} side={DoubleSide} toneMapped={false} />
-    </mesh>
-  );
-}
-
-function Ramp({
-  xM,
-  yM,
-  widthM,
-  depthM,
-  heightM,
-  ascending,
-}: {
-  readonly xM: number;
-  readonly yM: number;
-  readonly widthM: number;
-  readonly depthM: number;
-  readonly heightM: number;
-  readonly ascending: boolean;
-}) {
-  const geometry = useMemo(() => {
-    const leftHeight = ascending ? 0 : heightM;
-    const rightHeight = ascending ? heightM : 0;
-    const vertices = new Float32Array([
-      0,
-      0,
-      0,
-      widthM,
-      0,
-      0,
-      widthM,
-      rightHeight,
-      0,
-      0,
-      leftHeight,
-      0,
-      0,
-      0,
-      depthM,
-      widthM,
-      0,
-      depthM,
-      widthM,
-      rightHeight,
-      depthM,
-      0,
-      leftHeight,
-      depthM,
-    ]);
-    // Leave the hidden bottom open so it cannot z-fight with the arena floor.
-    const indices = [
-      0, 2, 1, 0, 3, 2, 4, 6, 7, 4, 5, 6, 3, 6, 2, 3, 7, 6, 0, 7, 3, 0, 4, 7, 1,
-      6, 5, 1, 2, 6,
-    ];
-    const next = new BufferGeometry();
-    next.setAttribute("position", new Float32BufferAttribute(vertices, 3));
-    next.setIndex(indices);
-    next.addGroup(0, 12, 1);
-    next.addGroup(12, 6, 0);
-    next.addGroup(18, 12, 1);
-    next.computeVertexNormals();
-    return next;
-  }, [ascending, depthM, heightM, widthM]);
-
-  const edgePoints = useMemo<readonly [number, number, number][]>(() => {
-    const leftHeight = ascending ? 0 : heightM;
-    const rightHeight = ascending ? heightM : 0;
-    const highX = ascending ? widthM : 0;
-
-    return [
-      // Floor perimeter.
-      [0, 0, 0],
-      [widthM, 0, 0],
-      [0, 0, depthM],
-      [widthM, 0, depthM],
-      [0, 0, 0],
-      [0, 0, depthM],
-      [widthM, 0, 0],
-      [widthM, 0, depthM],
-      // The two exposed sides of the sloped surface.
-      [0, leftHeight, 0],
-      [widthM, rightHeight, 0],
-      [0, leftHeight, depthM],
-      [widthM, rightHeight, depthM],
-      // Uprights on the tall end. The top edge across the ramp is omitted:
-      // it meets the adjacent deck at the same elevation and should not read
-      // as a seam between the two surfaces.
-      [highX, 0, 0],
-      [highX, heightM, 0],
-      [highX, 0, depthM],
-      [highX, heightM, depthM],
-    ];
-  }, [ascending, depthM, heightM, widthM]);
-
-  return (
-    <mesh
-      geometry={geometry}
-      position={[worldX(xM), 0, worldZ(yM)]}
-      scale={[-1, 1, 1]}
-      castShadow
-      receiveShadow
-    >
-      <meshStandardMaterial
-        attach="material-0"
-        color={fieldFloorColor}
-        roughness={0.88}
-      />
-      <meshStandardMaterial
-        attach="material-1"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-      <Line
-        points={edgePoints}
-        segments
-        color="#090a0c"
-        lineWidth={4}
-        scale={1.002}
-      />
-    </mesh>
-  );
-}
-
-function HighGroundDeck({
-  xM,
-  yM,
-  widthM,
-  depthM,
-  heightM,
-}: {
-  readonly xM: number;
-  readonly yM: number;
-  readonly widthM: number;
-  readonly depthM: number;
-  readonly heightM: number;
-}) {
-  return (
-    <Box
-      args={[widthM, heightM, depthM]}
-      position={[worldX(xM + widthM / 2), heightM / 2, worldZ(yM + depthM / 2)]}
-      castShadow
-      receiveShadow
-    >
-      <meshStandardMaterial
-        attach="material-0"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-      <meshStandardMaterial
-        attach="material-1"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-      <meshStandardMaterial
-        attach="material-2"
-        color={fieldFloorColor}
-        roughness={0.88}
-      />
-      <meshStandardMaterial
-        attach="material-3"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-      <meshStandardMaterial
-        attach="material-4"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-      <meshStandardMaterial
-        attach="material-5"
-        color={fieldWoodColor}
-        roughness={0.92}
-        metalness={0}
-      />
-    </Box>
-  );
-}
+const modeWorldX = fieldWorldX;
+const modeWorldZ = fieldWorldZ;
 
 function PlaceholderRobot({ robotId }: Pick<RobotTelemetry, "robotId">) {
   const robot = robotProfile(robotId);
@@ -593,339 +300,6 @@ function FieldOverlays({ overlays, mode }: Pick<FieldProps, 'overlays' | 'mode'>
   ));
 }
 
-const Arena = memo(function Arena() {
-  return (
-    <>
-      <ambientLight intensity={1.25} />
-      <directionalLight
-        position={[-3, 12, 6]}
-        intensity={2.7}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-      <hemisphereLight args={["#b7d4ff", "#15181d", 0.8]} />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[12, 8]} />
-        <meshStandardMaterial color={fieldFloorColor} roughness={0.95} />
-      </mesh>
-
-      {ARCC_2026_FIELD.zones.map((zone) => (
-        <ZoneOutline key={zone.id} zone={zone} />
-      ))}
-
-      {ARCC_2026_FIELD.highGround.lowerDecks.map((deck, index) => (
-        <HighGroundDeck
-          key={`lower-${index}`}
-          xM={deck.xM}
-          yM={deck.yM}
-          widthM={deck.widthM}
-          depthM={deck.depthM}
-          heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
-        />
-      ))}
-      <Ramp
-        xM={ARCC_2026_FIELD.highGround.footprint[0]!.xM}
-        yM={6}
-        widthM={ARCC_2026_FIELD.highGround.approachRunM}
-        depthM={2}
-        heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
-        ascending
-      />
-      <Ramp
-        xM={9}
-        yM={6}
-        widthM={ARCC_2026_FIELD.highGround.approachRunM}
-        depthM={2}
-        heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
-        ascending={false}
-      />
-      {ARCC_2026_FIELD.highGround.innerRamps.map((ramp, index) => (
-        <Ramp
-          key={`inner-ramp-${index}`}
-          xM={ramp.xM}
-          yM={ramp.yM}
-          widthM={ramp.widthM}
-          depthM={ramp.depthM}
-          heightM={ARCC_2026_FIELD.highGround.lowerHeightM}
-          ascending={ramp.ascending}
-        />
-      ))}
-      <Box
-        args={[
-          ARCC_2026_FIELD.highGround.centerBarrier.widthM,
-          ARCC_2026_FIELD.highGround.centerBarrier.heightM,
-          ARCC_2026_FIELD.highGround.centerBarrier.depthM,
-        ]}
-        position={[
-          worldX(
-            ARCC_2026_FIELD.highGround.centerBarrier.xM +
-              ARCC_2026_FIELD.highGround.centerBarrier.widthM / 2,
-          ),
-          ARCC_2026_FIELD.highGround.centerBarrier.heightM / 2,
-          worldZ(
-            ARCC_2026_FIELD.highGround.centerBarrier.yM +
-              ARCC_2026_FIELD.highGround.centerBarrier.depthM / 2,
-          ),
-        ]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color={fieldWoodColor}
-          roughness={0.92}
-          metalness={0}
-        />
-      </Box>
-
-      <Box
-        args={[
-          ARCC_2026_FIELD.centralPlatform.widthM,
-          ARCC_2026_FIELD.centralPlatform.heightM,
-          ARCC_2026_FIELD.centralPlatform.depthM,
-        ]}
-        position={[
-          worldX(
-            ARCC_2026_FIELD.centralPlatform.xM +
-              ARCC_2026_FIELD.centralPlatform.widthM / 2,
-          ),
-          ARCC_2026_FIELD.centralPlatform.heightM / 2,
-          worldZ(
-            ARCC_2026_FIELD.centralPlatform.yM +
-              ARCC_2026_FIELD.centralPlatform.depthM / 2,
-          ),
-        ]}
-        castShadow
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color={fieldWoodColor}
-          roughness={0.92}
-          metalness={0}
-        />
-      </Box>
-
-      {ARCC_2026_FIELD.bumpyRoad.tiles.map((tile) => (
-        <Box
-          key={tile.id}
-          args={[
-            tile.widthM,
-            ARCC_2026_FIELD.bumpyRoad.bumpHeightM,
-            tile.depthM,
-          ]}
-          position={[
-            worldX(tile.xM + tile.widthM / 2),
-            ARCC_2026_FIELD.bumpyRoad.bumpHeightM / 2,
-            worldZ(tile.yM + tile.depthM / 2),
-          ]}
-          receiveShadow
-        >
-          <meshStandardMaterial
-            color={
-              tile.rotationDeg === 0 ? fieldDarkBumpColor : fieldLightBumpColor
-            }
-            roughness={1}
-          />
-        </Box>
-      ))}
-
-      {ARCC_2026_FIELD.barriers.map((barrier) => {
-        const dx = worldX(barrier.end.xM) - worldX(barrier.start.xM);
-        const dy = worldZ(barrier.end.yM) - worldZ(barrier.start.yM);
-        const length = Math.hypot(dx, dy);
-        const angle = Math.atan2(dy, dx);
-        const woodHeightM = Math.min(
-          barrier.heightM,
-          ARCC_2026_FIELD.barrierConstruction.woodHeightM,
-        );
-        const sheetHeightM = Math.max(0, barrier.heightM - woodHeightM);
-        return (
-          <group
-            key={barrier.id}
-            position={[
-              worldX((barrier.start.xM + barrier.end.xM) / 2),
-              0,
-              worldZ((barrier.start.yM + barrier.end.yM) / 2),
-            ]}
-            rotation={[0, -angle, 0]}
-          >
-            <Box
-              args={[length, woodHeightM, barrier.thicknessM]}
-              position={[0, woodHeightM / 2, 0]}
-              castShadow
-              receiveShadow
-            >
-              <meshStandardMaterial
-                color={fieldWoodColor}
-                roughness={0.92}
-                metalness={0}
-              />
-            </Box>
-            {sheetHeightM > 0 && (
-              <Box
-                args={[
-                  length,
-                  sheetHeightM,
-                  ARCC_2026_FIELD.barrierConstruction.sheetThicknessM,
-                ]}
-                position={[0, woodHeightM + sheetHeightM / 2, 0]}
-                castShadow
-                receiveShadow
-              >
-                <meshStandardMaterial
-                  color={fieldSheetColor}
-                  roughness={0.78}
-                  metalness={0.04}
-                />
-              </Box>
-            )}
-          </group>
-        );
-      })}
-
-      {ARCC_2026_FIELD.markers.map((marker) => (
-        <MarkerFace key={marker.id} marker={marker} />
-      ))}
-
-      <PerimeterWall
-        position={[
-          0,
-          ARCC_2026_FIELD.wall.heightM / 2,
-          -4 - ARCC_2026_FIELD.wall.thicknessM / 2,
-        ]}
-        args={[
-          12 + 2 * ARCC_2026_FIELD.wall.thicknessM,
-          ARCC_2026_FIELD.wall.heightM,
-          ARCC_2026_FIELD.wall.thicknessM,
-        ]}
-      />
-      <PerimeterWall
-        position={[
-          0,
-          ARCC_2026_FIELD.wall.heightM / 2,
-          4 + ARCC_2026_FIELD.wall.thicknessM / 2,
-        ]}
-        args={[
-          12 + 2 * ARCC_2026_FIELD.wall.thicknessM,
-          ARCC_2026_FIELD.wall.heightM,
-          ARCC_2026_FIELD.wall.thicknessM,
-        ]}
-      />
-      <PerimeterWall
-        position={[
-          -6 - ARCC_2026_FIELD.wall.thicknessM / 2,
-          ARCC_2026_FIELD.wall.heightM / 2,
-          0,
-        ]}
-        args={[
-          ARCC_2026_FIELD.wall.thicknessM,
-          ARCC_2026_FIELD.wall.heightM,
-          8,
-        ]}
-      />
-      <PerimeterWall
-        position={[
-          6 + ARCC_2026_FIELD.wall.thicknessM / 2,
-          ARCC_2026_FIELD.wall.heightM / 2,
-          0,
-        ]}
-        args={[
-          ARCC_2026_FIELD.wall.thicknessM,
-          ARCC_2026_FIELD.wall.heightM,
-          8,
-        ]}
-      />
-    </>
-  );
-});
-
-const OneVOneArena = memo(function OneVOneArena() {
-  const { size, wall } = ARCC_2026_1V1_FIELD;
-  const halfLength = size.lengthM / 2;
-  const halfWidth = size.widthM / 2;
-
-  return (
-    <>
-      <ambientLight intensity={1.25} />
-      <directionalLight
-        position={[-3, 10, 5]}
-        intensity={2.7}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-      <hemisphereLight args={["#b7d4ff", "#15181d", 0.8]} />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[size.lengthM, size.widthM]} />
-        <meshStandardMaterial color={fieldFloorColor} roughness={0.95} />
-      </mesh>
-
-      {ARCC_2026_1V1_FIELD.zones.map((zone) => (
-        <group key={zone.id}>
-          <mesh
-            position={[
-              modeWorldX(zone.xM + zone.widthM / 2, '1v1'),
-              0.006,
-              modeWorldZ(zone.yM + zone.depthM / 2, '1v1'),
-            ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[zone.widthM, zone.depthM]} />
-            <meshStandardMaterial color={teamColor(zone.team)} transparent opacity={0.08} roughness={0.9} />
-          </mesh>
-          <Line
-            points={[
-              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
-              [modeWorldX(zone.xM + zone.widthM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
-              [modeWorldX(zone.xM + zone.widthM, '1v1'), 0.012, modeWorldZ(zone.yM + zone.depthM, '1v1')],
-              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM + zone.depthM, '1v1')],
-              [modeWorldX(zone.xM, '1v1'), 0.012, modeWorldZ(zone.yM, '1v1')],
-            ]}
-            color={teamColor(zone.team)}
-            lineWidth={2}
-            transparent
-            opacity={0.72}
-          />
-        </group>
-      ))}
-
-      {ARCC_2026_1V1_FIELD.bunkers.map((bunker) => (
-        <Box
-          key={bunker.id}
-          args={[bunker.lengthM, bunker.heightM, bunker.depthM]}
-          position={[
-            modeWorldX(bunker.center.xM, '1v1'),
-            bunker.heightM / 2,
-            modeWorldZ(bunker.center.yM, '1v1'),
-          ]}
-          rotation={[0, -(bunker.rotationDeg * Math.PI) / 180, 0]}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial color={fieldWoodColor} roughness={0.92} metalness={0} />
-        </Box>
-      ))}
-
-      <PerimeterWall
-        position={[0, wall.heightM / 2, -halfWidth - wall.thicknessM / 2]}
-        args={[size.lengthM + 2 * wall.thicknessM, wall.heightM, wall.thicknessM]}
-      />
-      <PerimeterWall
-        position={[0, wall.heightM / 2, halfWidth + wall.thicknessM / 2]}
-        args={[size.lengthM + 2 * wall.thicknessM, wall.heightM, wall.thicknessM]}
-      />
-      <PerimeterWall
-        position={[-halfLength - wall.thicknessM / 2, wall.heightM / 2, 0]}
-        args={[wall.thicknessM, wall.heightM, size.widthM]}
-      />
-      <PerimeterWall
-        position={[halfLength + wall.thicknessM / 2, wall.heightM / 2, 0]}
-        args={[wall.thicknessM, wall.heightM, size.widthM]}
-      />
-    </>
-  );
-});
-
 function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   const regress = useThree((state) => state.performance.regress);
   const initialDpr = useThree((state) => state.viewport.initialDpr);
@@ -1010,12 +384,12 @@ function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<F
       ref={controlsRef}
       makeDefault
       target={[
-        modeWorldX(mode === '1v1' ? 2.5 : cameraState.targetXM, mode),
+        modeWorldX(mode === '3v3' ? cameraState.targetXM : FIELD_SPECS[mode].size.lengthM / 2, mode),
         0,
-        modeWorldZ(mode === '1v1' ? 2.5 : cameraState.targetYM, mode),
+        modeWorldZ(mode === '3v3' ? cameraState.targetYM : FIELD_SPECS[mode].size.widthM / 2, mode),
       ]}
       minDistance={mode === '1v1' ? 3 : 4.5}
-      maxDistance={25}
+      maxDistance={mode === 'drone' ? 150 : 40}
       maxPolarAngle={Math.PI / 2.05}
       enableDamping
       regress
@@ -1024,11 +398,20 @@ function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<F
   );
 }
 
+function FieldPerspectiveCamera({ camera, mode }: Pick<FieldProps, 'camera' | 'mode'>) {
+  const aspect = useThree((state) => state.size.width / state.size.height);
+  const targetXM = mode === '3v3' ? camera.targetXM : FIELD_SPECS[mode].size.lengthM / 2;
+  const targetYM = mode === '3v3' ? camera.targetYM : FIELD_SPECS[mode].size.widthM / 2;
+  const distance = fieldCameraDistance(mode, aspect) / Math.max(0.7, camera.zoom);
+  const direction = fieldCameraDirection(mode);
+  const directionLength = Math.hypot(...direction);
+  return <PerspectiveCamera makeDefault fov={43} near={0.05} far={250} position={[
+    modeWorldX(targetXM, mode) + distance * direction[0] / directionLength, distance * direction[1] / directionLength,
+    modeWorldZ(targetYM, mode) + distance * direction[2] / directionLength,
+  ]} />;
+}
+
 export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {
-  const distanceScale = 1 / Math.max(0.7, camera.zoom);
-  const targetXM = mode === '1v1' ? 2.5 : camera.targetXM;
-  const targetYM = mode === '1v1' ? 2.5 : camera.targetYM;
-  const framingScale = mode === '1v1' ? 0.72 : 1;
   return (
     <div className="field-stage">
       <Canvas
@@ -1044,19 +427,9 @@ export const Field = memo(function Field({ active, robot, robots, camera, mode, 
         }}
       >
         <color attach="background" args={["#0b0f15"]} />
-        <fog attach="fog" args={["#0b0f15", 14, 26]} />
-        <PerspectiveCamera
-          makeDefault
-          fov={43}
-          near={0.05}
-          far={100}
-          position={[
-            modeWorldX(targetXM, mode),
-            8.4 * distanceScale * framingScale,
-            modeWorldZ(targetYM, mode) - 8.8 * distanceScale * framingScale,
-          ]}
-        />
-        {mode === '1v1' ? <OneVOneArena /> : <Arena />}
+        <fog attach="fog" args={["#0b0f15", mode === 'drone' ? 90 : 35, mode === 'drone' ? 180 : 75]} />
+        <FieldPerspectiveCamera camera={camera} mode={mode} />
+        <FieldArena mode={mode} />
         {robots.map((fieldRobot) => (
           <Robot key={fieldRobot.robotId} robot={fieldRobot} model={modelForRobot(fieldRobot.robotId)} mode={mode} />
         ))}

@@ -3,7 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
-import { ARCC_2026_FIELD } from './field/fieldSpec';
+import { ARCC_2027_3V3_FIELD } from './field/fieldSpec';
 import { FIELD_ROBOT_IDS, fieldRobotsAt } from './field/fieldRobots';
 import { useReplay } from './hooks/useReplay';
 import { useFieldOverlayWorkspace } from './hooks/useFieldOverlayWorkspace';
@@ -35,8 +35,8 @@ const COMPACT_SIDEBAR_WIDTH_WITHOUT_WINDOW_CONTROLS = 64;
 const MAX_SIDEBAR_WIDTH = 480;
 const COMPACT_SIDEBAR_WIDTH = 190;
 const DEFAULT_CAMERA: CameraState = {
-  targetXM: ARCC_2026_FIELD.size.lengthM / 2,
-  targetYM: ARCC_2026_FIELD.size.widthM / 2,
+  targetXM: ARCC_2027_3V3_FIELD.size.lengthM / 2,
+  targetYM: ARCC_2027_3V3_FIELD.size.widthM / 2,
   zoom: 1,
 };
 
