@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { REPLAY_DURATION_S, telemetryAt } from '../telemetry/mockReplay';
-import type { ReplayState, RobotTelemetry } from '../types';
+import type { ReplayState, RobotId, RobotTelemetry } from '../types';
 
 const initialReplay: ReplayState = {
   durationS: REPLAY_DURATION_S,
@@ -11,11 +11,11 @@ const initialReplay: ReplayState = {
 
 const REPLAY_FRAME_INTERVAL_MS = 1000 / 60;
 
-export const useReplay = () => {
+export const useReplay = (robotId: RobotId = 'infantry') => {
   const [replay, setReplay] = useState<ReplayState>(initialReplay);
   const lastFrameMs = useRef<number | null>(null);
   const nextFrameMs = useRef<number | null>(null);
-  const robot = useMemo<RobotTelemetry>(() => telemetryAt(replay.currentTimeS), [replay.currentTimeS]);
+  const robot = useMemo<RobotTelemetry>(() => telemetryAt(replay.currentTimeS, robotId), [replay.currentTimeS, robotId]);
 
   useEffect(() => {
     if (!replay.playing) {
@@ -35,7 +35,8 @@ export const useReplay = () => {
       lastFrameMs.current = nowMs;
       nextFrameMs.current = (nextFrameMs.current ?? nowMs) + REPLAY_FRAME_INTERVAL_MS;
       if (nextFrameMs.current < nowMs) nextFrameMs.current = nowMs + REPLAY_FRAME_INTERVAL_MS;
-      const deltaS = (nowMs - previousMs) / 1000;
+      // Do not fast-forward an entire recording after the app resumes from sleep.
+      const deltaS = Math.min(0.25, Math.max(0, (nowMs - previousMs) / 1000));
 
       setReplay((current) => {
         const nextTimeS = Math.min(current.durationS, current.currentTimeS + deltaS * current.speed);
@@ -53,6 +54,8 @@ export const useReplay = () => {
   }, [replay.playing]);
 
   const seek = useCallback((timeS: number) => {
+    if (!Number.isFinite(timeS)) return;
+    lastFrameMs.current = null;
     const nextTimeS = Math.max(0, Math.min(REPLAY_DURATION_S, timeS));
     setReplay((current) => ({ ...current, currentTimeS: nextTimeS }));
   }, []);
@@ -66,6 +69,8 @@ export const useReplay = () => {
   }, []);
 
   const setSpeed = useCallback((speed: number) => {
+    if (!Number.isFinite(speed) || speed <= 0) return;
+    lastFrameMs.current = null;
     setReplay((current) => ({ ...current, speed }));
   }, []);
 

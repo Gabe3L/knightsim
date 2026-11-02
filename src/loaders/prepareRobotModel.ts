@@ -1,4 +1,5 @@
-import { Group, Mesh, SkinnedMesh, type BufferGeometry, type Material, type Object3D } from 'three';
+import { Group, InstancedMesh, Line, LOD, Mesh, Points, SkinnedMesh, type BufferGeometry, type Material, type Object3D } from 'three';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 interface GeometryBucket {
@@ -16,15 +17,6 @@ export interface PreparedRobotModel {
 
 const MERGE_CHUNK_SIZE = 512;
 const preparedModels = new WeakMap<Object3D, PreparedRobotModel>();
-
-const isEffectivelyVisible = (object: Object3D): boolean => {
-  let current: Object3D | null = object;
-  while (current) {
-    if (!current.visible) return false;
-    current = current.parent;
-  }
-  return true;
-};
 
 const geometryLayoutKey = (geometry: BufferGeometry): string => {
   const attributes = Object.entries(geometry.attributes)
@@ -46,7 +38,11 @@ const triangleCount = (geometry: BufferGeometry): number => {
 
 const canMergeMesh = (mesh: Mesh): mesh is Mesh<BufferGeometry, Material> => (
   !(mesh instanceof SkinnedMesh)
+  && !(mesh instanceof InstancedMesh)
+  && mesh.geometry.drawRange.start === 0
+  && mesh.geometry.drawRange.count === Infinity
   && !Array.isArray(mesh.material)
+  && !mesh.material.transparent
   && mesh.geometry.getAttribute('position') !== undefined
   && Object.keys(mesh.geometry.morphAttributes).length === 0
   && mesh.matrixWorld.determinant() >= 0
@@ -57,7 +53,8 @@ const cloneUnoptimized = (
   sourceMeshCount: number,
   sourceTriangleCount: number,
 ): PreparedRobotModel => {
-  const object = source.clone(true) as Group;
+  const object = new Group();
+  object.add(cloneSkeleton(source));
   object.traverse((child) => {
     if (child instanceof Mesh) {
       // Imported CAD assemblies can contain tens of thousands of primitives.
@@ -94,31 +91,42 @@ const mergeBucket = (bucket: GeometryBucket): BufferGeometry | null => {
   return merged ?? null;
 };
 
+const hierarchyModels = new WeakMap<Object3D, PreparedRobotModel>();
+
 /**
  * Flattens a static GLB hierarchy and merges compatible primitives by material.
  * CAD exports commonly contain tens of thousands of tiny primitives; drawing the
  * same geometry in a few material batches is dramatically cheaper on every GPU.
  */
-export function prepareRobotModel(source: Object3D): PreparedRobotModel {
-  const cached = preparedModels.get(source);
+export function prepareRobotModel(source: Object3D, preserveHierarchy = false): PreparedRobotModel {
+  const cache = preserveHierarchy ? hierarchyModels : preparedModels;
+  const cached = cache.get(source);
   if (cached) return cached;
 
   const startedAt = performance.now();
   const buckets = new Map<string, GeometryBucket>();
   let sourceMeshCount = 0;
   let sourceTriangleCount = 0;
-  let mergeSupported = true;
+  let mergeSupported = !preserveHierarchy;
 
   source.updateWorldMatrix(true, true);
-  source.traverse((child) => {
-    if (!(child instanceof Mesh) || !isEffectivelyVisible(child)) return;
+  // Preflight before cloning any geometry: one unsupported primitive should not
+  // trigger a large temporary allocation for an assembly that cannot be merged.
+  source.traverseVisible((child) => {
+    if (child instanceof Line || child instanceof Points || child instanceof LOD) mergeSupported = false;
+    if (!(child instanceof Mesh)) return;
     sourceMeshCount += 1;
-    sourceTriangleCount += triangleCount(child.geometry);
-    if (!canMergeMesh(child)) {
-      mergeSupported = false;
-      return;
-    }
+    sourceTriangleCount += triangleCount(child.geometry) * (child instanceof InstancedMesh ? child.count : 1);
+    if (!canMergeMesh(child)) mergeSupported = false;
+  });
+  if (!mergeSupported || sourceMeshCount === 0) {
+    const fallback = cloneUnoptimized(source, sourceMeshCount, sourceTriangleCount);
+    cache.set(source, fallback);
+    return fallback;
+  }
 
+  source.traverseVisible((child) => {
+    if (!(child instanceof Mesh) || !canMergeMesh(child)) return;
     const material = child.material;
     const key = `${material.uuid}:${child.renderOrder}:${geometryLayoutKey(child.geometry)}`;
     let bucket = buckets.get(key);
@@ -132,12 +140,6 @@ export function prepareRobotModel(source: Object3D): PreparedRobotModel {
     bucket.geometries.push(child.geometry.clone().applyMatrix4(child.matrixWorld));
   });
 
-  if (!mergeSupported || buckets.size === 0) {
-    buckets.forEach((bucket) => bucket.geometries.forEach((geometry) => geometry.dispose()));
-    const fallback = cloneUnoptimized(source, sourceMeshCount, sourceTriangleCount);
-    preparedModels.set(source, fallback);
-    return fallback;
-  }
 
   const object = new Group();
   object.name = `${source.name || 'robot-model'}-optimized`;
@@ -151,7 +153,7 @@ export function prepareRobotModel(source: Object3D): PreparedRobotModel {
         if (child instanceof Mesh) child.geometry.dispose();
       });
       const fallback = cloneUnoptimized(source, sourceMeshCount, sourceTriangleCount);
-      preparedModels.set(source, fallback);
+      cache.set(source, fallback);
       return fallback;
     }
     geometry.computeBoundingBox();
@@ -170,7 +172,7 @@ export function prepareRobotModel(source: Object3D): PreparedRobotModel {
     renderedMeshCount: object.children.length,
     triangleCount: sourceTriangleCount,
   };
-  preparedModels.set(source, prepared);
+  cache.set(source, prepared);
   console.info('[KnightSim] Prepared robot model for real-time rendering', JSON.stringify({
     sourceMeshes: prepared.sourceMeshCount,
     renderedMeshes: prepared.renderedMeshCount,

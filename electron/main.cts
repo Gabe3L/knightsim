@@ -1,47 +1,21 @@
+import { validateGlb } from './validateGlb.cjs';
 import { randomUUID } from 'node:crypto';
-import { copyFile, mkdir, open, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell } from 'electron';
+
+import {
+  EMPTY_MODEL_LIBRARY, MODEL_ID_PATTERN, isRecord, isRobotId, normalizeOrientation,
+  normalizeModelLibrary, serializeModelOperation,
+  type RobotModelLibrary, type RobotModelRecord,
+} from './modelLibrary.cjs';
 
 // Prefer the discrete GPU on hybrid Windows/macOS systems. Hardware acceleration
 // remains enabled by Electron, and the WebGL context also requests this preference.
 app.commandLine.appendSwitch('force_high_performance_gpu');
 
-type Axis = 'x' | 'y' | 'z';
-type RobotId = 'sentry' | 'infantry' | 'hero';
-
-const ROBOT_IDS: readonly RobotId[] = ['sentry', 'infantry', 'hero'];
-
-interface RobotModelOrientation {
-  readonly scale: number;
-  readonly rotationDeg: Record<Axis, number>;
-  readonly flipped: Record<Axis, boolean>;
-}
-
-interface RobotModelRecord {
-  readonly id: string;
-  readonly name: string;
-  readonly sourceFileName: string;
-  readonly sizeBytes: number;
-  readonly importedAt: string;
-  readonly orientation: RobotModelOrientation;
-}
-
-interface RobotModelLibrary {
-  readonly version: 2;
-  readonly modelIdByRobot: Readonly<Record<RobotId, string | null>>;
-  readonly models: readonly RobotModelRecord[];
-}
-
-const EMPTY_MODEL_LIBRARY: RobotModelLibrary = {
-  version: 2,
-  modelIdByRobot: { sentry: null, infantry: null, hero: null },
-  models: [],
-};
-
 const MODEL_PROTOCOL = 'knightsim-model';
-const MODEL_ID_PATTERN = /^[0-9a-f-]{36}$/;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -64,113 +38,24 @@ const modelDirectory = (): string => path.join(app.getPath('userData'), 'robot-m
 const modelLibraryPath = (): string => path.join(modelDirectory(), 'library.json');
 const modelFilePath = (id: string): string => path.join(modelDirectory(), `${id}.glb`);
 
-const isRecord = (value: unknown): value is Record<string, unknown> => (
-  typeof value === 'object' && value !== null
-);
-
-const isRobotId = (value: unknown): value is RobotId => (
-  typeof value === 'string' && ROBOT_IDS.includes(value as RobotId)
-);
-
-function normalizeOrientation(value: unknown): RobotModelOrientation {
-  const orientation = isRecord(value) ? value : {};
-  const rotation = isRecord(orientation.rotationDeg) ? orientation.rotationDeg : {};
-  const flipped = isRecord(orientation.flipped) ? orientation.flipped : {};
-  const normalizeRotation = (axis: Axis): number => {
-    const candidate = rotation[axis];
-    if (typeof candidate !== 'number' || !Number.isFinite(candidate)) return 0;
-    return ((Math.round(candidate / 90) * 90) % 360 + 360) % 360;
-  };
-  return {
-    scale: typeof orientation.scale === 'number' && Number.isFinite(orientation.scale) && orientation.scale > 0
-      ? orientation.scale : 1,
-    rotationDeg: { x: normalizeRotation('x'), y: normalizeRotation('y'), z: normalizeRotation('z') },
-    flipped: {
-      x: flipped.x === true,
-      y: flipped.y === true,
-      z: flipped.z === true,
-    },
-  };
-}
-
-function normalizeModel(value: unknown): RobotModelRecord | null {
-  if (!isRecord(value)) return null;
-  if (typeof value.id !== 'string' || !MODEL_ID_PATTERN.test(value.id)) return null;
-  if (typeof value.name !== 'string' || typeof value.sourceFileName !== 'string') return null;
-  if (typeof value.sizeBytes !== 'number' || !Number.isFinite(value.sizeBytes)) return null;
-  if (typeof value.importedAt !== 'string') return null;
-  return {
-    id: value.id,
-    name: value.name,
-    sourceFileName: value.sourceFileName,
-    sizeBytes: Math.max(0, Math.round(value.sizeBytes)),
-    importedAt: value.importedAt,
-    orientation: normalizeOrientation(value.orientation),
-  };
-}
-
 async function readModelLibrary(): Promise<RobotModelLibrary> {
   try {
-    const parsed: unknown = JSON.parse(await readFile(modelLibraryPath(), 'utf8'));
-    if (!isRecord(parsed) || !Array.isArray(parsed.models)) return EMPTY_MODEL_LIBRARY;
-    const models = parsed.models.map(normalizeModel).filter((model): model is RobotModelRecord => model !== null);
-    const legacyModelId = typeof parsed.activeModelId === 'string'
-      && models.some((model) => model.id === parsed.activeModelId)
-      ? parsed.activeModelId
-      : models[0]?.id ?? null;
-    const storedAssignments = isRecord(parsed.modelIdByRobot) ? parsed.modelIdByRobot : null;
-    const modelIdByRobot = Object.fromEntries(ROBOT_IDS.map((robotId) => {
-      const candidate = storedAssignments?.[robotId];
-      const modelId = typeof candidate === 'string' && models.some((model) => model.id === candidate)
-        ? candidate
-        : storedAssignments ? null : legacyModelId;
-      return [robotId, modelId];
-    })) as Record<RobotId, string | null>;
-    return { version: 2, modelIdByRobot, models };
+    return normalizeModelLibrary(JSON.parse(await readFile(modelLibraryPath(), 'utf8')));
   } catch (error) {
     if (isRecord(error) && error.code === 'ENOENT') return EMPTY_MODEL_LIBRARY;
-    console.error('Unable to read the robot model library:', error);
-    return EMPTY_MODEL_LIBRARY;
+    throw new Error('Unable to read the robot model library. Restore or repair library.json before making changes.', { cause: error });
   }
 }
 
 async function writeModelLibrary(library: RobotModelLibrary): Promise<void> {
   await mkdir(modelDirectory(), { recursive: true });
-  await writeFile(modelLibraryPath(), `${JSON.stringify(library, null, 2)}\n`, 'utf8');
-}
-
-async function validateGlb(filePath: string): Promise<number> {
-  const fileStats = await stat(filePath);
-  if (!fileStats.isFile() || fileStats.size < 12) throw new Error('The selected file is not a valid GLB model.');
-
-  const file = await open(filePath, 'r');
+  const temporaryPath = `${modelLibraryPath()}.${randomUUID()}.tmp`;
   try {
-    const header = Buffer.alloc(12);
-    await file.read(header, 0, header.length, 0);
-    const declaredLength = header.readUInt32LE(8);
-    if (header.toString('ascii', 0, 4) !== 'glTF' || header.readUInt32LE(4) !== 2 || declaredLength !== fileStats.size) {
-      throw new Error('KnightSim supports glTF 2.0 binary (.glb) models only.');
-    }
-
-    const chunkHeader = Buffer.alloc(8);
-    await file.read(chunkHeader, 0, chunkHeader.length, 12);
-    const jsonLength = chunkHeader.readUInt32LE(0);
-    const jsonChunkType = chunkHeader.readUInt32LE(4);
-    if (jsonChunkType !== 0x4e4f534a || jsonLength > fileStats.size - 20) {
-      throw new Error('The selected file has an invalid glTF data section.');
-    }
-    const jsonBuffer = Buffer.alloc(jsonLength);
-    await file.read(jsonBuffer, 0, jsonLength, 20);
-    try {
-      JSON.parse(jsonBuffer.toString('utf8').replace(/\0+$/u, '').trim());
-    } catch {
-      throw new Error('The selected file has an invalid glTF data section.');
-    }
+    await writeFile(temporaryPath, `${JSON.stringify(library, null, 2)}\n`, 'utf8');
+    await rename(temporaryPath, modelLibraryPath());
   } finally {
-    await file.close();
+    await unlink(temporaryPath).catch(() => undefined);
   }
-
-  return fileStats.size;
 }
 
 async function importRobotModel(
@@ -221,11 +106,11 @@ async function importRobotModel(
 }
 
 function registerRobotModelIpc(): void {
-  ipcMain.handle('robot-models:list', () => readModelLibrary());
+  ipcMain.handle('robot-models:list', () => serializeModelOperation(readModelLibrary));
   ipcMain.handle('robot-models:import', (event, robotId: unknown) => (
-    importRobotModel(BrowserWindow.fromWebContents(event.sender) ?? undefined, robotId)
+    serializeModelOperation(() => importRobotModel(BrowserWindow.fromWebContents(event.sender) ?? undefined, robotId))
   ));
-  ipcMain.handle('robot-models:set-for-robot', async (_event, robotId: unknown, id: unknown) => {
+  ipcMain.handle('robot-models:set-for-robot', (_event, robotId: unknown, id: unknown) => serializeModelOperation(async () => {
     if (!isRobotId(robotId)) throw new Error('Invalid robot identifier.');
     const current = await readModelLibrary();
     if (id !== null && (typeof id !== 'string' || !current.models.some((model) => model.id === id))) {
@@ -237,8 +122,8 @@ function registerRobotModelIpc(): void {
     } satisfies RobotModelLibrary;
     await writeModelLibrary(next);
     return next;
-  });
-  ipcMain.handle('robot-models:update-orientation', async (_event, id: unknown, orientation: unknown) => {
+  }));
+  ipcMain.handle('robot-models:update-orientation', (_event, id: unknown, orientation: unknown) => serializeModelOperation(async () => {
     if (typeof id !== 'string') throw new Error('Invalid robot model identifier.');
     const current = await readModelLibrary();
     if (!current.models.some((model) => model.id === id)) throw new Error('That robot model is no longer available.');
@@ -250,8 +135,8 @@ function registerRobotModelIpc(): void {
     } satisfies RobotModelLibrary;
     await writeModelLibrary(next);
     return next;
-  });
-  ipcMain.handle('robot-models:remove', async (_event, id: unknown) => {
+  }));
+  ipcMain.handle('robot-models:remove', (_event, id: unknown) => serializeModelOperation(async () => {
     if (typeof id !== 'string') throw new Error('Invalid robot model identifier.');
     const current = await readModelLibrary();
     const models = current.models.filter((model) => model.id !== id);
@@ -259,17 +144,16 @@ function registerRobotModelIpc(): void {
     const next: RobotModelLibrary = {
       version: 2,
       models,
-      modelIdByRobot: Object.fromEntries(ROBOT_IDS.map((robotId) => [
-        robotId,
-        current.modelIdByRobot[robotId] === id ? null : current.modelIdByRobot[robotId],
-      ])) as Record<RobotId, string | null>,
+      modelIdByRobot: Object.fromEntries(Object.entries(current.modelIdByRobot).map(([robotId, modelId]) => [
+        robotId, modelId === id ? null : modelId,
+      ])),
     };
     await writeModelLibrary(next);
     await unlink(modelFilePath(id)).catch((error: unknown) => {
       if (!isRecord(error) || error.code !== 'ENOENT') console.error('Unable to remove a robot model file:', error);
     });
     return next;
-  });
+  }));
 }
 
 async function registerRobotModelProtocol(): Promise<void> {

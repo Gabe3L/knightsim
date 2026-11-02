@@ -1,4 +1,4 @@
-import { Box3, Euler, Matrix4, Mesh, Quaternion, Vector3, type Object3D } from 'three';
+import { Box3, Euler, InstancedMesh, Matrix4, Mesh, Quaternion, SkinnedMesh, Vector3, type Object3D } from 'three';
 import type { RobotModelOrientation } from '../types';
 
 /** World-axis bounds after the same rotation, flips and uniform scale as the viewer. */
@@ -12,10 +12,19 @@ export function modelDimensions(scene: Object3D, orientation: RobotModelOrientat
   scene.updateWorldMatrix(true, true);
   scene.traverseVisible((child) => {
     if (!(child instanceof Mesh)) return;
-    if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
-    if (child.geometry.boundingBox) {
+    // Instance transforms and skeleton deformation live on the mesh, not the
+    // base geometry. Use their object bounds so scale controls match the viewer.
+    let box;
+    if (child instanceof InstancedMesh || child instanceof SkinnedMesh) {
+      child.computeBoundingBox();
+      box = child.boundingBox;
+    } else {
+      if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
+      box = child.geometry.boundingBox;
+    }
+    if (box) {
       matrix.multiplyMatrices(transform, child.matrixWorld);
-      bounds.union(child.geometry.boundingBox.clone().applyMatrix4(matrix));
+      bounds.union(box.clone().applyMatrix4(matrix));
     }
   });
   return bounds.getSize(new Vector3());

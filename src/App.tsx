@@ -4,6 +4,7 @@ import { SettingsDialog } from './components/SettingsDialog';
 import { Timeline } from './components/Timeline';
 import { TopBar } from './components/TopBar';
 import { ARCC_2026_FIELD } from './field/fieldSpec';
+import { FIELD_ROBOT_IDS, fieldRobotsAt } from './field/fieldRobots';
 import { useReplay } from './hooks/useReplay';
 import { useFieldOverlayWorkspace } from './hooks/useFieldOverlayWorkspace';
 import { useRobotModels } from './hooks/useRobotModels';
@@ -18,7 +19,7 @@ import {
   graphSignalById,
   type GraphSignalConfig,
 } from './telemetry/graphSignals';
-import type { CameraState, ControllerMode, FieldMode, ViewMode } from './types';
+import type { CameraState, ControllerMode, FieldMode, RobotId, ViewMode } from './types';
 import { Field } from './views/Field';
 import { LineGraph } from './views/LineGraph';
 import { ControllerView } from './views/ControllerView';
@@ -56,8 +57,15 @@ export function App() {
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
-  const { replay, robot, seek, togglePlaying, setSpeed } = useReplay();
+  const [robotId, setRobotId] = useState<RobotId>('sentry');
+  const { replay, robot, seek, togglePlaying, setSpeed } = useReplay(robotId);
   const robotModels = useRobotModels();
+  const fieldRobots = useMemo(() => fieldRobotsAt(replay.currentTimeS, fieldMode),
+    [replay.currentTimeS, fieldMode]);
+  const changeFieldMode = (mode: FieldMode): void => {
+    setFieldMode(mode);
+    setRobotId((current) => FIELD_ROBOT_IDS[mode].includes(current) ? current : FIELD_ROBOT_IDS[mode][0]!);
+  };
   const { state: fieldOverlayWorkspace, dispatch: dispatchFieldOverlay } = useFieldOverlayWorkspace();
   const fieldOverlays = useMemo(() => resolveFieldOverlays(
     fieldOverlayWorkspace.items,
@@ -214,6 +222,8 @@ export function App() {
       />
       <div className="app-main">
         <TopBar
+          robotId={robotId}
+          onRobotChange={setRobotId}
           activeView={activeView}
           connected={robot.connected}
           controllerInputCount={controllerInputIds.length}
@@ -222,7 +232,7 @@ export function App() {
           graphSignalCount={graphSignals.length}
           playing={replay.playing}
           onControllerModeChange={setControllerMode}
-          onFieldModeChange={setFieldMode}
+          onFieldModeChange={changeFieldMode}
           onViewChange={setActiveView}
         />
         <main className="workspace">
@@ -236,35 +246,37 @@ export function App() {
               camera={DEFAULT_CAMERA}
               mode={fieldMode}
               overlays={fieldOverlays}
-              model={robotModels.modelForRobot(robot.robotId)}
+              robots={fieldRobots}
+              modelForRobot={robotModels.modelForRobot}
             />
           </div>
           <div
             className={activeView === 'graph' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== 'graph'}
           >
-            <LineGraph
+            {activeView === 'graph' ? <LineGraph
               replay={replay}
               signals={graphSignals}
               onAddSignal={addGraphSignal}
               onSeek={seek}
-            />
+            /> : null}
           </div>
           <div
             className={activeView === 'controller' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== 'controller'}
           >
-            <ControllerView
+            {activeView === 'controller' ? <ControllerView
               controllerMode={controllerMode}
               currentTimeS={replay.currentTimeS}
               selectedInputIds={controllerInputIds}
-            />
+            /> : null}
           </div>
         </main>
         <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
       {settingsOpen ? (
         <SettingsDialog
+          initialRobotId={robotId}
           busy={robotModels.busy}
           error={robotModels.error}
           library={robotModels.library}

@@ -1,3 +1,5 @@
+import { ROBOT_PROFILES, robotProfile } from '../robots/profiles';
+import { telemetryAt } from '../telemetry/mockReplay';
 import { useMemo, useState, type DragEvent } from 'react';
 import {
   Bot,
@@ -93,6 +95,7 @@ function graphField(
 }
 
 function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): readonly TelemetryTopic[] {
+  const profile = robotProfile(robotId);
   const topics: TelemetryTopic[] = [
     {
       id: 'inputs',
@@ -123,7 +126,7 @@ function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): re
       label: 'Referee state',
       fields: [
         graphField('Hit points', `${robotId}.referee.hp`, timeS, `${snapshot.hp} / ${snapshot.maxHp}`),
-        graphField('Barrel heat', `${robotId}.referee.heat`, timeS, `${snapshot.heat} / ${snapshot.maxHeat}`),
+        ...(profile.maxHeat > 0 ? [graphField('Barrel heat', `${robotId}.referee.heat`, timeS, `${snapshot.heat} / ${snapshot.maxHeat}`)] : []),
         { label: 'Team', value: 'Red' },
         { label: 'Match stage', value: 'Battle' },
       ],
@@ -177,7 +180,9 @@ function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): re
     });
   }
 
-  return topics;
+  return topics.filter((topic) => topic.fields.length > 0
+    && (topic.id !== 'referee' || profile.capabilities.referee)
+    && (topic.id !== 'aim' || profile.capabilities.aim));
 }
 
 function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
@@ -221,41 +226,22 @@ export function Inspector({
     overlays.filter((overlay) => overlay.visible).map((overlay) => overlay.id),
   ), [overlays]);
 
-  const robots = useMemo<readonly RobotNode[]>(() => [
-    {
-      id: 'sentry',
-      name: 'Sentry',
-      connected: false,
-      topics: topicsFor({
-        x: 2.184, y: 6.932, z: 0, yaw: -90, pitch: 0, roll: 0,
-        hp: 600, maxHp: 600, heat: 0, maxHeat: 400,
-        battery: '—', signal: 'No link', mode: 'Idle', cpu: '—',
-        aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
-      }, 'sentry', currentTimeS),
-    },
-    {
-      id: 'infantry',
-      name: 'Infantry',
-      connected: robot.connected,
-      topics: topicsFor({
-        x: robot.xM, y: robot.yM, z: 0, yaw: robot.yawDeg, pitch: -1.4, roll: 0.2,
-        hp: robot.hp, maxHp: robot.maxHp, heat: robot.heat, maxHeat: robot.maxHeat,
-        battery: '23.8 V', signal: '-47 dBm', mode: 'Chassis follow', cpu: '38%',
-        aimTarget: 'Blue-03', yawError: '0.8°', pitchError: '-0.3°', aimLocked: true,
-      }, 'infantry', currentTimeS),
-    },
-    {
-      id: 'hero',
-      name: 'Hero',
-      connected: false,
-      topics: topicsFor({
-        x: 8.642, y: 1.207, z: 0, yaw: 176.4, pitch: 0, roll: -0.1,
-        hp: 300, maxHp: 300, heat: 18, maxHeat: 200,
-        battery: '—', signal: 'No link', mode: 'Safe', cpu: '—',
-        aimTarget: 'None', yawError: '—', pitchError: '—', aimLocked: false,
-      }, 'hero', currentTimeS),
-    },
-  ], [currentTimeS, robot]);
+  const robots = useMemo<readonly RobotNode[]>(() => ROBOT_PROFILES.map((profile) => {
+    const sample = profile.id === robot.robotId ? robot : telemetryAt(currentTimeS, profile.id);
+    return {
+      id: profile.id,
+      name: profile.name,
+      connected: sample.connected,
+      topics: expandedRobots.has(profile.id) && !collapsed ? topicsFor({
+        x: sample.xM, y: sample.yM, z: sample.zM,
+        yaw: sample.yawDeg, pitch: sample.pitchDeg, roll: sample.rollDeg,
+        hp: sample.hp, maxHp: sample.maxHp, heat: sample.heat, maxHeat: sample.maxHeat,
+        battery: '24 V', signal: sample.connected ? '-47 dBm' : 'No link',
+        mode: profile.mobility, cpu: '38%', aimTarget: 'Demo target',
+        yawError: '0°', pitchError: '0°', aimLocked: sample.connected,
+      }, profile.id, currentTimeS) : [],
+    };
+  }), [currentTimeS, robot, expandedRobots, collapsed]);
 
   const startSignalDrag = (event: DragEvent<HTMLDivElement>, graphSignalId: string): void => {
     event.dataTransfer.effectAllowed = 'copy';

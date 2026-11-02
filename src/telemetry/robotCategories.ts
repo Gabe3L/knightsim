@@ -19,6 +19,7 @@ export const ROBOT_CATEGORIES: readonly RobotCategoryDescriptor[] = [
   { id: 'infantry', label: 'Infantry' },
   { id: 'sentry', label: 'Sentry' },
   { id: 'hero', label: 'Hero' },
+  { id: 'generic', label: 'General purpose' },
 ];
 
 // Every category deliberately shares a profile for now. Renderers still resolve
@@ -38,6 +39,7 @@ export const ROBOT_RENDER_PROFILES: Readonly<Record<RobotCategory, RobotRenderPr
   infantry: sharedProfile,
   sentry: sharedProfile,
   hero: sharedProfile,
+  generic: { ...sharedProfile, body: '#4e9cab', emissive: '#4e9cab' },
 };
 
 export const robotRenderProfile = (category: RobotCategory): RobotRenderProfile => (

@@ -1,5 +1,7 @@
+import { robotProfile } from '../robots/profiles';
+import { FIELD_ROBOT_IDS } from '../field/fieldRobots';
 import { Box, ChartLine, Gamepad2 } from 'lucide-react';
-import type { ControllerMode, FieldMode, ViewMode } from '../types';
+import type { ControllerMode, FieldMode, RobotId, ViewMode } from '../types';
 
 const CONTROLLER_MODE_OPTIONS = [
   { mode: 'kbm', label: 'KBM' },
@@ -16,6 +18,8 @@ const CONTROLLER_MODE_TITLES: Readonly<Record<ControllerMode, string>> = {
 };
 
 interface TopBarProps {
+  readonly robotId: RobotId;
+  readonly onRobotChange: (id: RobotId) => void;
   readonly activeView: ViewMode;
   readonly connected: boolean;
   readonly controllerInputCount: number;
@@ -29,6 +33,8 @@ interface TopBarProps {
 }
 
 export function TopBar({
+  robotId,
+  onRobotChange,
   activeView,
   connected,
   controllerInputCount,
@@ -58,7 +64,12 @@ export function TopBar({
     <header className="topbar">
       <div className="topbar-context" aria-label={`${context.eyebrow}, ${context.label}`}>
         <span>{context.eyebrow}</span>
-        <strong>{context.label}</strong>
+        {activeView === 'field' ? (
+          <select className="robot-preview-select" value={robotId} aria-label="Preview robot"
+            onChange={(event) => onRobotChange(event.currentTarget.value)}>
+            {FIELD_ROBOT_IDS[fieldMode].map(robotProfile).map((profile) => <option key={profile.id} value={profile.id}>{profile.name} · Demo</option>)}
+          </select>
+        ) : <strong>{context.label}</strong>}
       </div>
 
       <nav className="view-tabs" aria-label="Workspace views">
@@ -93,7 +104,7 @@ export function TopBar({
 
       {activeView === 'field' ? (
         <div className="field-mode-selector" role="group" aria-label="Field format">
-          {(['1v1', '3v3'] as const).map((mode) => (
+          {(['1v1', '3v3', 'drone'] as const).map((mode) => (
             <button
               key={mode}
               className={fieldMode === mode ? 'field-mode-option field-mode-option-active' : 'field-mode-option'}
@@ -101,7 +112,7 @@ export function TopBar({
               aria-pressed={fieldMode === mode}
               onClick={() => onFieldModeChange(mode)}
             >
-              {mode}
+              {mode === 'drone' ? 'Drone' : mode}
             </button>
           ))}
         </div>

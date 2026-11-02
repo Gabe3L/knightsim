@@ -1,4 +1,5 @@
-import type { ReplayFrame, RobotTelemetry } from '../types';
+import { robotProfile } from '../robots/profiles';
+import type { ReplayFrame, RobotId, RobotTelemetry } from '../types';
 
 export const REPLAY_DURATION_S = 84;
 
@@ -14,8 +15,9 @@ const path = [
 
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
-export const telemetryAt = (timeS: number): RobotTelemetry => {
-  const clampedTime = Math.max(0, Math.min(REPLAY_DURATION_S, timeS));
+export const telemetryAt = (timeS: number, robotId: RobotId = 'infantry'): RobotTelemetry => {
+  const profile = robotProfile(robotId);
+  const clampedTime = Math.max(0, Math.min(REPLAY_DURATION_S, Number.isFinite(timeS) ? timeS : 0));
   const rightIndex = path.findIndex((point) => point.timeS >= clampedTime);
   const end = path[Math.max(1, rightIndex === -1 ? path.length - 1 : rightIndex)]!;
   const start = path[Math.max(0, path.indexOf(end) - 1)]!;
@@ -23,15 +25,18 @@ export const telemetryAt = (timeS: number): RobotTelemetry => {
   const progress = (clampedTime - start.timeS) / span;
 
   return {
-    robotId: 'infantry',
-    category: 'infantry',
+    robotId,
+    category: profile.category,
+    zM: profile.mobility === 'aerial' ? 1.2 + Math.sin(clampedTime / 6) * 0.25 : 0,
+    pitchDeg: profile.mobility === 'aerial' ? Math.sin(clampedTime / 7) * 5 : 0,
+    rollDeg: profile.mobility === 'aerial' ? Math.cos(clampedTime / 6) * 4 : 0,
     xM: lerp(start.xM, end.xM, progress),
     yM: lerp(start.yM, end.yM, progress),
     yawDeg: lerp(start.yawDeg, end.yawDeg, progress),
-    hp: Math.round(400 - clampedTime * 1.36),
-    maxHp: 400,
-    heat: Math.round(42 + Math.sin(clampedTime / 4) * 28 + clampedTime * 0.62),
-    maxHeat: 260,
+    hp: Math.max(0, Math.round(profile.maxHp * (1 - clampedTime * 0.0034))),
+    maxHp: profile.maxHp,
+    heat: Math.min(profile.maxHeat, Math.round(42 + Math.sin(clampedTime / 4) * 28 + clampedTime * 0.62)),
+    maxHeat: profile.maxHeat,
     connected: clampedTime < 76 || clampedTime > 78.4,
   };
 };

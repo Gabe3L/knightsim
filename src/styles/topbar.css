@@ -61,3 +61,6 @@
 .playback-state { color: #77717f; }
 .playback-state-playing { color: #e86e85; border-color: rgba(239, 71, 100, .25); background: rgba(239, 71, 100, .07); }
 .playback-state-playing svg { filter: drop-shadow(0 0 4px rgba(239, 71, 100, .42)); }
+
+.robot-preview-select { max-width: 100%; min-width: 0; border: 0; border-radius: 4px; background: #151923; color: #d9d8de; font: inherit; font-size: 12px; padding: 3px; }
+.robot-preview-select:focus-visible { outline: 2px solid var(--focus-ring); }

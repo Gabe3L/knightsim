@@ -1,3 +1,5 @@
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { robotProfile } from '../robots/profiles';
 import {
   AdaptiveDpr,
   Box,
@@ -35,14 +37,15 @@ import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
 import { robotRenderProfile } from "../telemetry/robotCategories";
-import type { CameraState, FieldMode, RobotModelRecord, RobotTelemetry } from "../types";
+import type { CameraState, FieldMode, RobotId, RobotModelRecord, RobotTelemetry } from "../types";
 
 interface FieldProps {
   readonly active: boolean;
   readonly robot: RobotTelemetry;
   readonly camera: CameraState;
   readonly mode: FieldMode;
-  readonly model: RobotModelRecord | null;
+  readonly robots: readonly RobotTelemetry[];
+  readonly modelForRobot: (id: RobotId) => RobotModelRecord | null;
   readonly overlays: readonly ResolvedFieldOverlay[];
 }
 
@@ -335,56 +338,53 @@ function HighGroundDeck({
   );
 }
 
-function PlaceholderRobot({ category }: Pick<RobotTelemetry, "category">) {
-  const profile = robotRenderProfile(category);
+function PlaceholderRobot({ robotId }: Pick<RobotTelemetry, "robotId">) {
+  const robot = robotProfile(robotId);
+  const profile = robotRenderProfile(robot.category);
+  const { length, width, height } = robot.dimensionsM;
   return (
-    <>
-      <Box args={[0.52, 0.18, 0.46]} position={[0, 0.125, 0]} castShadow>
-        <meshStandardMaterial
-          color={profile.body}
-          roughness={0.42}
-          metalness={0.55}
-        />
+    <group>
+      <Box args={[length * 0.8, height * 0.45, width * 0.7]} position={[0, height * 0.55, 0]} castShadow>
+        <meshStandardMaterial color={profile.body} roughness={0.42} metalness={0.55} />
       </Box>
-      <Box args={[0.3, 0.24, 0.3]} position={[0, 0.315, 0]} castShadow>
-        <meshStandardMaterial
-          color="#202936"
-          roughness={0.34}
-          metalness={0.68}
-        />
+      <Box args={[length * 0.4, height * 0.225, width * 0.4]} position={[0, height * 0.8875, 0]} castShadow>
+        <meshStandardMaterial color="#202936" roughness={0.34} metalness={0.68} />
       </Box>
-      <mesh position={[0.34, 0.145, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.09, 0.22, 4]} />
-        <meshStandardMaterial
-          color="#fff"
-          emissive={profile.emissive}
-          emissiveIntensity={1.5}
-        />
+      <mesh position={[length * 0.4, height * 0.6, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[width * 0.1, length * 0.2, 4]} />
+        <meshStandardMaterial color="#fff" emissive={profile.emissive} emissiveIntensity={1.5} />
       </mesh>
-      {(
-        [
-          [-0.19, -0.19],
-          [-0.19, 0.19],
-          [0.19, -0.19],
-          [0.19, 0.19],
-        ] as const
-      ).map(([x, z], index) => (
-        <mesh
-          key={index}
-          position={[x, 0.035, z]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <cylinderGeometry args={[0.07, 0.07, 0.08, 14]} />
-          <meshStandardMaterial color="#090b0f" roughness={0.8} />
-        </mesh>
-      ))}
-    </>
+      {robot.mobility === 'tracked' ? [-1, 1].map((side) => (
+        <Box key={side} args={[length, height * 0.4, width * 0.2]}
+          position={[0, height * 0.2, side * width * (robot.mobility === 'aerial' ? 0.32 : 0.4)]}>
+          <meshStandardMaterial color="#151a21" roughness={0.9} />
+        </Box>
+      )) : [-1, 1].flatMap((front) => [-1, 1].map((side) => (
+        <group key={`${front}:${side}`} position={[front * length * 0.3, 0, side * width * (robot.mobility === 'aerial' ? 0.32 : 0.4)]}>
+          {robot.mobility === 'legged' ? (
+            <Box args={[length * 0.1, height * 0.6, width * 0.12]} position={[0, height * 0.3, 0]}>
+              <meshStandardMaterial color="#151a21" />
+            </Box>
+          ) : robot.mobility === 'aerial' ? (
+            <mesh position={[0, height * 0.1, 0]}>
+              <cylinderGeometry args={[Math.min(length, width) * 0.18, Math.min(length, width) * 0.18, height * 0.2, 20]} />
+              <meshStandardMaterial color="#a3bac5" />
+            </mesh>
+          ) : (
+            <mesh position={[0, height * 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[height * 0.18, height * 0.18, width * 0.2, 14]} />
+              <meshStandardMaterial color="#090b0f" roughness={0.8} />
+            </mesh>
+          )}
+        </group>
+      )))}
+    </group>
   );
 }
 
 interface ModelErrorBoundaryProps {
   readonly cacheKey: string;
-  readonly category: RobotTelemetry['category'];
+  readonly robotId: RobotTelemetry['robotId'];
   readonly children: ReactNode;
 }
 
@@ -412,7 +412,7 @@ class ModelErrorBoundary extends Component<
   }
 
   override render(): ReactNode {
-    return this.state.failed ? <PlaceholderRobot category={this.props.category} /> : this.props.children;
+    return this.state.failed ? <PlaceholderRobot robotId={this.props.robotId} /> : this.props.children;
   }
 }
 
@@ -422,8 +422,10 @@ const UploadedRobot = memo(function UploadedRobot({
   readonly model: RobotModelRecord;
 }) {
   const url = window.knightSim?.robotModels.urlFor(model.id) ?? "";
-  const { scene } = useGLTF(url, false, true, configureDracoLoader);
-  const prepared = useMemo(() => prepareRobotModel(scene), [scene]);
+  const { scene, animations } = useGLTF(url, false, true, configureDracoLoader);
+  const prepared = useMemo(() => prepareRobotModel(scene, animations.length > 0), [scene, animations]);
+  // A cached template must never be attached to multiple scene parents.
+  const object = useMemo(() => cloneSkeleton(prepared.object), [prepared]);
   const { rotationDeg, flipped, scale = 1 } = model.orientation;
   const orientationKey = [
     scale,
@@ -445,28 +447,32 @@ const UploadedRobot = memo(function UploadedRobot({
         ]}
         scale={[(flipped.x ? -1 : 1) * scale, (flipped.y ? -1 : 1) * scale, (flipped.z ? -1 : 1) * scale]}
       >
-        <primitive object={prepared.object} />
+        <primitive object={object} dispose={null} />
       </group>
     </Center>
   );
 });
 
-function Robot({ robot, model, mode }: Pick<FieldProps, "robot" | "model" | "mode">) {
+function Robot({ robot, model, mode }: {
+  readonly robot: RobotTelemetry;
+  readonly model: RobotModelRecord | null;
+  readonly mode: FieldMode;
+}) {
   return (
     <group
       name={`robot:${robot.category}`}
-      position={[modeWorldX(robot.xM, mode), 0.035, modeWorldZ(robot.yM, mode)]}
-      rotation={[0, (robot.yawDeg * Math.PI) / 180, 0]}
+      position={[modeWorldX(robot.xM, mode), 0.035 + robot.zM, modeWorldZ(robot.yM, mode)]}
+      rotation={[-robot.rollDeg * Math.PI / 180, robot.yawDeg * Math.PI / 180, -robot.pitchDeg * Math.PI / 180, 'YXZ']}
       scale={[-1, 1, 1]}
     >
       {model && window.knightSim?.robotModels ? (
-        <ModelErrorBoundary cacheKey={model.id} category={robot.category}>
-          <Suspense fallback={<PlaceholderRobot category={robot.category} />}>
+        <ModelErrorBoundary cacheKey={model.id} robotId={robot.robotId}>
+          <Suspense fallback={<PlaceholderRobot robotId={robot.robotId} />}>
             <UploadedRobot model={model} />
           </Suspense>
         </ModelErrorBoundary>
       ) : (
-        <PlaceholderRobot category={robot.category} />
+        <PlaceholderRobot robotId={robot.robotId} />
       )}
     </group>
   );
@@ -1018,7 +1024,7 @@ function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<F
   );
 }
 
-export function Field({ active, robot, camera, mode, model, overlays }: FieldProps) {
+export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {
   const distanceScale = 1 / Math.max(0.7, camera.zoom);
   const targetXM = mode === '1v1' ? 2.5 : camera.targetXM;
   const targetYM = mode === '1v1' ? 2.5 : camera.targetYM;
@@ -1051,11 +1057,13 @@ export function Field({ active, robot, camera, mode, model, overlays }: FieldPro
           ]}
         />
         {mode === '1v1' ? <OneVOneArena /> : <Arena />}
-        <Robot robot={robot} model={model} mode={mode} />
+        {robots.map((fieldRobot) => (
+          <Robot key={fieldRobot.robotId} robot={fieldRobot} model={modelForRobot(fieldRobot.robotId)} mode={mode} />
+        ))}
         <FieldOverlays overlays={overlays} mode={mode} />
         <AdaptiveReplayQuality robot={robot} />
         <FieldCameraFlightControls active={active} camera={camera} mode={mode} />
       </Canvas>
     </div>
   );
-}
+}, (previous, next) => !previous.active && !next.active);

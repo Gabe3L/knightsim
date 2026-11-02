@@ -1,35 +1,18 @@
 export type ViewMode = 'field' | 'graph' | 'controller';
 
-export type FieldMode = '1v1' | '3v3';
+export type FieldMode = '1v1' | '3v3' | 'drone';
 
 export type ControllerMode = 'kbm' | 'xbox' | 'ps5' | 'dji';
 
-export type RobotId = 'sentry' | 'infantry' | 'hero';
+/** Stable profile/instance identifier, independent of category or chassis. */
+export type RobotId = string;
 
-export type RobotCategory = 'ghost' | 'enemy' | 'infantry' | 'sentry' | 'hero';
+export type RobotCategory = 'ghost' | 'enemy' | 'infantry' | 'sentry' | 'hero' | 'generic';
 
 export type ModelAxis = 'x' | 'y' | 'z';
 
-export interface RobotModelOrientation {
-  readonly scale: number;
-  readonly rotationDeg: Record<ModelAxis, number>;
-  readonly flipped: Record<ModelAxis, boolean>;
-}
-
-export interface RobotModelRecord {
-  readonly id: string;
-  readonly name: string;
-  readonly sourceFileName: string;
-  readonly sizeBytes: number;
-  readonly importedAt: string;
-  readonly orientation: RobotModelOrientation;
-}
-
-export interface RobotModelLibrary {
-  readonly version: 2;
-  readonly modelIdByRobot: Readonly<Record<RobotId, string | null>>;
-  readonly models: readonly RobotModelRecord[];
-}
+// Keep the renderer and Electron IPC persistence contract in sync.
+export type { RobotModelOrientation, RobotModelRecord, RobotModelLibrary } from '../electron/modelLibrary.cjs';
 
 export interface RobotPose {
   readonly xM: number;
@@ -38,6 +21,9 @@ export interface RobotPose {
 }
 
 export interface RobotTelemetry extends RobotPose {
+  readonly zM: number;
+  readonly pitchDeg: number;
+  readonly rollDeg: number;
   readonly robotId: RobotId;
   readonly category: RobotCategory;
   readonly hp: number;

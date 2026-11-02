@@ -171,6 +171,13 @@ export function LineGraph({
   const plotHeight = Math.max(1, height - CHART_MARGIN.top - CHART_MARGIN.bottom);
   const laneCount = Math.max(1, lanes.length);
   const laneHeight = Math.max(24, (plotHeight - LANE_GAP * (laneCount - 1)) / laneCount);
+  // Curves depend on samples and layout, not the moving replay cursor.
+  const pathsById = useMemo(() => new Map(lanes.flatMap((lane, laneIndex) => {
+    const y = plotY + laneIndex * (laneHeight + LANE_GAP);
+    return lane.series.map((series) => [series.descriptor.id,
+      pathFor(times, series.values, replay.durationS, lane.min, lane.max, plotX, y, plotWidth, laneHeight),
+    ] as const);
+  })), [lanes, times, replay.durationS, plotX, plotY, plotWidth, laneHeight]);
   const currentX = plotX + (replay.currentTimeS / Math.max(replay.durationS, 0.0001)) * plotWidth;
   const hoverX = hoverTimeS === null
     ? null
@@ -275,7 +282,7 @@ export function LineGraph({
                     return (
                       <g key={series.descriptor.id}>
                         <path
-                          d={pathFor(times, series.values, replay.durationS, lane.min, lane.max, plotX, y, plotWidth, laneHeight)}
+                          d={pathsById.get(series.descriptor.id)}
                           fill="none"
                           stroke={signalColorById.get(series.descriptor.id) ?? series.descriptor.color}
                           className="graph-series-line"

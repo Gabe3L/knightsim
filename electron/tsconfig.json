@@ -5,10 +5,16 @@
     "moduleResolution": "Node16",
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "rootDir": ".",
     "outDir": "../dist-electron",
-    "sourceMap": true
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
-  "include": ["./*.cts"]
+  "include": [
+    "./*.cts"
+  ]
 }

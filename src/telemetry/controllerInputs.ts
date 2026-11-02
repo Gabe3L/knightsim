@@ -1,3 +1,4 @@
+import { ROBOT_PROFILES } from '../robots/profiles';
 import type { RobotId } from '../types';
 
 export const CONTROLLER_INPUT_DRAG_TYPE = 'application/x-knightsim-controller-input';
@@ -30,11 +31,6 @@ export interface ControllerInputDescriptor {
   readonly format: (value: number) => string;
 }
 
-const ROBOTS: readonly { readonly id: RobotId; readonly name: string; readonly phase: number }[] = [
-  { id: 'sentry', name: 'Sentry', phase: 1.8 },
-  { id: 'infantry', name: 'Infantry', phase: 0 },
-  { id: 'hero', name: 'Hero', phase: 3.7 },
-];
 
 const axisValue = (timeS: number, phase: number, speed: number): number => (
   Math.sin(timeS * speed + phase) * 0.82
@@ -92,8 +88,8 @@ function inputsForRobot(
   ];
 }
 
-export const CONTROLLER_INPUTS: readonly ControllerInputDescriptor[] = ROBOTS.flatMap((robot) => (
-  inputsForRobot(robot.id, robot.name, robot.phase)
+export const CONTROLLER_INPUTS: readonly ControllerInputDescriptor[] = ROBOT_PROFILES.filter((robot) => robot.capabilities.controller).flatMap((robot) => (
+  inputsForRobot(robot.id, robot.name, robot.demoPhase)
 ));
 
 const inputById = new Map(CONTROLLER_INPUTS.map((descriptor) => [descriptor.id, descriptor]));
@@ -102,8 +98,12 @@ export const controllerInputById = (id: string): ControllerInputDescriptor | nul
   inputById.get(id) ?? null
 );
 
+const inputsByRobot = new Map(ROBOT_PROFILES.map(({ id }) => [
+  id, CONTROLLER_INPUTS.filter((descriptor) => descriptor.robotId === id),
+]));
+
 export const controllerInputsForRobot = (robotId: RobotId): readonly ControllerInputDescriptor[] => (
-  CONTROLLER_INPUTS.filter((descriptor) => descriptor.robotId === robotId)
+  inputsByRobot.get(robotId) ?? []
 );
 
 export const controllerInputValueAt = (id: string, timeS: number): number | null => {

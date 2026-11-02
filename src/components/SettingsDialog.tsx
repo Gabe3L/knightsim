@@ -1,3 +1,4 @@
+import { ROBOT_PROFILES, type RobotTuning as TuningSettings } from '../robots/profiles';
 import {
   Bot,
   Box,
@@ -22,6 +23,7 @@ import '../styles/settings.css';
 import { ModelScaleControls } from './ModelScaleControls';
 
 interface SettingsDialogProps {
+  readonly initialRobotId: RobotId;
   readonly busy: boolean;
   readonly error: string | null;
   readonly library: RobotModelLibrary;
@@ -36,24 +38,6 @@ interface SettingsDialogProps {
 
 type SettingsPage = 'settings' | 'connectivity' | 'keybindings';
 type AuthenticationMethod = 'key' | 'password';
-
-interface RobotOption {
-  readonly id: RobotId;
-  readonly name: string;
-}
-
-interface TuningSettings {
-  readonly coefficientOfFriction: number;
-  readonly maxAcceleration: number;
-  readonly maxDriveSpeed: number;
-  readonly maxAngularSpeed: number;
-  readonly robotMass: number;
-  readonly wheelRadius: number;
-  readonly controlFrequency: number;
-  readonly driveCurrentLimit: number;
-  readonly simulateBatterySag: boolean;
-  readonly enableCollisions: boolean;
-}
 
 interface ConnectivitySettings {
   readonly host: string;
@@ -71,71 +55,16 @@ interface ConnectivitySettings {
   readonly remoteWorkspace: string;
 }
 
-const ROBOTS: readonly RobotOption[] = [
-  { id: 'sentry', name: 'Sentry' },
-  { id: 'infantry', name: 'Infantry' },
-  { id: 'hero', name: 'Hero' },
-];
+const ROBOTS = ROBOT_PROFILES;
 
-const DEFAULT_TUNING: Record<RobotId, TuningSettings> = {
-  sentry: {
-    coefficientOfFriction: 0.86,
-    maxAcceleration: 4.8,
-    maxDriveSpeed: 4.2,
-    maxAngularSpeed: 420,
-    robotMass: 118,
-    wheelRadius: 76,
-    controlFrequency: 200,
-    driveCurrentLimit: 60,
-    simulateBatterySag: true,
-    enableCollisions: true,
-  },
-  infantry: {
-    coefficientOfFriction: 0.82,
-    maxAcceleration: 6.5,
-    maxDriveSpeed: 5.2,
-    maxAngularSpeed: 540,
-    robotMass: 44.5,
-    wheelRadius: 60,
-    controlFrequency: 250,
-    driveCurrentLimit: 40,
-    simulateBatterySag: true,
-    enableCollisions: true,
-  },
-  hero: {
-    coefficientOfFriction: 0.8,
-    maxAcceleration: 5.4,
-    maxDriveSpeed: 4.6,
-    maxAngularSpeed: 460,
-    robotMass: 52,
-    wheelRadius: 76,
-    controlFrequency: 250,
-    driveCurrentLimit: 50,
-    simulateBatterySag: true,
-    enableCollisions: true,
-  },
-};
+const DEFAULT_TUNING: Record<RobotId, TuningSettings> = Object.fromEntries(ROBOTS.map(({ id, tuning }) => [id, tuning]));
 
-const DEFAULT_CONNECTIVITY: Record<RobotId, ConnectivitySettings> = {
-  sentry: {
-    host: 'sentry.local', port: 22, username: 'ubuntu', authentication: 'key',
-    privateKeyPath: '~/.ssh/id_ed25519', password: '', connectTimeout: 8, keepAlive: 15,
-    autoReconnect: true, verifyHostKey: true, compression: false, telemetryPort: 5800,
-    remoteWorkspace: '/home/ubuntu/knightsim',
-  },
-  infantry: {
-    host: 'infantry.local', port: 22, username: 'ubuntu', authentication: 'key',
-    privateKeyPath: '~/.ssh/id_ed25519', password: '', connectTimeout: 8, keepAlive: 15,
-    autoReconnect: true, verifyHostKey: true, compression: false, telemetryPort: 5800,
-    remoteWorkspace: '/home/ubuntu/knightsim',
-  },
-  hero: {
-    host: 'hero.local', port: 22, username: 'ubuntu', authentication: 'key',
-    privateKeyPath: '~/.ssh/id_ed25519', password: '', connectTimeout: 8, keepAlive: 15,
-    autoReconnect: true, verifyHostKey: true, compression: false, telemetryPort: 5800,
-    remoteWorkspace: '/home/ubuntu/knightsim',
-  },
-};
+const DEFAULT_CONNECTIVITY: Record<RobotId, ConnectivitySettings> = Object.fromEntries(ROBOTS.map(({ id }) => [id, {
+  host: `${id}.local`, port: 22, username: 'ubuntu', authentication: 'key',
+  privateKeyPath: '~/.ssh/id_ed25519', password: '', connectTimeout: 8, keepAlive: 15,
+  autoReconnect: true, verifyHostKey: true, compression: false, telemetryPort: 5800,
+  remoteWorkspace: '/home/ubuntu/knightsim',
+}]));
 
 const TUNING_STORAGE_KEY = 'knightsim:tuning-settings:v1';
 const CONNECTIVITY_STORAGE_KEY = 'knightsim:connectivity-settings:v1';
@@ -222,6 +151,7 @@ function Toggle({ checked, label, onChange }: ToggleProps) {
 }
 
 export function SettingsDialog({
+  initialRobotId,
   busy,
   error,
   library,
@@ -234,7 +164,7 @@ export function SettingsDialog({
   onUpdateOrientation,
 }: SettingsDialogProps) {
   const [page, setPage] = useState<SettingsPage>('settings');
-  const [selectedRobotId, setSelectedRobotId] = useState<RobotId>('infantry');
+  const [selectedRobotId, setSelectedRobotId] = useState<RobotId>(initialRobotId);
   const [tuningByRobot, setTuningByRobot] = useState(() => (
     loadSettings(TUNING_STORAGE_KEY, DEFAULT_TUNING)
   ));
@@ -243,8 +173,8 @@ export function SettingsDialog({
   ));
 
   const selectedRobot = ROBOTS.find((robot) => robot.id === selectedRobotId) ?? ROBOTS[1]!;
-  const tuning = tuningByRobot[selectedRobotId];
-  const connectivity = connectivityByRobot[selectedRobotId];
+  const tuning = tuningByRobot[selectedRobotId]!;
+  const connectivity = connectivityByRobot[selectedRobotId]!;
   const activeModel = library.models.find(
     (model) => model.id === library.modelIdByRobot[selectedRobotId],
   ) ?? null;
@@ -255,7 +185,7 @@ export function SettingsDialog({
 
   useEffect(() => {
     const nonSecretSettings = Object.fromEntries(ROBOTS.map(({ id }) => {
-      const { password: _password, ...safeSettings } = connectivityByRobot[id];
+      const { password: _password, ...safeSettings } = connectivityByRobot[id]!;
       return [id, safeSettings];
     }));
     window.localStorage.setItem(CONNECTIVITY_STORAGE_KEY, JSON.stringify(nonSecretSettings));
@@ -272,7 +202,7 @@ export function SettingsDialog({
   const updateTuning = <K extends keyof TuningSettings>(key: K, value: TuningSettings[K]): void => {
     setTuningByRobot((current) => ({
       ...current,
-      [selectedRobotId]: { ...current[selectedRobotId], [key]: value },
+      [selectedRobotId]: { ...current[selectedRobotId]!, [key]: value },
     }));
   };
 
@@ -282,7 +212,7 @@ export function SettingsDialog({
   ): void => {
     setConnectivityByRobot((current) => ({
       ...current,
-      [selectedRobotId]: { ...current[selectedRobotId], [key]: value },
+      [selectedRobotId]: { ...current[selectedRobotId]!, [key]: value },
     }));
   };
 
@@ -350,7 +280,7 @@ export function SettingsDialog({
                     onClick={() => setSelectedRobotId(robot.id)}
                   >
                     <Bot size={15} />
-                    <span><strong>{robot.name}</strong></span>
+                    <span><strong>{robot.name}</strong><small>{robot.mobility}</small></span>
                   </button>
                 ))}
               </div>
@@ -371,7 +301,7 @@ export function SettingsDialog({
                   <Box size={16} />
                   <div>
                     <h3>Appearance</h3>
-                    <p>Select model for the {selectedRobot.name} robot.</p>
+                    <p>{selectedRobot.name} · {selectedRobot.mobility} · Placeholder {selectedRobot.dimensionsM.length} × {selectedRobot.dimensionsM.width} × {selectedRobot.dimensionsM.height} m (L × W × H).</p>
                   </div>
                 </div>
 
@@ -465,7 +395,7 @@ export function SettingsDialog({
                   </div>
                 ) : (
                   <div className="model-inline-empty">
-                    <Box size={18} /> Import an glTF 2.0 binary to view on the Field.
+                    <Box size={18} /> Import a glTF 2.0 binary to view on the Field.
                   </div>
                 )}
               </section>
@@ -475,7 +405,7 @@ export function SettingsDialog({
                   <Gauge size={16} />
                   <div>
                     <h3>Drive simulation</h3>
-                    <p>Physical limits and solver values for the {selectedRobot.name} chassis.</p>
+                    <p>Saved configuration for {selectedRobot.name}. Demo replay does not simulate these limits.</p>
                   </div>
                 </div>
                 <div className="numeric-settings-grid">
@@ -499,10 +429,10 @@ export function SettingsDialog({
                     <span>Robot mass</span>
                     <div className="number-input"><input type="number" min="0" step="0.5" value={tuning.robotMass} onChange={(event) => updateTuning('robotMass', Number(event.currentTarget.value))} /><small>kg</small></div>
                   </label>
-                  <label className="numeric-setting">
+                  {['wheeled', 'omnidirectional', 'tracked'].includes(selectedRobot.mobility) ? (<label className="numeric-setting">
                     <span>Wheel radius</span>
                     <div className="number-input"><input type="number" min="0" step="1" value={tuning.wheelRadius} onChange={(event) => updateTuning('wheelRadius', Number(event.currentTarget.value))} /><small>mm</small></div>
-                  </label>
+                  </label>) : null}
                   <label className="numeric-setting">
                     <span>Control frequency</span>
                     <div className="number-input"><input type="number" min="20" step="10" value={tuning.controlFrequency} onChange={(event) => updateTuning('controlFrequency', Number(event.currentTarget.value))} /><small>Hz</small></div>

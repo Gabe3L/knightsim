@@ -1,0 +1,194 @@
+[
+  {
+    "id": "sentry",
+    "name": "Sentry",
+    "category": "sentry",
+    "mobility": "omnidirectional",
+    "dimensionsM": {
+      "length": 0.72,
+      "width": 0.66,
+      "height": 0.85
+    },
+    "maxHp": 600,
+    "maxHeat": 400,
+    "capabilities": {
+      "referee": true,
+      "aim": true,
+      "controller": true,
+      "odometry": false
+    },
+    "demoPhase": 1.8,
+    "tuning": {
+      "coefficientOfFriction": 0.86,
+      "maxAcceleration": 4.8,
+      "maxDriveSpeed": 4.2,
+      "maxAngularSpeed": 420,
+      "robotMass": 118,
+      "wheelRadius": 76,
+      "controlFrequency": 200,
+      "driveCurrentLimit": 60,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  },
+  {
+    "id": "infantry",
+    "name": "Infantry",
+    "category": "infantry",
+    "mobility": "omnidirectional",
+    "dimensionsM": {
+      "length": 0.65,
+      "width": 0.55,
+      "height": 0.55
+    },
+    "maxHp": 400,
+    "maxHeat": 260,
+    "capabilities": {
+      "referee": true,
+      "aim": true,
+      "controller": true,
+      "odometry": true
+    },
+    "demoPhase": 0,
+    "tuning": {
+      "coefficientOfFriction": 0.82,
+      "maxAcceleration": 6.5,
+      "maxDriveSpeed": 5.2,
+      "maxAngularSpeed": 540,
+      "robotMass": 44.5,
+      "wheelRadius": 60,
+      "controlFrequency": 250,
+      "driveCurrentLimit": 40,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  },
+  {
+    "id": "hero",
+    "name": "Hero",
+    "category": "hero",
+    "mobility": "omnidirectional",
+    "dimensionsM": {
+      "length": 0.8,
+      "width": 0.7,
+      "height": 0.7
+    },
+    "maxHp": 300,
+    "maxHeat": 200,
+    "capabilities": {
+      "referee": true,
+      "aim": true,
+      "controller": true,
+      "odometry": false
+    },
+    "demoPhase": 3.7,
+    "tuning": {
+      "coefficientOfFriction": 0.8,
+      "maxAcceleration": 5.4,
+      "maxDriveSpeed": 4.6,
+      "maxAngularSpeed": 460,
+      "robotMass": 52,
+      "wheelRadius": 76,
+      "controlFrequency": 250,
+      "driveCurrentLimit": 50,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  },
+  {
+    "id": "engineer",
+    "name": "Engineer",
+    "category": "generic",
+    "mobility": "wheeled",
+    "dimensionsM": {
+      "length": 0.85,
+      "width": 0.7,
+      "height": 0.9
+    },
+    "maxHp": 400,
+    "maxHeat": 0,
+    "capabilities": {
+      "referee": true,
+      "aim": false,
+      "controller": true,
+      "odometry": false
+    },
+    "demoPhase": 2.5,
+    "tuning": {
+      "coefficientOfFriction": 0.8,
+      "maxAcceleration": 2,
+      "maxDriveSpeed": 2.5,
+      "maxAngularSpeed": 180,
+      "robotMass": 60,
+      "wheelRadius": 80,
+      "controlFrequency": 100,
+      "driveCurrentLimit": 40,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  },
+  {
+    "id": "dart",
+    "name": "Dart",
+    "category": "generic",
+    "mobility": "aerial",
+    "dimensionsM": {
+      "length": 0.5,
+      "width": 0.15,
+      "height": 0.15
+    },
+    "maxHp": 0,
+    "maxHeat": 0,
+    "capabilities": {
+      "referee": false,
+      "aim": false,
+      "controller": true,
+      "odometry": false
+    },
+    "demoPhase": 4.5,
+    "tuning": {
+      "coefficientOfFriction": 0,
+      "maxAcceleration": 8,
+      "maxDriveSpeed": 15,
+      "maxAngularSpeed": 180,
+      "robotMass": 0.5,
+      "wheelRadius": 0,
+      "controlFrequency": 400,
+      "driveCurrentLimit": 20,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  },
+  {
+    "id": "drone",
+    "name": "Drone",
+    "category": "generic",
+    "mobility": "aerial",
+    "dimensionsM": {
+      "length": 0.65,
+      "width": 0.65,
+      "height": 0.2
+    },
+    "maxHp": 0,
+    "maxHeat": 0,
+    "capabilities": {
+      "referee": false,
+      "aim": false,
+      "controller": true,
+      "odometry": false
+    },
+    "demoPhase": 6.5,
+    "tuning": {
+      "coefficientOfFriction": 0,
+      "maxAcceleration": 4,
+      "maxDriveSpeed": 8,
+      "maxAngularSpeed": 360,
+      "robotMass": 2,
+      "wheelRadius": 0,
+      "controlFrequency": 400,
+      "driveCurrentLimit": 20,
+      "simulateBatterySag": true,
+      "enableCollisions": true
+    }
+  }
+]

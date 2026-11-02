@@ -4,5 +4,3 @@ dist-electron/
 .DS_Store
 *.log
 tmp/
-models/
-!models/.gitkeep
