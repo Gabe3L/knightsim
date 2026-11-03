@@ -8,7 +8,12 @@ const isEditableTarget = (target: EventTarget | null): boolean => (
   && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
 );
 
-export function CameraFlightControls({ active }: { readonly active: boolean }) {
+interface CameraFlightControlsProps {
+  readonly active: boolean;
+  readonly onInteraction?: () => void;
+}
+
+export function CameraFlightControls({ active, onInteraction }: CameraFlightControlsProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
@@ -26,7 +31,7 @@ export function CameraFlightControls({ active }: { readonly active: boolean }) {
     canvas.style.cursor = 'grab';
     canvas.style.touchAction = 'none';
 
-    const changed = (): void => { regress(); invalidate(); };
+    const changed = (): void => { onInteraction?.(); regress(); invalidate(); };
     const stopDrag = (): void => {
       const pointerId = drag?.id;
       drag = null;
@@ -42,6 +47,7 @@ export function CameraFlightControls({ active }: { readonly active: boolean }) {
       const action = fieldCameraActionForCode(event.code);
       if (!action) return;
       event.preventDefault();
+      onInteraction?.();
       pressedActions.current.add(action);
       invalidate();
     };
@@ -110,10 +116,11 @@ export function CameraFlightControls({ active }: { readonly active: boolean }) {
       canvas.removeEventListener('contextmenu', handleContextMenu);
       canvas.removeEventListener('wheel', handleWheel);
     };
-  }, [active, canvas, flight, invalidate, regress]);
+  }, [active, canvas, flight, invalidate, regress, onInteraction]);
 
   useFrame((_state, delta) => {
     if (active && flight.move(pressedActions.current, delta)) {
+      onInteraction?.();
       regress();
       invalidate();
     }

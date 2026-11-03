@@ -3,12 +3,22 @@ import test from 'node:test';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { loadTypeScript } from './loadTypeScript.mjs';
 
-const { defaultFieldCameraPose, FIELD_CAMERA_FOV, FieldCameraViews } = await loadTypeScript(
+const { defaultFieldCameraPose, FIELD_CAMERA_FOV, FIELD_CAMERA_TRANSITION_MS, FieldCameraViews } = await loadTypeScript(
   new URL('../src/camera/FieldCameraViews.ts', import.meta.url),
 );
 const { FIELD_SPECS, fieldWorldX, fieldWorldZ } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
 const state = { targetXM: 6, targetYM: 4, zoom: 1 };
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
+
+function createViews() {
+  const camera = new PerspectiveCamera();
+  let nowMs = 0;
+  const views = new FieldCameraViews(camera, () => nowMs);
+  return {
+    camera, views,
+    advance(ms) { nowMs += ms; return views.update(); },
+  };
+}
 
 function cameraAtSpawn(mode, width, height) {
   const camera = new PerspectiveCamera(FIELD_CAMERA_FOV, width / height, 0.05, 250);
@@ -53,9 +63,53 @@ test('challenge views place the launch zone and base at equal depth', () => {
   }
 });
 
-test('switching fields gives new fields their own spawn and restores prior flight poses', () => {
-  const camera = new PerspectiveCamera();
-  const views = new FieldCameraViews(camera);
+test('the initial field opens directly at its overview', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const { camera, views, advance } = createViews();
+    const pose = defaultFieldCameraPose(mode, 1440, 800, state);
+    assert.equal(views.select(mode, 1440, 800, state), true);
+    assert.ok(camera.position.equals(pose.position));
+    assert.ok(camera.quaternion.equals(pose.quaternion));
+    assert.equal(advance(0), false);
+  }
+});
+
+test('each field switch eases position and direction to the destination and finishes exactly', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const { camera, views, advance } = createViews();
+    views.select(mode === '3v3' ? 'sentry' : '3v3', 1440, 800, state);
+    const start = camera.position.clone(), rotation = camera.quaternion.clone();
+    const target = defaultFieldCameraPose(mode, 1440, 800, state);
+    const distance = start.distanceTo(target.position);
+    const angle = rotation.angleTo(target.quaternion);
+
+    views.select(mode, 1440, 800, state);
+    assert.ok(camera.position.equals(start), `${mode}: no jump on selection`);
+    assert.ok(camera.quaternion.equals(rotation));
+    assert.equal(advance(FIELD_CAMERA_TRANSITION_MS / 4), true);
+    const earlyDistance = start.distanceTo(camera.position) / distance;
+    const earlyAngle = rotation.angleTo(camera.quaternion) / angle;
+    assert.ok(earlyDistance > 0 && earlyDistance < 0.25, `${mode}: position eases in`);
+    assert.ok(earlyAngle > 0 && earlyAngle < 0.25, `${mode}: direction eases in`);
+
+    advance(FIELD_CAMERA_TRANSITION_MS / 4);
+    close(start.distanceTo(camera.position) / distance, 0.5);
+    close(rotation.angleTo(camera.quaternion) / angle, 0.5);
+    close(camera.quaternion.length(), 1);
+    camera.position.toArray().forEach((value, index) => close(camera.matrixWorld.elements[12 + index], value));
+
+    advance(FIELD_CAMERA_TRANSITION_MS / 4);
+    const lateDistance = start.distanceTo(camera.position) / distance;
+    assert.ok(lateDistance > 0.75 && lateDistance < 1, `${mode}: position eases out`);
+    assert.equal(advance(FIELD_CAMERA_TRANSITION_MS / 4), false);
+    assert.ok(camera.position.equals(target.position));
+    assert.ok(camera.quaternion.equals(target.quaternion));
+    assert.equal(advance(16), false);
+  }
+});
+
+test('switching fields transitions to new spawns and restores prior flight poses', () => {
+  const { camera, views, advance } = createViews();
   assert.equal(views.select('3v3', 1440, 800, state), true);
   camera.position.set(3, 4, 5);
   camera.lookAt(1, 2, 3);
@@ -63,6 +117,7 @@ test('switching fields gives new fields their own spawn and restores prior fligh
 
   assert.equal(views.select('drone', 700, 1000, state), true);
   const droneSpawn = defaultFieldCameraPose('drone', 700, 1000, state);
+  advance(FIELD_CAMERA_TRANSITION_MS);
   assert.ok(camera.position.equals(droneSpawn.position));
   assert.ok(camera.quaternion.equals(droneSpawn.quaternion));
   camera.position.set(-30, 7, 10);
@@ -70,11 +125,93 @@ test('switching fields gives new fields their own spawn and restores prior fligh
   const dronePosition = camera.position.clone(), droneRotation = camera.quaternion.clone();
 
   assert.equal(views.select('3v3', 1440, 800, state), true);
+  advance(FIELD_CAMERA_TRANSITION_MS);
   assert.ok(camera.position.equals(arenaPosition));
   assert.ok(camera.quaternion.equals(arenaRotation));
   assert.equal(views.select('drone', 1440, 800, state), true);
+  advance(FIELD_CAMERA_TRANSITION_MS);
   assert.ok(camera.position.equals(dronePosition));
   assert.ok(camera.quaternion.equals(droneRotation));
+});
+
+test('rapid field switches start at the visible pose and preserve unfinished destinations', () => {
+  const { camera, views, advance } = createViews();
+  views.select('3v3', 1440, 800, state);
+  camera.position.set(3, 4, 5);
+  camera.lookAt(1, 2, 3);
+  const arenaPosition = camera.position.clone(), arenaRotation = camera.quaternion.clone();
+  const droneSpawn = defaultFieldCameraPose('drone', 1440, 800, state);
+
+  views.select('drone', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS / 3);
+  const visiblePosition = camera.position.clone(), visibleRotation = camera.quaternion.clone();
+  views.select('dart', 1440, 800, state);
+  assert.ok(camera.position.equals(visiblePosition));
+  assert.ok(camera.quaternion.equals(visibleRotation));
+  advance(FIELD_CAMERA_TRANSITION_MS / 4);
+  views.select('drone', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS);
+  assert.ok(camera.position.equals(droneSpawn.position));
+  assert.ok(camera.quaternion.equals(droneSpawn.quaternion));
+
+  views.select('3v3', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS);
+  assert.ok(camera.position.equals(arenaPosition));
+  assert.ok(camera.quaternion.equals(arenaRotation));
+});
+
+test('manual takeover stops the transition and preserves the new flight pose', () => {
+  const { camera, views, advance } = createViews();
+  views.select('3v3', 1440, 800, state);
+  views.select('drone', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS / 4);
+  views.cancelTransition();
+  camera.position.add(new Vector3(2, 1, -3));
+  camera.lookAt(0, 1, 0);
+  const position = camera.position.clone(), rotation = camera.quaternion.clone();
+  assert.equal(advance(FIELD_CAMERA_TRANSITION_MS * 2), false);
+  assert.ok(camera.position.equals(position));
+  assert.ok(camera.quaternion.equals(rotation));
+
+  views.select('sentry', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS);
+  views.select('drone', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS);
+  assert.ok(camera.position.equals(position));
+  assert.ok(camera.quaternion.equals(rotation));
+});
+
+test('transitions use elapsed time independently of frame rate or prior idle time', () => {
+  const run = (steps) => {
+    const { camera, views, advance } = createViews();
+    views.select('3v3', 1440, 800, state);
+    advance(60_000);
+    const start = camera.position.clone();
+    views.select('dart', 1440, 800, state);
+    assert.equal(advance(0), true);
+    assert.ok(camera.position.equals(start), 'an idle loop does not skip the transition');
+    for (const ms of steps) advance(ms);
+    return camera;
+  };
+  const singleFrame = run([FIELD_CAMERA_TRANSITION_MS / 2]);
+  const manyFrames = run(Array(40).fill(FIELD_CAMERA_TRANSITION_MS / 80));
+  close(singleFrame.position.distanceTo(manyFrames.position), 0);
+  close(singleFrame.quaternion.angleTo(manyFrames.quaternion), 0);
+});
+
+test('rerendering during a transition preserves its destination and completion time', () => {
+  const { camera, views, advance } = createViews();
+  views.select('3v3', 1440, 800, state);
+  views.select('dart', 1440, 800, state);
+  advance(FIELD_CAMERA_TRANSITION_MS / 4);
+  const position = camera.position.clone(), rotation = camera.quaternion.clone();
+  assert.equal(views.select('dart', 700, 1000, { ...state, zoom: 2 }), false);
+  assert.ok(camera.position.equals(position));
+  assert.ok(camera.quaternion.equals(rotation));
+  assert.equal(advance(FIELD_CAMERA_TRANSITION_MS * 3 / 4), false);
+  const target = defaultFieldCameraPose('dart', 1440, 800, state);
+  assert.ok(camera.position.equals(target.position));
+  assert.ok(camera.quaternion.equals(target.quaternion));
 });
 
 test('resizing or rerendering a field preserves the active camera position and orientation', () => {

@@ -3,12 +3,19 @@ import { FIELD_SPECS, fieldWorldX, fieldWorldZ } from '../field/fieldSpec';
 import type { CameraState, FieldMode } from '../types';
 
 export const FIELD_CAMERA_FOV = 43;
+export const FIELD_CAMERA_TRANSITION_MS = 800;
 const TIMELINE_CLEARANCE_PX = 84;
 const WORLD_UP = new Vector3(0, 1, 0);
 
 interface CameraPose {
   readonly position: Vector3;
   readonly quaternion: Quaternion;
+}
+
+interface CameraTransition {
+  readonly from: CameraPose;
+  readonly to: CameraPose;
+  readonly startedAtMs: number;
 }
 
 interface ProjectedCorner {
@@ -78,19 +85,58 @@ export function defaultFieldCameraPose(mode: FieldMode, width: number, height: n
 export class FieldCameraViews {
   private readonly poses = new Map<FieldMode, CameraPose>();
   private currentMode: FieldMode | null = null;
+  private transition: CameraTransition | null = null;
 
-  constructor(private readonly camera: Camera) {}
+  constructor(
+    private readonly camera: Camera,
+    private readonly now: () => number = () => performance.now(),
+  ) {}
 
   select(mode: FieldMode, width: number, height: number, state: CameraState): boolean {
     if (mode === this.currentMode) return false;
-    if (this.currentMode) this.poses.set(this.currentMode, {
+    const from = {
       position: this.camera.position.clone(), quaternion: this.camera.quaternion.clone(),
-    });
+    };
+    // A quick switch should remember the field's destination, not a point
+    // partway through the journey from the previous field.
+    if (this.currentMode) this.poses.set(this.currentMode, this.transition?.to ?? from);
     const pose = this.poses.get(mode) ?? defaultFieldCameraPose(mode, width, height, state);
+    if (this.currentMode) {
+      this.transition = { from, to: pose, startedAtMs: this.now() };
+    } else {
+      this.applyPose(pose);
+    }
+    this.currentMode = mode;
+    return true;
+  }
+
+  /** Advance the transition and report whether another frame is needed. */
+  update(): boolean {
+    if (!this.transition) return false;
+    const { from, to, startedAtMs } = this.transition;
+    // Use time since selection so an idle demand-render loop cannot consume
+    // the animation with its first, potentially very large, frame delta.
+    const progress = Math.max(0, (this.now() - startedAtMs) / FIELD_CAMERA_TRANSITION_MS);
+    if (progress >= 1) {
+      this.applyPose(to);
+      this.transition = null;
+      return false;
+    }
+    const eased = progress * progress * (3 - 2 * progress);
+    this.camera.position.lerpVectors(from.position, to.position, eased);
+    this.camera.quaternion.slerpQuaternions(from.quaternion, to.quaternion, eased);
+    this.camera.updateMatrixWorld();
+    return true;
+  }
+
+  /** Manual flight takes over from the current interpolated pose. */
+  cancelTransition(): void {
+    this.transition = null;
+  }
+
+  private applyPose(pose: CameraPose): void {
     this.camera.position.copy(pose.position);
     this.camera.quaternion.copy(pose.quaternion);
     this.camera.updateMatrixWorld();
-    this.currentMode = mode;
-    return true;
   }
 }

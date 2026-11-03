@@ -8,11 +8,12 @@ import {
   PerspectiveCamera,
   useGLTF,
 } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Component,
   memo,
   Suspense,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -299,17 +300,28 @@ function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
-function FieldPerspectiveCamera({ camera, mode }: Pick<FieldProps, 'camera' | 'mode'>) {
+function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
   const size = useThree((state) => state.size);
   const invalidate = useThree((state) => state.invalidate);
+  const regress = useThree((state) => state.performance.regress);
   const cameraRef = useRef<ThreePerspectiveCamera>(null);
   const views = useRef<FieldCameraViews | null>(null);
+  const cancelTransition = useCallback(() => views.current?.cancelTransition(), []);
   useLayoutEffect(() => {
     if (!cameraRef.current) return;
     views.current ??= new FieldCameraViews(cameraRef.current);
     if (views.current.select(mode, size.width, size.height, camera)) invalidate();
   }, [camera, mode, size.width, size.height, invalidate]);
-  return <PerspectiveCamera ref={cameraRef} makeDefault fov={FIELD_CAMERA_FOV} near={0.05} far={250} />;
+  useFrame(() => {
+    if (views.current?.update()) {
+      regress();
+      invalidate();
+    }
+  });
+  return <>
+    <PerspectiveCamera ref={cameraRef} makeDefault fov={FIELD_CAMERA_FOV} near={0.05} far={250} />
+    <CameraFlightControls active={active} onInteraction={cancelTransition} />
+  </>;
 }
 
 export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {
@@ -328,14 +340,13 @@ export const Field = memo(function Field({ active, robot, robots, camera, mode, 
       >
         <color attach="background" args={["#0b0f15"]} />
         <fog attach="fog" args={["#0b0f15", mode === 'drone' || mode === 'dart' ? 90 : 35, mode === 'drone' || mode === 'dart' ? 180 : 75]} />
-        <FieldPerspectiveCamera camera={camera} mode={mode} />
+        <FieldPerspectiveCamera active={active} camera={camera} mode={mode} />
         <FieldArena mode={mode} />
         {robots.map((fieldRobot) => (
           <Robot key={fieldRobot.robotId} robot={fieldRobot} model={modelForRobot(fieldRobot.robotId)} mode={mode} />
         ))}
         <FieldOverlays overlays={overlays} mode={mode} />
         <AdaptiveReplayQuality robot={robot} />
-        <CameraFlightControls active={active} />
       </Canvas>
     </div>
   );
