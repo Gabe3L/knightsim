@@ -17,7 +17,7 @@ function overlaps(a, b) {
 }
 
 test('all preview lineups stay within their field and ground routes avoid the new obstacles', () => {
-  for (const [mode, ids] of Object.entries({ '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'] })) {
+  for (const [mode, ids] of Object.entries({ '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'], dart: ['dart'] })) {
     const spec = FIELD_SPECS[mode];
     const obstacles = mode === '3v3' ? [...spec.barriers, ...spec.sideHighGrounds, spec.centralHighGround.deck]
       .map((r) => ({ x: r.xM + r.widthM / 2, y: r.yM + r.depthM / 2, width: r.widthM, depth: r.depthM, angle: 0 }))
@@ -60,4 +60,17 @@ test('drone demo takes off and returns to its own starting zone', () => {
   assert.deepEqual([finish.xM, finish.yM, finish.zM], [25, 6, 0]);
   assert.ok(fieldRobotsAt(40, 'drone')[0].zM > 1);
   for (const time of [NaN, Infinity, -1]) assert.deepEqual(fieldRobotsAt(time, 'drone'), fieldRobotsAt(0, 'drone'));
+});
+
+test('Dart preview starts in its launch zone and travels toward its base', () => {
+  const { zones: [zone], base } = FIELD_SPECS.dart;
+  const [start] = fieldRobotsAt(0, 'dart');
+  assert.equal(start.robotId, 'dart');
+  assert.deepEqual([start.xM, start.yM], [zone.xM + zone.widthM / 2, zone.yM + zone.depthM / 2]);
+  const [mid] = fieldRobotsAt(40, 'dart'), [end] = fieldRobotsAt(84, 'dart');
+  const distance = (robot) => Math.hypot(robot.xM - base.xM, robot.yM - base.yM);
+  assert.ok(distance(start) > distance(mid) && distance(mid) > distance(end));
+  assert.ok(mid.zM > start.zM && mid.zM > end.zM);
+  for (const time of [NaN, Infinity, -1]) assert.deepEqual(fieldRobotsAt(time, 'dart'), fieldRobotsAt(0, 'dart'));
+  assert.deepEqual(fieldRobotsAt(1000, 'dart'), fieldRobotsAt(84, 'dart'));
 });

@@ -328,7 +328,7 @@ export const Field = memo(function Field({ active, robot, robots, camera, mode, 
         }}
       >
         <color attach="background" args={["#0b0f15"]} />
-        <fog attach="fog" args={["#0b0f15", mode === 'drone' ? 90 : 35, mode === 'drone' ? 180 : 75]} />
+        <fog attach="fog" args={["#0b0f15", mode === 'drone' || mode === 'dart' ? 90 : 35, mode === 'drone' || mode === 'dart' ? 180 : 75]} />
         <FieldPerspectiveCamera camera={camera} mode={mode} />
         <FieldArena mode={mode} />
         {robots.map((fieldRobot) => (

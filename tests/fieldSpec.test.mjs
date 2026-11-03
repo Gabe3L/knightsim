@@ -3,6 +3,7 @@ import test from 'node:test';
 import { loadTypeScript } from './loadTypeScript.mjs';
 const {
   ARCC_2027_3V3_FIELD: three, ARCC_2027_1V1_FIELD: one, ARCC_2027_DRONE_FIELD: drone,
+  ARCC_2027_DART_FIELD: dart,
   FIELD_SPECS, fieldWorldX, fieldWorldZ,
 } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
@@ -100,6 +101,22 @@ test('drone launch centre has the specified offsets from the base; coordinate ma
   }
 });
 
+test('Dart Figure 7-1 offsets and starting zone use the shared blue base', () => {
+  assert.equal(FIELD_SPECS.dart, dart);
+  assert.equal(dart.wall, null);
+  assert.equal(dart.base, drone.base);
+  const zone = dart.zones[0], base = dart.base;
+  const cx = zone.xM + zone.widthM / 2, cy = zone.yM + zone.depthM / 2;
+  assert.equal(zone.team, 'red');
+  assert.deepEqual([zone.widthM, zone.depthM], [1, 0.6]);
+  close(cx - base.xM, 25.5); close(cy - base.yM, 3);
+  close(Math.abs(fieldWorldX(cx, 'dart') - fieldWorldX(base.xM, 'dart')), 25.5);
+  close(Math.abs(fieldWorldZ(cy, 'dart') - fieldWorldZ(base.yM, 'dart')), 3);
+  assert.ok(dart.floor.xM < base.xM && dart.floor.yM < base.yM);
+  assert.ok(dart.floor.xM + dart.floor.widthM > zone.xM + zone.widthM);
+  assert.ok(dart.floor.yM + dart.floor.depthM > zone.yM + zone.depthM);
+});
+
 test('default cameras contain all field corners at wide and narrow canvas sizes', async () => {
   const { fieldCameraDistance, fieldCameraDirection } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
   const v = Math.tan(43 * Math.PI / 360);
@@ -109,7 +126,7 @@ test('default cameras contain all field corners at wide and narrow canvas sizes'
     const d = fieldCameraDistance(mode, aspect), pad = spec.wall?.thicknessM ?? 0;
     for (const x of [-spec.floor.widthM / 2 - pad, spec.floor.widthM / 2 + pad]) {
       for (const z of [-spec.floor.depthM / 2 - pad, spec.floor.depthM / 2 + pad]) {
-        for (const y of [0, 0.5, mode === '3v3' ? 1.406 : 0.5]) {
+        for (const y of [0, mode === '3v3' ? 1.406 : mode === 'drone' ? 1.7 : mode === 'dart' ? 2.7 : 0.5]) {
           const depth = d - cx * x - cy * y - cz * z;
           const screenX = (-cz * x + cx * z) / h;
           const screenY = -cy * cx * x / h + h * y - cy * cz * z / h;

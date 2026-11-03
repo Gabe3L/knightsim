@@ -3,6 +3,10 @@ import { FIELD_ROBOT_IDS } from '../field/fieldRobots';
 import { Box, ChartLine, Gamepad2 } from 'lucide-react';
 import type { ControllerMode, FieldMode, RobotId, ViewMode } from '../types';
 
+const FIELD_MODE_LABELS: Readonly<Record<FieldMode, string>> = {
+  '1v1': '1v1', sentry: 'Sentry', '3v3': '3v3', drone: 'Drone', dart: 'Dart',
+};
+
 const CONTROLLER_MODE_OPTIONS = [
   { mode: 'kbm', label: 'KBM' },
   { mode: 'xbox', label: 'Xbox' },
@@ -47,7 +51,7 @@ export function TopBar({
   onViewChange,
 }: TopBarProps) {
   const context = activeView === 'field'
-    ? { eyebrow: 'Field', label: `${fieldMode === 'sentry' ? 'Sentry' : fieldMode} Battlefield` }
+    ? { eyebrow: 'Field', label: `${FIELD_MODE_LABELS[fieldMode]} ${fieldMode === 'drone' || fieldMode === 'dart' ? 'Challenge' : 'Battlefield'}` }
     : activeView === 'graph'
       ? {
         eyebrow: 'Line Graph',
@@ -104,7 +108,7 @@ export function TopBar({
 
       {activeView === 'field' ? (
         <div className="field-mode-selector" role="group" aria-label="Field format">
-          {(['1v1', 'sentry', '3v3', 'drone'] as const).map((mode) => (
+          {(['1v1', 'sentry', '3v3', 'drone', 'dart'] as const).map((mode) => (
             <button
               key={mode}
               className={fieldMode === mode ? 'field-mode-option field-mode-option-active' : 'field-mode-option'}
@@ -112,7 +116,7 @@ export function TopBar({
               aria-pressed={fieldMode === mode}
               onClick={() => onFieldModeChange(mode)}
             >
-              {mode === 'drone' ? 'Drone' : mode === 'sentry' ? 'Sentry' : mode}
+              {FIELD_MODE_LABELS[mode]}
             </button>
           ))}
         </div>

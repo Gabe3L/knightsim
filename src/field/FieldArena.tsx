@@ -258,8 +258,7 @@ function OneVOne() {
   </group>;
 }
 
-function DroneBase() {
-  const { base } = drone;
+function ChallengeBase({ base }: { readonly base: typeof drone.base }) {
   const tilt = base.armorTiltDeg * Math.PI / 180;
   const shell = useMemo(() => {
     const bottomApothem = base.armorCenterRadiusM - 0.012 / Math.cos(tilt) + base.armorCenterHeightM * Math.tan(tilt);
@@ -323,9 +322,9 @@ export const FieldArena = memo(function FieldArena({ mode }: { readonly mode: Fi
         <planeGeometry args={[spec.floor.widthM, spec.floor.depthM]} />
         <meshStandardMaterial color={FLOOR} roughness={0.95} side={DoubleSide} />
       </mesh>
-      {mode === '3v3' ? <ThreeVThree /> : mode === '1v1' || mode === 'sentry' ? <OneVOne /> : <group name="drone-field">
-        {drone.zones.map((zone) => <Tape key={zone.id} {...zone} />)}
-        <DroneBase />
+      {mode === '3v3' ? <ThreeVThree /> : mode === '1v1' || mode === 'sentry' ? <OneVOne /> : <group name={`${mode}-field`}>
+        {spec.zones.map((zone) => <Tape key={zone.id} {...zone} />)}
+        <ChallengeBase base={FIELD_SPECS[mode].base} />
       </group>}
     </group>
   </>;

@@ -144,7 +144,24 @@ export const ARCC_2027_DRONE_FIELD = {
     'Floor extent is display padding, not a competition boundary. Base shell and armor outlines are illustrative.'],
 } as const;
 
-export const FIELD_SPECS = { '1v1': ARCC_2027_1V1_FIELD, sentry: ARCC_2027_1V1_FIELD, '3v3': ARCC_2027_3V3_FIELD, drone: ARCC_2027_DRONE_FIELD } as const;
+/** Figure 7-1: base-to-start-centre offsets, with a 1000 × 600 mm
+ * starting zone. Section 7.2 reuses the Drone Challenge's blue base. */
+export const ARCC_2027_DART_FIELD = {
+  id: 'arcc-2027-dart', name: 'ARCC 2026–2027 · Dart Challenge', units: 'metres',
+  size: { lengthM: 25.5, widthM: 3 },
+  floor: { xM: -1.1, yM: -1.1, widthM: 27.7, depthM: 5.2 }, wall: null,
+  zones: [{ id: 'dart-start', team: 'red', xM: 25, yM: 2.7, widthM: 1, depthM: 0.6, tapeWidthM }] satisfies FieldZone[],
+  base: ARCC_2027_DRONE_FIELD.base,
+  provenance: ['Events Manual Season 2 V1.0, November 1, 2026, §7.2, pp. 45–46; Figure 7-1.',
+    'Launch centre (25.5, 3) m relative to base centre; 1000 × 600 mm starting zone.',
+    'Blue base follows §6.2 and Figures 6-1/6-3. Floor extent is display padding, not a competition boundary.',
+    'Tape width follows the other fields; not separately dimensioned for Dart. Base shell and armor outlines are illustrative.'],
+} as const;
+
+export const FIELD_SPECS = {
+  '1v1': ARCC_2027_1V1_FIELD, sentry: ARCC_2027_1V1_FIELD, '3v3': ARCC_2027_3V3_FIELD,
+  drone: ARCC_2027_DRONE_FIELD, dart: ARCC_2027_DART_FIELD,
+} as const satisfies Readonly<Record<FieldMode, unknown>>;
 export const fieldWorldX = (xM: number, mode: FieldMode): number => FIELD_SPECS[mode].size.lengthM / 2 - xM;
 export const fieldWorldZ = (yM: number, mode: FieldMode): number => yM - FIELD_SPECS[mode].size.widthM / 2;
 export const teamColor = (team: Team): string => team === 'red' ? '#ed202b' : team === 'blue' ? '#2439e9' : '#e7bd20';
@@ -159,7 +176,7 @@ export function fieldCameraDistance(mode: FieldMode, aspect: number): number {
   const pad = spec.wall ? spec.wall.thicknessM : 0;
   const halfX = spec.floor.widthM / 2 + pad;
   const halfZ = spec.floor.depthM / 2 + pad;
-  const height = mode === '3v3' ? 1.406 : mode === 'drone' ? 1.7 : 0.5;
+  const height = mode === '3v3' ? 1.406 : mode === 'drone' ? 1.7 : mode === 'dart' ? 2.7 : 0.5;
   const vertical = Math.tan(43 * Math.PI / 360);
   const horizontal = vertical * Math.max(0.1, aspect);
   const direction = fieldCameraDirection(mode);

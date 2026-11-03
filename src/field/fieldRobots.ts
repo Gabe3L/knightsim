@@ -2,7 +2,7 @@ import { REPLAY_DURATION_S, telemetryAt } from '../telemetry/mockReplay';
 import type { FieldMode, RobotId, RobotTelemetry } from '../types';
 
 export const FIELD_ROBOT_IDS: Readonly<Record<FieldMode, readonly RobotId[]>> = {
-  '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'],
+  '1v1': ['infantry'], sentry: ['sentry'], '3v3': ['sentry', 'hero', 'engineer'], drone: ['drone'], dart: ['dart'],
 };
 
 type Waypoint = readonly [timeS: number, xM: number, yM: number, zM: number];
@@ -15,6 +15,9 @@ const routes: Readonly<Record<string, readonly Waypoint[]>> = {
   engineer: [[0, 6.9, 5.2, 0], [42, 10.7, 5.2, 0], [84, 6.9, 5.2, 0]],
   drone: [[0, 25, 6, 0], [6, 25, 6, 1.5], [28, 12, 3, 1.7], [44, 4, 1.5, 1.5],
     [70, 25, 6, 1.5], [84, 25, 6, 0]],
+  // Illustrative dart flight toward the base, not a ballistic/scoring simulation.
+  dart: [[0, 25.5, 3, 0.3], [6, 25.5, 3, 0.3], [40, 13, 1.53, 2.2],
+    [70, 0.8, 0.094, 0.5], [84, 0.8, 0.094, 0.5]],
 };
 
 export function fieldRobotsAt(timeS: number, mode: FieldMode): readonly RobotTelemetry[] {

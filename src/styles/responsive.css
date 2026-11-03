@@ -12,7 +12,7 @@
       min(var(--sidebar-width, 292px), 240px)
       minmax(0, 1fr);
   }
-  .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding-inline: 10px; }
+  .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); padding-inline: 10px; }
   .topbar-context > strong { display: none; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 13px; }
   .view-tab svg { display: none; }
