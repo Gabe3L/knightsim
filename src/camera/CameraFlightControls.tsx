@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { Box3 } from 'three';
 import { fieldCameraActionForCode, type FieldCameraAction } from '../keybindings';
-import { CameraFlight } from './CameraFlight';
+import { SmoothedCameraFlight } from './SmoothedCameraFlight';
 
 const isEditableTarget = (target: EventTarget | null): boolean => (
   target instanceof HTMLElement
@@ -20,11 +20,14 @@ export function CameraFlightControls({ active, bounds, onInteraction }: CameraFl
   const canvas = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
   const regress = useThree((state) => state.performance.regress);
-  const flight = useMemo(() => new CameraFlight(camera, bounds), [camera, bounds]);
+  const flight = useMemo(() => new SmoothedCameraFlight(camera, bounds), [camera, bounds]);
   const pressedActions = useRef(new Set<FieldCameraAction>());
+  const previousFrameAtMs = useRef<number | null>(null);
 
   useEffect(() => {
     pressedActions.current.clear();
+    flight.stop();
+    previousFrameAtMs.current = null;
     if (!active) return;
 
     let drag: { id: number; x: number; y: number; pan: boolean } | null = null;
@@ -33,29 +36,38 @@ export function CameraFlightControls({ active, bounds, onInteraction }: CameraFl
     canvas.style.cursor = 'grab';
     canvas.style.touchAction = 'none';
 
-    const changed = (): void => { onInteraction?.(); regress(); invalidate(); };
+    const wake = (): void => {
+      // Exclude time spent idle before the input from the first easing frame.
+      previousFrameAtMs.current ??= performance.now();
+      invalidate();
+    };
+    const changed = (): void => { onInteraction?.(); regress(); wake(); };
     const stopDrag = (): void => {
       const pointerId = drag?.id;
       drag = null;
       if (pointerId !== undefined && canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
       canvas.style.cursor = 'grab';
     };
-    const stopMovement = (): void => { pressedActions.current.clear(); stopDrag(); };
+    const stopMovement = (): void => {
+      pressedActions.current.clear();
+      flight.stop();
+      previousFrameAtMs.current = null;
+      stopDrag();
+    };
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) {
-        pressedActions.current.clear();
+        stopMovement();
         return;
       }
       const action = fieldCameraActionForCode(event.code);
       if (!action) return;
       event.preventDefault();
-      onInteraction?.();
+      changed();
       pressedActions.current.add(action);
-      invalidate();
     };
     const handleKeyUp = (event: KeyboardEvent): void => {
       const action = fieldCameraActionForCode(event.code);
-      if (action) pressedActions.current.delete(action);
+      if (action && pressedActions.current.delete(action)) wake();
     };
     const handleFocus = (event: FocusEvent): void => {
       if (isEditableTarget(event.target)) stopMovement();
@@ -71,11 +83,12 @@ export function CameraFlightControls({ active, bounds, onInteraction }: CameraFl
     const handlePointerMove = (event: PointerEvent): void => {
       if (!drag || drag.id !== event.pointerId) return;
       const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+      if (dx === 0 && dy === 0) return;
+      changed();
       if (drag.pan) flight.pan(dx, dy);
       else flight.look(dx, dy);
       drag.x = event.clientX;
       drag.y = event.clientY;
-      changed();
     };
     const handlePointerEnd = (event: PointerEvent): void => {
       if (drag?.id === event.pointerId) stopDrag();
@@ -83,9 +96,10 @@ export function CameraFlightControls({ active, bounds, onInteraction }: CameraFl
     const handleWheel = (event: WheelEvent): void => {
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       event.preventDefault();
+      if (event.deltaY === 0) return;
       const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? canvas.clientHeight : 1;
-      flight.dolly(-event.deltaY * unit * 0.01);
       changed();
+      flight.dolly(-event.deltaY * unit * 0.01);
     };
     const handleContextMenu = (event: MouseEvent): void => event.preventDefault();
 
@@ -120,11 +134,16 @@ export function CameraFlightControls({ active, bounds, onInteraction }: CameraFl
     };
   }, [active, canvas, flight, invalidate, regress, onInteraction]);
 
-  useFrame((_state, delta) => {
-    if (active && flight.move(pressedActions.current, delta)) {
-      onInteraction?.();
+  useFrame(() => {
+    if (!active || previousFrameAtMs.current === null) return;
+    const now = performance.now();
+    const delta = (now - previousFrameAtMs.current) / 1000;
+    previousFrameAtMs.current = now;
+    if (flight.update(pressedActions.current, delta)) {
       regress();
       invalidate();
+    } else {
+      previousFrameAtMs.current = null;
     }
   });
   return null;

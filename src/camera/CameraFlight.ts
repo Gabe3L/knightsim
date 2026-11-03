@@ -3,7 +3,7 @@ import type { FieldCameraAction } from '../keybindings';
 import { cameraMovementBounds } from './CameraFlightBounds';
 
 const SPEED_MPS = 5;
-const LOOK_RADIANS_PER_PIXEL = 0.003;
+const LOOK_RADIANS_PER_PIXEL = 0.0033;
 const PAN_METRES_PER_PIXEL = 0.01;
 const MAX_PITCH = Math.PI / 2 - 0.001;
 

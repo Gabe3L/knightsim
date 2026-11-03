@@ -15,7 +15,7 @@ test('mouse look rotates in place and flight follows the new direction', () => {
   const camera = new PerspectiveCamera();
   camera.position.set(5, 3, -4);
   const flight = new CameraFlight(camera, fieldCameraBounds('3v3'));
-  flight.look(-Math.PI / 2 / 0.003, 0);
+  flight.look(-Math.PI / 2 / 0.0033, 0);
   vectorClose(camera.position, [5, 3, -4]);
   vectorClose(camera.getWorldDirection(new Vector3()), [-1, 0, 0]);
   flight.move(new Set(['forward']), 0.1);
@@ -92,7 +92,7 @@ test('scroll crosses the old orbit target and pan stays in the view plane inside
   vectorClose(camera.position, [0, 2, -2]);
   flight.dolly(-4);
   vectorClose(camera.position, [0, 2, 2]);
-  flight.look(-Math.PI / 2 / 0.003, 0);
+  flight.look(-Math.PI / 2 / 0.0033, 0);
   const start = camera.position.clone();
   const direction = camera.getWorldDirection(new Vector3());
   const orientation = camera.quaternion.clone();
@@ -134,7 +134,7 @@ test('pitched flight cannot dive under the field and can slide along a wall', ()
   const bounds = cameraMovementBounds(barrierBounds);
   const flight = new CameraFlight(camera, barrierBounds);
   camera.position.set(0, 0.2, 0);
-  flight.look(0, Math.PI / 4 / 0.003);
+  flight.look(0, Math.PI / 4 / 0.0033);
   flight.move(new Set(['forward']), 0.1);
   close(camera.position.y, CAMERA_FLOOR_CLEARANCE_M);
   assert.ok(camera.position.z < -0.3);
