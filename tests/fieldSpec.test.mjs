@@ -116,24 +116,3 @@ test('Dart Figure 7-1 offsets and starting zone use the shared blue base', () =>
   assert.ok(dart.floor.xM + dart.floor.widthM > zone.xM + zone.widthM);
   assert.ok(dart.floor.yM + dart.floor.depthM > zone.yM + zone.depthM);
 });
-
-test('default cameras contain all field corners at wide and narrow canvas sizes', async () => {
-  const { fieldCameraDistance, fieldCameraDirection } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
-  const v = Math.tan(43 * Math.PI / 360);
-  for (const [mode, spec] of Object.entries(FIELD_SPECS)) for (const aspect of [0.7, 1, 1.8, 2.4]) {
-    const direction = fieldCameraDirection(mode), n = Math.hypot(...direction);
-    const [cx, cy, cz] = direction.map((value) => value / n), h = Math.hypot(cx, cz);
-    const d = fieldCameraDistance(mode, aspect), pad = spec.wall?.thicknessM ?? 0;
-    for (const x of [-spec.floor.widthM / 2 - pad, spec.floor.widthM / 2 + pad]) {
-      for (const z of [-spec.floor.depthM / 2 - pad, spec.floor.depthM / 2 + pad]) {
-        for (const y of [0, mode === '3v3' ? 1.406 : mode === 'drone' ? 1.7 : mode === 'dart' ? 2.7 : 0.5]) {
-          const depth = d - cx * x - cy * y - cz * z;
-          const screenX = (-cz * x + cx * z) / h;
-          const screenY = -cy * cx * x / h + h * y - cy * cz * z / h;
-          assert.ok(Math.abs(screenX) / depth < v * aspect, `${mode} clips horizontally at ${aspect}`);
-          assert.ok(Math.abs(screenY) / depth < v, `${mode} clips vertically at ${aspect}`);
-        }
-      }
-    }
-  }
-});

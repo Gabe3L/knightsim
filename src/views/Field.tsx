@@ -14,14 +14,16 @@ import {
   memo,
   Suspense,
   useEffect,
+  useLayoutEffect,
   useMemo,
-  useState,
+  useRef,
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { CanvasTexture, Matrix4, Quaternion, SRGBColorSpace, Vector3 } from "three";
+import { CanvasTexture, PerspectiveCamera as ThreePerspectiveCamera, SRGBColorSpace } from "three";
 import { CameraFlightControls } from "../camera/CameraFlightControls";
-import { FIELD_SPECS, fieldWorldX, fieldWorldZ, fieldCameraDistance, fieldCameraDirection } from "../field/fieldSpec";
+import { FIELD_CAMERA_FOV, FieldCameraViews } from "../camera/FieldCameraViews";
+import { fieldWorldX, fieldWorldZ } from "../field/fieldSpec";
 import { FieldArena } from "../field/FieldArena";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
@@ -298,19 +300,16 @@ function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
 }
 
 function FieldPerspectiveCamera({ camera, mode }: Pick<FieldProps, 'camera' | 'mode'>) {
-  const aspect = useThree((state) => state.size.width / state.size.height);
-  // Frame the field once; later field and viewport changes must preserve the flight pose.
-  const [initialView] = useState(() => {
-    const targetXM = mode === '3v3' ? camera.targetXM : FIELD_SPECS[mode].size.lengthM / 2;
-    const targetYM = mode === '3v3' ? camera.targetYM : FIELD_SPECS[mode].size.widthM / 2;
-    const target = new Vector3(modeWorldX(targetXM, mode), 0, modeWorldZ(targetYM, mode));
-    const distance = fieldCameraDistance(mode, aspect) / Math.max(0.7, camera.zoom);
-    const position = new Vector3(...fieldCameraDirection(mode)).normalize().multiplyScalar(distance).add(target);
-    const quaternion = new Quaternion().setFromRotationMatrix(new Matrix4().lookAt(position, target, new Vector3(0, 1, 0)));
-    return { position, quaternion };
-  });
-  return <PerspectiveCamera makeDefault fov={43} near={0.05} far={250}
-    position={initialView.position} quaternion={initialView.quaternion} />;
+  const size = useThree((state) => state.size);
+  const invalidate = useThree((state) => state.invalidate);
+  const cameraRef = useRef<ThreePerspectiveCamera>(null);
+  const views = useRef<FieldCameraViews | null>(null);
+  useLayoutEffect(() => {
+    if (!cameraRef.current) return;
+    views.current ??= new FieldCameraViews(cameraRef.current);
+    if (views.current.select(mode, size.width, size.height, camera)) invalidate();
+  }, [camera, mode, size.width, size.height, invalidate]);
+  return <PerspectiveCamera ref={cameraRef} makeDefault fov={FIELD_CAMERA_FOV} near={0.05} far={250} />;
 }
 
 export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {

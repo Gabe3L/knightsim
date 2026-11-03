@@ -165,31 +165,3 @@ export const FIELD_SPECS = {
 export const fieldWorldX = (xM: number, mode: FieldMode): number => FIELD_SPECS[mode].size.lengthM / 2 - xM;
 export const fieldWorldZ = (yM: number, mode: FieldMode): number => yM - FIELD_SPECS[mode].size.widthM / 2;
 export const teamColor = (team: Team): string => team === 'red' ? '#ed202b' : team === 'blue' ? '#2439e9' : '#e7bd20';
-
-export const fieldCameraDirection = (mode: FieldMode): readonly [number, number, number] =>
-  mode === '3v3' ? [3.8, 8.4, -8.8] : [0, 8.4, -8.8];
-
-/** Fit every field corner in the default 43° perspective camera, accounting
- * for its oblique viewing direction and the actual canvas aspect ratio. */
-export function fieldCameraDistance(mode: FieldMode, aspect: number): number {
-  const spec = FIELD_SPECS[mode];
-  const pad = spec.wall ? spec.wall.thicknessM : 0;
-  const halfX = spec.floor.widthM / 2 + pad;
-  const halfZ = spec.floor.depthM / 2 + pad;
-  const height = mode === '3v3' ? 1.406 : mode === 'drone' ? 1.7 : mode === 'dart' ? 2.7 : 0.5;
-  const vertical = Math.tan(43 * Math.PI / 360);
-  const horizontal = vertical * Math.max(0.1, aspect);
-  const direction = fieldCameraDirection(mode);
-  const norm = Math.hypot(...direction);
-  const [cx, cy, cz] = direction.map((value) => value / norm) as [number, number, number];
-  const h = Math.hypot(cx, cz);
-  let distance = 0;
-  for (const x of [-halfX, halfX]) for (const z of [-halfZ, halfZ]) for (const y of [0, height]) {
-    const depthOffset = cx * x + cy * y + cz * z;
-    const screenX = (-cz * x + cx * z) / h;
-    const screenY = -cy * cx * x / h + h * y - cy * cz * z / h;
-    distance = Math.max(distance, Math.abs(screenX) / horizontal + depthOffset,
-      Math.abs(screenY) / vertical + depthOffset);
-  }
-  return distance * 1.06;
-}
