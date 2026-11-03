@@ -15,15 +15,17 @@ contextBridge.exposeInMainWorld('knightSim', {
   }),
   robotModels: Object.freeze({
     list: () => ipcRenderer.invoke('robot-models:list'),
-    import: (robotId: string) => ipcRenderer.invoke('robot-models:import', robotId),
+    chooseDirectory: () => ipcRenderer.invoke('robot-models:choose-directory'),
+    resetDirectory: () => ipcRenderer.invoke('robot-models:reset-directory'),
     setForRobot: (robotId: string, id: string | null) => (
       ipcRenderer.invoke('robot-models:set-for-robot', robotId, id)
     ),
     updateOrientation: (id: string, orientation: unknown) => (
       ipcRenderer.invoke('robot-models:update-orientation', id, orientation)
     ),
-    remove: (id: string) => ipcRenderer.invoke('robot-models:remove', id),
-    urlFor: (id: string) => `knightsim-model://robot/${encodeURIComponent(id)}.glb`,
+    urlFor: (id: string, revision: string) => (
+      `knightsim-model://robot/${encodeURIComponent(id)}.glb?v=${encodeURIComponent(revision)}`
+    ),
   }),
 });
 

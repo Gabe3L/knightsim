@@ -13,14 +13,14 @@ declare global {
       };
       readonly robotModels: {
         readonly list: () => Promise<RobotModelLibrary>;
-        readonly import: (robotId: RobotId) => Promise<RobotModelLibrary | null>;
+        readonly chooseDirectory: () => Promise<RobotModelLibrary | null>;
+        readonly resetDirectory: () => Promise<RobotModelLibrary>;
         readonly setForRobot: (robotId: RobotId, id: string | null) => Promise<RobotModelLibrary>;
         readonly updateOrientation: (
           id: string,
           orientation: RobotModelOrientation,
         ) => Promise<RobotModelLibrary>;
-        readonly remove: (id: string) => Promise<RobotModelLibrary>;
-        readonly urlFor: (id: string) => string;
+        readonly urlFor: (id: string, revision: string) => string;
       };
     };
   }

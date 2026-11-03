@@ -13,7 +13,7 @@ class SizeBoundary extends Component<{ children: ReactNode }, { failed: boolean 
 }
 
 function ModelSize({ model }: { model: RobotModelRecord }) {
-  const url = window.knightSim!.robotModels.urlFor(model.id);
+  const url = window.knightSim!.robotModels.urlFor(model.id, model.revision);
   const { scene } = useGLTF(url, false, true, configureDracoLoader);
   const size = useMemo(() => modelDimensions(scene, model.orientation), [scene, model.orientation]);
   const format = (value: number) => value.toLocaleString(undefined, { maximumSignificantDigits: 4 });
@@ -45,7 +45,7 @@ export function ModelScaleControls({ model, busy, onUpdate }: {
     </form>
     <small id={`scale-help-${model.id}`}>{valid ? 'Uniform multiplier on all axes. Use 0.001 for models exported in millimetres.' : 'Enter a finite scale greater than zero.'}</small>
     <div className="model-current-size" aria-live="polite">
-      <SizeBoundary key={model.id}><Suspense fallback={<span>Measuring model…</span>}>
+      <SizeBoundary key={`${model.id}:${model.revision}`}><Suspense fallback={<span>Measuring model…</span>}>
         {window.knightSim?.robotModels ? <ModelSize model={model} /> : <span>Model size is available in the desktop app.</span>}
       </Suspense></SizeBoundary>
     </div>

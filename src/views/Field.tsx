@@ -114,18 +114,20 @@ class ModelErrorBoundary extends Component<
   }
 }
 
-const UploadedRobot = memo(function UploadedRobot({
+const FolderRobot = memo(function FolderRobot({
   model,
 }: {
   readonly model: RobotModelRecord;
 }) {
-  const url = window.knightSim?.robotModels.urlFor(model.id) ?? "";
+  const url = window.knightSim?.robotModels.urlFor(model.id, model.revision) ?? "";
   const { scene, animations } = useGLTF(url, false, true, configureDracoLoader);
   const prepared = useMemo(() => prepareRobotModel(scene, animations.length > 0), [scene, animations]);
   // A cached template must never be attached to multiple scene parents.
   const object = useMemo(() => cloneSkeleton(prepared.object), [prepared]);
   const { rotationDeg, flipped, scale = 1 } = model.orientation;
   const orientationKey = [
+    model.id,
+    model.revision,
     scale,
     rotationDeg.x,
     rotationDeg.y,
@@ -164,9 +166,9 @@ function Robot({ robot, model, mode }: {
       scale={[-1, 1, 1]}
     >
       {model && window.knightSim?.robotModels ? (
-        <ModelErrorBoundary cacheKey={model.id} robotId={robot.robotId}>
+        <ModelErrorBoundary cacheKey={`${model.id}:${model.revision}`} robotId={robot.robotId}>
           <Suspense fallback={<PlaceholderRobot robotId={robot.robotId} />}>
-            <UploadedRobot model={model} />
+            <FolderRobot model={model} />
           </Suspense>
         </ModelErrorBoundary>
       ) : (

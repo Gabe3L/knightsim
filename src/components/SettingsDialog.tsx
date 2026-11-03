@@ -4,14 +4,14 @@ import {
   Box,
   Crosshair,
   FileKey,
+  FolderOpen,
   Keyboard,
   KeyRound,
   Network,
+  RefreshCw,
   RotateCcw,
   Settings2,
   ShieldCheck,
-  Trash2,
-  Upload,
   Wifi,
   X,
 } from 'lucide-react';
@@ -27,10 +27,12 @@ interface SettingsDialogProps {
   readonly error: string | null;
   readonly library: RobotModelLibrary;
   readonly loading: boolean;
+  readonly modelsAvailable: boolean;
   readonly onClearError: () => void;
   readonly onClose: () => void;
-  readonly onImport: (robotId: RobotId) => void;
-  readonly onRemove: (id: string) => void;
+  readonly onChooseDirectory: () => void;
+  readonly onResetDirectory: () => void;
+  readonly onRefreshModels: () => void;
   readonly onSelect: (robotId: RobotId, id: string | null) => void;
   readonly onUpdateOrientation: (id: string, orientation: RobotModelOrientation) => void;
 }
@@ -152,10 +154,12 @@ export function SettingsDialog({
   error,
   library,
   loading,
+  modelsAvailable,
   onClearError,
   onClose,
-  onImport,
-  onRemove,
+  onChooseDirectory,
+  onResetDirectory,
+  onRefreshModels,
   onSelect,
   onUpdateOrientation,
 }: SettingsDialogProps) {
@@ -286,27 +290,51 @@ export function SettingsDialog({
                   </div>
                 </div>
 
-                <SettingRow label="Robot model" description="GLB model used by the Field viewer.">
-                  <div className="model-select-row">
-                    <select
-                      className="settings-select model-dropdown"
-                      value={activeModel?.id ?? ''}
-                      disabled={busy || loading || library.models.length === 0}
-                      onChange={(event) => onSelect(selectedRobotId, event.currentTarget.value || null)}
-                      aria-label={`${selectedRobot.name} robot model`}
-                    >
-                      <option value="">Black cube ({selectedRobot.name})</option>
-                      {library.models.map((model) => <option value={model.id} key={model.id}>{model.name}</option>)}
-                    </select>
-                    <button className="secondary-button" type="button" onClick={() => onImport(selectedRobotId)} disabled={busy || loading}>
-                      <Upload size={14} />
-                      Import GLB
+                <div className="model-folder">
+                  <div className="model-folder-copy">
+                    <strong>Model folder</strong>
+                    <span>Load GLB files directly from this folder. Default: ./models</span>
+                  </div>
+                  <div className="model-folder-path" title={library.directory}>
+                    <FolderOpen size={16} />
+                    <span>{library.directory}</span>
+                  </div>
+                  <div className="model-folder-actions">
+                    <button className="secondary-button" type="button" onClick={onChooseDirectory} disabled={!modelsAvailable || busy || loading}>
+                      <FolderOpen size={14} /> Choose folder
+                    </button>
+                    <button className="secondary-button" type="button" onClick={onRefreshModels} disabled={!modelsAvailable || busy || loading}>
+                      <RefreshCw size={14} /> Refresh
+                    </button>
+                    <button className="secondary-button" type="button" onClick={onResetDirectory} disabled={!modelsAvailable || busy || loading || library.isDefaultDirectory}>
+                      <RotateCcw size={14} /> Use ./models
                     </button>
                   </div>
+                  {!modelsAvailable ? <span role="status">Open the KnightSim desktop app to choose a model folder.</span> : null}
+                  {library.directoryMissing ? <span role="status">This folder is unavailable. Choose another folder or restore it, then Refresh.</span> : null}
+                  {library.issues.length > 0 ? (
+                    <div className="model-folder-issues" role="status">
+                      <strong>Some files could not be loaded:</strong>
+                      <ul>{library.issues.map((issue) => <li key={issue.fileName}>{issue.fileName}: {issue.message}</li>)}</ul>
+                    </div>
+                  ) : null}
+                </div>
+
+                <SettingRow label="Robot model" description="Choose a GLB from the model folder for this robot.">
+                  <select
+                    className="settings-select model-dropdown"
+                    value={activeModel?.id ?? ''}
+                    disabled={busy || loading || library.models.length === 0}
+                    onChange={(event) => onSelect(selectedRobotId, event.currentTarget.value || null)}
+                    aria-label={`${selectedRobot.name} robot model`}
+                  >
+                    <option value="">Black cube ({selectedRobot.name})</option>
+                    {library.models.map((model) => <option value={model.id} key={model.id}>{model.name}</option>)}
+                  </select>
                 </SettingRow>
 
                 {loading ? (
-                  <div className="model-inline-empty"><span className="model-loading-dot" />Loading saved models…</div>
+                  <div className="model-inline-empty"><span className="model-loading-dot" />Loading models from folder…</div>
                 ) : activeModel ? (
                   <div className="model-transform">
                     <div className="model-file-summary">
@@ -315,18 +343,6 @@ export function SettingsDialog({
                         <strong>{activeModel.name}</strong>
                         <small>{activeModel.sourceFileName} · {formatFileSize(activeModel.sizeBytes)}</small>
                       </span>
-                      <button
-                        type="button"
-                        className="model-delete"
-                        disabled={busy}
-                        aria-label={`Remove ${activeModel.name}`}
-                        title="Remove model"
-                        onClick={() => {
-                          if (window.confirm(`Remove “${activeModel.name}” from this device?`)) onRemove(activeModel.id);
-                        }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
                     </div>
                     <ModelScaleControls key={activeModel.id} model={activeModel} busy={busy} onUpdate={onUpdateOrientation} />
                     <div className="orientation-controls" aria-label={`${activeModel.name} orientation`}>
@@ -376,7 +392,9 @@ export function SettingsDialog({
                   </div>
                 ) : (
                   <div className="model-inline-empty">
-                    <Box size={18} /> Import a glTF 2.0 binary to view on the Field.
+                    <Box size={18} /> {library.models.length === 0
+                      ? 'No GLB models found. Add .glb files to the model folder, then Refresh.'
+                      : 'Select a model from the folder to view it on the Field.'}
                   </div>
                 )}
               </section>

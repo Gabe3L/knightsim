@@ -2,7 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RobotId, RobotModelLibrary, RobotModelOrientation, RobotModelRecord } from '../types';
 
 const EMPTY_LIBRARY: RobotModelLibrary = {
-  version: 2,
+  version: 3,
+  directory: './models',
+  isDefaultDirectory: true,
+  directoryMissing: false,
+  issues: [],
   modelIdByRobot: {},
   models: [],
 };
@@ -58,12 +62,20 @@ export function useRobotModels() {
     }
   }, []);
 
-  const importModel = useCallback(async (robotId: RobotId): Promise<void> => {
+  const refreshModels = useCallback(async (): Promise<void> => {
+    if (api) await run(() => api.list());
+  }, [api, run]);
+
+  const chooseDirectory = useCallback(async (): Promise<void> => {
     if (!api) {
-      setError('Robot models can only be imported from the KnightSim desktop app.');
+      setError('Model folders are available in the KnightSim desktop app.');
       return;
     }
-    await run(() => api.import(robotId));
+    await run(() => api.chooseDirectory());
+  }, [api, run]);
+
+  const resetDirectory = useCallback(async (): Promise<void> => {
+    if (api) await run(() => api.resetDirectory());
   }, [api, run]);
 
   const setRobotModel = useCallback(async (robotId: RobotId, id: string | null): Promise<void> => {
@@ -75,10 +87,6 @@ export function useRobotModels() {
     orientation: RobotModelOrientation,
   ): Promise<void> => {
     if (api) await run(() => api.updateOrientation(id, orientation));
-  }, [api, run]);
-
-  const removeModel = useCallback(async (id: string): Promise<void> => {
-    if (api) await run(() => api.remove(id));
   }, [api, run]);
 
   const clearError = useCallback(() => setError(null), []);
@@ -93,11 +101,12 @@ export function useRobotModels() {
     busy,
     clearError,
     error,
-    importModel,
+    chooseDirectory,
     library,
     loading,
     modelForRobot,
-    removeModel,
+    refreshModels,
+    resetDirectory,
     setRobotModel,
     updateOrientation,
   };

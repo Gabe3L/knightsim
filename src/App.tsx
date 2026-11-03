@@ -284,8 +284,10 @@ export function App() {
           loading={robotModels.loading}
           onClearError={robotModels.clearError}
           onClose={() => setSettingsOpen(false)}
-          onImport={(robotId) => void robotModels.importModel(robotId)}
-          onRemove={(id) => void robotModels.removeModel(id)}
+          modelsAvailable={robotModels.available}
+          onChooseDirectory={() => void robotModels.chooseDirectory()}
+          onResetDirectory={() => void robotModels.resetDirectory()}
+          onRefreshModels={() => void robotModels.refreshModels()}
           onSelect={(robotId, id) => void robotModels.setRobotModel(robotId, id)}
           onUpdateOrientation={(id, orientation) => void robotModels.updateOrientation(id, orientation)}
         />

@@ -1,6 +1,6 @@
 # KnightSim
 
-Electron/React workbench for robot replay, 3D field visualization, telemetry graphs, controller inputs, and imported GLB models.
+Electron/React workbench for robot replay, 3D field visualization, telemetry graphs, controller inputs, and GLB models loaded from a folder.
 
 ## Run and verify
 
@@ -15,7 +15,7 @@ npm run build
 npm start
 ```
 
-`npm test` discovers all regression tests automatically. `npm run test:models` runs the model geometry and library tests. Browser-only development is available with `npx vite`; model import requires Electron.
+`npm test` discovers all regression tests automatically. `npm run test:models` runs the model geometry, folder loading, and settings tests. Browser-only development is available with `npx vite`; loading local model folders requires Electron.
 
 `npm start` rebuilds the app before launching Electron so it includes the latest source changes. Use `npm run dev` for live updates while editing.
 
@@ -30,7 +30,7 @@ Choose a field format from the top bar. Preferences open on a robot in that form
 The shared registry is [`electron/robotProfiles.json`](electron/robotProfiles.json). To add a robot or another instance of the same chassis:
 
 1. Copy a profile and choose a unique, stable lowercase `id` (for example `infantry-2`) and display `name`. Identity is independent of category and mobility.
-2. Set `mobility` to `wheeled`, `omnidirectional`, `tracked`, `legged`, or `aerial`, and set `dimensionsM` (length, width, height). Robots without a model appear as black cubes with their display name on every face; the cube side uses the largest profile dimension. Imported GLBs retain their own dimensions and explicit scale.
+2. Set `mobility` to `wheeled`, `omnidirectional`, `tracked`, `legged`, or `aerial`, and set `dimensionsM` (length, width, height). Robots without a model appear as black cubes with their display name on every face; the cube side uses the largest profile dimension. GLBs retain their own dimensions and explicit scale.
 3. Select an existing rendering `category`: `infantry`, `sentry`, `hero`, or `generic` (`ghost` and `enemy` are also available). Set `capabilities` and `maxHp`/`maxHeat`; use zero for unsupported referee or heat data. Keep `odometry` false unless you supply an overlay adapter—existing odometry data belongs to Infantry.
 4. Set `demoPhase` to offset the synthetic controller inputs.
 5. Run tests and rebuild/restart Electron. The registry automatically supplies the field selector, settings, sidebar, graph signals, controller inputs, and IPC model-assignment allowlist.
@@ -39,11 +39,13 @@ Saved preferences override changed defaults for existing IDs. Do not rename an I
 
 ## Coordinates and models
 
-Telemetry uses metres, a horizontal X/Y plane, Z altitude, and degree angles. Model assets use Three.js Y-up, with local +X forward. The field maps telemetry X/Y to world -X/+Z; positive yaw turns +X toward +Y. Roll is about local forward and pitch is about the lateral axis (nose-up positive). Aerial demo samples include altitude, pitch, and roll. Rotation and flips in Preferences adapt asset axes; scale is a uniform multiplier (use `0.001` for millimetre exports). Imported models are centered horizontally and grounded at their lowest point; telemetry altitude offsets that base.
+Models load directly from the selected folder, which defaults to `./models` in the application/project root. In **Preferences → Appearance**, use **Choose folder** to select any model directory, then choose a model for each robot in the **Robot model** dropdown. The app remembers the folder across restarts. **Use ./models** returns to the default, and **Refresh** picks up added, changed, or removed files without restarting. Only regular `.glb` files directly inside the folder are listed; subdirectories and symbolic links are excluded. Invalid GLBs are reported individually. An empty or missing folder uses the labeled black cube fallback.
 
-Import self-contained glTF 2.0 `.glb` files. JSON metadata is limited to 32 MiB; binary geometry may be larger. Draco-compressed assets are supported. Static, opaque compatible meshes are batched by material to reduce draw calls. Instanced, skinned, morphing, transparent, partial-draw, and animated models preserve their hierarchy. Each displayed model gets its own scene clone, including independent skeletons. Animated node hierarchies are preserved; clip playback and joint control are not implemented.
+Telemetry uses metres, a horizontal X/Y plane, Z altitude, and degree angles. Model assets use Three.js Y-up, with local +X forward. The field maps telemetry X/Y to world -X/+Z; positive yaw turns +X toward +Y. Roll is about local forward and pitch is about the lateral axis (nose-up positive). Aerial demo samples include altitude, pitch, and roll. Rotation and flips in Preferences adapt asset axes; scale is a uniform multiplier (use `0.001` for millimetre exports). Models are centered horizontally and grounded at their lowest point; telemetry altitude offsets that base.
 
-Models live in Electron's user-data `robot-models` directory. Library updates are serialized and written through a temporary file plus rename. Invalid/unsupported libraries are reported instead of silently replaced. Back up and repair `library.json` if that error occurs. Orientation belongs to the library asset and is shared by every robot assigned that asset; import a separate copy for a different orientation.
+Use self-contained glTF 2.0 `.glb` files. JSON metadata is limited to 32 MiB; binary geometry may be larger. Draco-compressed assets are supported. Static, opaque compatible meshes are batched by material to reduce draw calls. Instanced, skinned, morphing, transparent, partial-draw, and animated models preserve their hierarchy. Each displayed model gets its own scene clone, including independent skeletons. Animated node hierarchies are preserved; clip playback and joint control are not implemented.
+
+Model files stay in their source folder. Only the selected folder, assignments, and transforms are saved in Electron's user-data `robot-models/library.json`. Each folder remembers its own assignments and transforms, including when a file temporarily disappears. Settings updates are serialized and written through a temporary file plus rename. Invalid/unsupported settings are reported instead of silently replaced. Back up and repair `library.json` if that error occurs. Orientation is shared by robots using the same file; duplicate the source file for a different orientation. Old imported-library settings reconnect to matching source filenames in the default folder; existing stored model copies are left untouched.
 
 ## Game fields
 
