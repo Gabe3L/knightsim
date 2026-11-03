@@ -7,6 +7,8 @@ const { defaultFieldCameraPose, FIELD_CAMERA_FOV, FIELD_CAMERA_TRANSITION_MS, Fi
   new URL('../src/camera/FieldCameraViews.ts', import.meta.url),
 );
 const { FIELD_SPECS, fieldWorldX, fieldWorldZ } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
+const { fieldCameraBounds, CAMERA_BARRIER_WARNING_M } = await loadTypeScript(new URL('../src/camera/CameraFlightBounds.ts', import.meta.url));
+const { CameraFlight } = await loadTypeScript(new URL('../src/camera/CameraFlight.ts', import.meta.url));
 const state = { targetXM: 6, targetYM: 4, zoom: 1 };
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
 
@@ -28,6 +30,29 @@ function cameraAtSpawn(mode, width, height) {
   camera.updateMatrixWorld();
   return camera;
 }
+
+test('normal overviews start clear of the barriers and even narrow overviews stay within flight limits', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    for (const [width, height] of [[700, 1000], [1440, 800], [1280, 520], [400, 1000], [150, 1200]]) {
+      const { position } = defaultFieldCameraPose(mode, width, height, state);
+      const bounds = fieldCameraBounds(mode, position);
+      assert.ok(bounds.containsPoint(position), `${mode}: overview inside flight limits`);
+      assert.ok(Math.min(position.x - bounds.min.x, bounds.max.x - position.x,
+        position.z - bounds.min.z, bounds.max.z - position.z, bounds.max.y - position.y) > CAMERA_BARRIER_WARNING_M,
+      `${mode}: no barrier over the normal overview`);
+    }
+  }
+});
+
+test('landscape flight limits keep every field large enough to inspect', () => {
+  const limits = { '1v1': [7.5, 5.5, 7.5], sentry: [7.5, 5.5, 7.5], '3v3': [13.5, 8.5, 9.5], drone: [22.5, 9.5, 8.5], dart: [22.5, 7, 7.5] };
+  for (const [mode, [x, y, z]] of Object.entries(limits)) {
+    const bounds = fieldCameraBounds(mode, defaultFieldCameraPose(mode, 1440, 800, state).position);
+    assert.ok(bounds.min.x >= -x && bounds.max.x <= x, `${mode}: nearby field ends`);
+    assert.ok(bounds.max.y <= y, `${mode}: nearby ceiling`);
+    assert.ok(bounds.min.z >= -z && bounds.max.z <= z, `${mode}: nearby field sides`);
+  }
+});
 
 test('end-corner starting views use a low angle and fit the field above the timeline', () => {
   for (const [mode, spec] of Object.entries(FIELD_SPECS)) {
@@ -127,7 +152,7 @@ test('switching fields transitions to new spawns and restores prior flight poses
   advance(FIELD_CAMERA_TRANSITION_MS);
   assert.ok(camera.position.equals(droneSpawn.position));
   assert.ok(camera.quaternion.equals(droneSpawn.quaternion));
-  camera.position.set(-30, 7, 10);
+  camera.position.set(-18, 7, 4);
   camera.lookAt(-20, 1, 0);
   const dronePosition = camera.position.clone(), droneRotation = camera.quaternion.clone();
 
@@ -173,7 +198,8 @@ test('manual takeover stops the transition and preserves the new flight pose', (
   views.select('drone', 1440, 800, state);
   advance(FIELD_CAMERA_TRANSITION_MS / 4);
   views.cancelTransition();
-  camera.position.add(new Vector3(2, 1, -3));
+  const bounds = fieldCameraBounds('drone', defaultFieldCameraPose('drone', 1440, 800, state).position);
+  new CameraFlight(camera, bounds).pan(-200, 100);
   camera.lookAt(0, 1, 0);
   const position = camera.position.clone(), rotation = camera.quaternion.clone();
   assert.equal(advance(FIELD_CAMERA_TRANSITION_MS * 2), false);
@@ -206,17 +232,20 @@ test('transitions use elapsed time independently of frame rate or prior idle tim
   assert.ok(singleFrame.quaternion.angleTo(manyFrames.quaternion) < 1e-7);
 });
 
-test('rerendering during a transition preserves its destination and completion time', () => {
+test('rerendering during a transition preserves its timing and respects tighter destination limits', () => {
   const { camera, views, advance } = createViews();
   views.select('3v3', 1440, 800, state);
   views.select('dart', 1440, 800, state);
   advance(FIELD_CAMERA_TRANSITION_MS / 4);
   const position = camera.position.clone(), rotation = camera.quaternion.clone();
-  assert.equal(views.select('dart', 700, 1000, { ...state, zoom: 2 }), false);
+  const nextState = { ...state, zoom: 2 };
+  assert.equal(views.select('dart', 700, 1000, nextState), false);
   assert.ok(camera.position.equals(position));
   assert.ok(camera.quaternion.equals(rotation));
   assert.equal(advance(FIELD_CAMERA_TRANSITION_MS * 3 / 4), false);
   const target = defaultFieldCameraPose('dart', 1440, 800, state);
+  const bounds = fieldCameraBounds('dart', defaultFieldCameraPose('dart', 700, 1000, nextState).position);
+  target.position.clamp(bounds.min, bounds.max);
   assert.ok(camera.position.equals(target.position));
   assert.ok(camera.quaternion.equals(target.quaternion));
 });
@@ -225,10 +254,21 @@ test('resizing or rerendering a field preserves the active camera position and o
   const camera = new PerspectiveCamera();
   const views = new FieldCameraViews(camera);
   views.select('sentry', 1440, 800, state);
-  camera.position.set(1000, -5, 2000);
-  camera.lookAt(1001, -4, 2000);
+  camera.position.set(5, 3, 4);
+  camera.lookAt(1, 1, 0);
   const position = camera.position.clone(), rotation = camera.quaternion.clone();
   assert.equal(views.select('sentry', 700, 1000, state), false);
   assert.ok(camera.position.equals(position));
   assert.ok(camera.quaternion.equals(rotation));
+});
+
+test('widening the viewport brings a distant portrait pose back within the tighter limits', () => {
+  const { camera, views } = createViews();
+  views.select('3v3', 400, 1000, state);
+  const orientation = camera.quaternion.clone();
+  const bounds = fieldCameraBounds('3v3', defaultFieldCameraPose('3v3', 1440, 800, state).position);
+  assert.ok(!bounds.containsPoint(camera.position));
+  assert.equal(views.select('3v3', 1440, 800, state), true);
+  assert.ok(bounds.containsPoint(camera.position));
+  assert.ok(camera.quaternion.equals(orientation));
 });

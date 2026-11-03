@@ -4,42 +4,57 @@ import { PerspectiveCamera, Vector3 } from 'three';
 import { loadTypeScript } from './loadTypeScript.mjs';
 
 const { CameraFlight } = await loadTypeScript(new URL('../src/camera/CameraFlight.ts', import.meta.url));
+const { fieldCameraBounds, cameraBarrierOpacity, CAMERA_BARRIER_WARNING_M, CAMERA_FLOOR_CLEARANCE_M } = await loadTypeScript(
+  new URL('../src/camera/CameraFlightBounds.ts', import.meta.url),
+);
+const { FIELD_SPECS } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9, `${actual} != ${expected}`);
 const vectorClose = (actual, expected) => actual.toArray().forEach((value, index) => close(value, expected[index]));
 
 test('mouse look rotates in place and flight follows the new direction', () => {
   const camera = new PerspectiveCamera();
-  camera.position.set(12, 3, -9);
-  const flight = new CameraFlight(camera);
+  camera.position.set(5, 3, -4);
+  const flight = new CameraFlight(camera, fieldCameraBounds('3v3'));
   flight.look(-Math.PI / 2 / 0.003, 0);
-  vectorClose(camera.position, [12, 3, -9]);
+  vectorClose(camera.position, [5, 3, -4]);
   vectorClose(camera.getWorldDirection(new Vector3()), [-1, 0, 0]);
   flight.move(new Set(['forward']), 0.1);
-  vectorClose(camera.position, [11.5, 3, -9]);
+  vectorClose(camera.position, [4.5, 3, -4]);
   flight.move(new Set(['right']), 0.1);
-  vectorClose(camera.position, [11.5, 3, -9.5]);
+  vectorClose(camera.position, [4.5, 3, -4.5]);
 });
 
-test('flight can travel below and far outside the field without changing orientation', () => {
-  const camera = new PerspectiveCamera();
-  camera.position.set(1000, -5, 2000);
-  camera.lookAt(1001, -4, 2000);
-  const orientation = camera.quaternion.clone();
-  const forward = camera.getWorldDirection(new Vector3());
-  const start = camera.position.clone();
-  const flight = new CameraFlight(camera);
-  for (let i = 0; i < 100; i++) flight.move(new Set(['forward']), 0.1);
-  close(camera.position.distanceTo(start.clone().addScaledVector(forward, 50)), 0);
-  assert.ok(camera.quaternion.equals(orientation));
-  flight.move(new Set(['down']), 0.1);
-  close(camera.position.y, start.y + forward.y * 50 - 0.5);
+test('keyboard flight stops at the floor, ceiling and every outer wall on each field', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const camera = new PerspectiveCamera();
+    const bounds = fieldCameraBounds(mode);
+    const flight = new CameraFlight(camera, bounds);
+    const orientation = camera.quaternion.clone();
+    for (const [action, axis, limit, retreat] of [
+      ['down', 'y', bounds.min.y, 'up'], ['up', 'y', bounds.max.y, 'down'],
+      ['left', 'x', bounds.min.x, 'right'], ['right', 'x', bounds.max.x, 'left'],
+      ['forward', 'z', bounds.min.z, 'back'], ['back', 'z', bounds.max.z, 'forward'],
+    ]) {
+      camera.position.set(0, 2, 0);
+      camera.position[axis] = limit + (['down', 'left', 'forward'].includes(action) ? 0.1 : -0.1);
+      assert.equal(flight.move(new Set([action]), 0.1), true);
+      close(camera.position[axis], limit);
+      assert.equal(flight.move(new Set([action]), 0.1), false, `${mode}: stops at ${action} limit`);
+      assert.ok(bounds.containsPoint(camera.position));
+      assert.ok(camera.quaternion.equals(orientation));
+      assert.equal(flight.move(new Set([retreat]), 0.1), true, `${mode}: can fly back from ${action} limit`);
+      assert.ok(Math.abs(camera.position[axis] - limit) > 0.49);
+    }
+  }
 });
 
 test('diagonal flight has the same speed, opposing keys cancel, and frame pauses are capped', () => {
   const camera = new PerspectiveCamera();
-  const flight = new CameraFlight(camera);
+  camera.position.y = 2;
+  const origin = camera.position.clone();
+  const flight = new CameraFlight(camera, fieldCameraBounds('3v3'));
   flight.move(new Set(['forward', 'right', 'up']), 0.1);
-  close(camera.position.length(), 0.5);
+  close(camera.position.distanceTo(origin), 0.5);
   const start = camera.position.clone();
   assert.equal(flight.move(new Set(['forward', 'back', 'left', 'right', 'up', 'down']), 0.1), false);
   assert.ok(camera.position.equals(start));
@@ -51,11 +66,12 @@ test('diagonal flight has the same speed, opposing keys cancel, and frame pauses
 
 test('looking up and down is independent of field elevation and stays upright at the poles', () => {
   const camera = new PerspectiveCamera();
-  const flight = new CameraFlight(camera);
+  camera.position.y = 2;
+  const flight = new CameraFlight(camera, fieldCameraBounds('3v3'));
   flight.look(0, -100000);
   assert.ok(camera.getWorldDirection(new Vector3()).y > 0.999);
   flight.move(new Set(['forward']), 0.1);
-  assert.ok(camera.position.y > 0.49);
+  assert.ok(camera.position.y > 2.49);
   flight.look(0, 100000);
   assert.ok(camera.getWorldDirection(new Vector3()).y < -0.999);
   flight.look(100, 0);
@@ -63,20 +79,71 @@ test('looking up and down is independent of field elevation and stays upright at
   close(camera.quaternion.length(), 1);
 });
 
-test('scroll crosses the old orbit target and pan stays in the view plane', () => {
+test('scroll crosses the old orbit target and pan stays in the view plane inside the boundaries', () => {
   const camera = new PerspectiveCamera();
-  camera.position.set(0, 0, 2);
-  const flight = new CameraFlight(camera);
-  flight.dolly(10);
-  vectorClose(camera.position, [0, 0, -8]);
-  flight.dolly(-100);
-  vectorClose(camera.position, [0, 0, 92]);
+  camera.position.set(0, 2, 2);
+  const flight = new CameraFlight(camera, fieldCameraBounds('3v3'));
+  flight.dolly(4);
+  vectorClose(camera.position, [0, 2, -2]);
+  flight.dolly(-4);
+  vectorClose(camera.position, [0, 2, 2]);
   flight.look(-Math.PI / 2 / 0.003, 0);
   const start = camera.position.clone();
   const direction = camera.getWorldDirection(new Vector3());
   const orientation = camera.quaternion.clone();
   flight.pan(50, 25);
   close(camera.position.clone().sub(start).dot(direction), 0);
-  close(camera.position.y, 0.25);
+  close(camera.position.y, 2.25);
   assert.ok(camera.quaternion.equals(orientation));
+});
+
+test('panning and large scroll inputs cannot bypass the floor or any outer boundary', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const camera = new PerspectiveCamera();
+    const bounds = fieldCameraBounds(mode);
+    const flight = new CameraFlight(camera, bounds);
+    camera.position.set(0, 2, 0);
+    flight.pan(1e6, -1e6);
+    vectorClose(camera.position, [bounds.min.x, CAMERA_FLOOR_CLEARANCE_M, 0]);
+    flight.pan(-2e6, 2e6);
+    vectorClose(camera.position, [bounds.max.x, bounds.max.y, 0]);
+    flight.dolly(1e6);
+    close(camera.position.z, bounds.min.z);
+    flight.dolly(-2e6);
+    close(camera.position.z, bounds.max.z);
+
+    camera.position.set(0, 2, 0);
+    flight.look(0, 1e6);
+    flight.dolly(1e6);
+    close(camera.position.y, bounds.min.y);
+    flight.dolly(-2e6);
+    close(camera.position.y, bounds.max.y);
+    assert.ok(bounds.containsPoint(camera.position));
+  }
+});
+
+test('pitched flight cannot dive under the field and can slide along a wall', () => {
+  const camera = new PerspectiveCamera();
+  const bounds = fieldCameraBounds('1v1');
+  const flight = new CameraFlight(camera, bounds);
+  camera.position.set(0, 0.2, 0);
+  flight.look(0, Math.PI / 4 / 0.003);
+  flight.move(new Set(['forward']), 0.1);
+  close(camera.position.y, CAMERA_FLOOR_CLEARANCE_M);
+  assert.ok(camera.position.z < -0.3);
+
+  camera.quaternion.identity();
+  camera.position.set(bounds.max.x, 2, 0);
+  flight.move(new Set(['right', 'forward']), 0.1);
+  close(camera.position.x, bounds.max.x);
+  assert.ok(camera.position.z < -0.3);
+});
+
+test('the red barrier fades in only within the warning distance and disappears on retreat', () => {
+  assert.equal(cameraBarrierOpacity(CAMERA_BARRIER_WARNING_M + 10), 0);
+  assert.equal(cameraBarrierOpacity(CAMERA_BARRIER_WARNING_M), 0);
+  const approaching = [0.75, 0.5, 0.25, 0].map((fraction) => cameraBarrierOpacity(fraction * CAMERA_BARRIER_WARNING_M));
+  assert.ok(approaching.every((opacity, index) => opacity > (approaching[index - 1] ?? 0)));
+  assert.equal(approaching.at(-1), 1);
+  assert.equal(cameraBarrierOpacity(CAMERA_BARRIER_WARNING_M + 0.1), 0);
 });

@@ -1,6 +1,7 @@
 import { Camera, Matrix4, Quaternion, Vector3 } from 'three';
 import { FIELD_SPECS, fieldWorldX, fieldWorldZ } from '../field/fieldSpec';
 import type { CameraState, FieldMode } from '../types';
+import { fieldCameraBounds } from './CameraFlightBounds';
 
 export const FIELD_CAMERA_FOV = 43;
 export const FIELD_CAMERA_TRANSITION_MS = 800;
@@ -97,14 +98,29 @@ export class FieldCameraViews {
   ) {}
 
   select(mode: FieldMode, width: number, height: number, state: CameraState): boolean {
-    if (mode === this.currentMode) return false;
+    const overview = defaultFieldCameraPose(mode, width, height, state);
+    const bounds = fieldCameraBounds(mode, overview.position);
+    if (mode === this.currentMode) {
+      if (this.transition) {
+        this.transition.to.position.clamp(bounds.min, bounds.max);
+        return false;
+      }
+      if (bounds.containsPoint(this.camera.position)) return false;
+      this.camera.position.clamp(bounds.min, bounds.max);
+      this.camera.updateMatrixWorld();
+      return true;
+    }
     const from = {
       position: this.camera.position.clone(), quaternion: this.camera.quaternion.clone(),
     };
     // A quick switch should remember the field's destination, not a point
     // partway through the journey from the previous field.
     if (this.currentMode) this.poses.set(this.currentMode, this.transition?.to ?? from);
-    const pose = this.poses.get(mode) ?? defaultFieldCameraPose(mode, width, height, state);
+    const remembered = this.poses.get(mode) ?? overview;
+    const pose = {
+      position: remembered.position.clone().clamp(bounds.min, bounds.max),
+      quaternion: remembered.quaternion,
+    };
     if (this.currentMode) {
       this.transition = { from, to: pose, startedAtMs: this.now() };
     } else {

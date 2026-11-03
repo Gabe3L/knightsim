@@ -23,7 +23,9 @@ import {
 } from "react";
 import { CanvasTexture, PerspectiveCamera as ThreePerspectiveCamera, SRGBColorSpace } from "three";
 import { CameraFlightControls } from "../camera/CameraFlightControls";
-import { FIELD_CAMERA_FOV, FieldCameraViews } from "../camera/FieldCameraViews";
+import { CameraFlightBarrier } from "../camera/CameraFlightBarrier";
+import { fieldCameraBounds } from "../camera/CameraFlightBounds";
+import { defaultFieldCameraPose, FIELD_CAMERA_FOV, FieldCameraViews } from "../camera/FieldCameraViews";
 import { fieldWorldX, fieldWorldZ } from "../field/fieldSpec";
 import { FieldArena } from "../field/FieldArena";
 import { configureDracoLoader } from "../loaders/draco";
@@ -302,6 +304,10 @@ function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
 
 function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
   const size = useThree((state) => state.size);
+  const bounds = useMemo(
+    () => fieldCameraBounds(mode, defaultFieldCameraPose(mode, size.width, size.height, camera).position),
+    [mode, size.width, size.height, camera],
+  );
   const invalidate = useThree((state) => state.invalidate);
   const regress = useThree((state) => state.performance.regress);
   const cameraRef = useRef<ThreePerspectiveCamera>(null);
@@ -320,7 +326,8 @@ function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'acti
   });
   return <>
     <PerspectiveCamera ref={cameraRef} makeDefault fov={FIELD_CAMERA_FOV} near={0.05} far={250} />
-    <CameraFlightControls active={active} onInteraction={cancelTransition} />
+    <CameraFlightControls active={active} bounds={bounds} onInteraction={cancelTransition} />
+    <CameraFlightBarrier bounds={bounds} />
   </>;
 }
 

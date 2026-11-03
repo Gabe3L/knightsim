@@ -1,5 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
+import type { Box3 } from 'three';
 import { fieldCameraActionForCode, type FieldCameraAction } from '../keybindings';
 import { CameraFlight } from './CameraFlight';
 
@@ -10,15 +11,16 @@ const isEditableTarget = (target: EventTarget | null): boolean => (
 
 interface CameraFlightControlsProps {
   readonly active: boolean;
+  readonly bounds: Box3;
   readonly onInteraction?: () => void;
 }
 
-export function CameraFlightControls({ active, onInteraction }: CameraFlightControlsProps) {
+export function CameraFlightControls({ active, bounds, onInteraction }: CameraFlightControlsProps) {
   const camera = useThree((state) => state.camera);
   const canvas = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
   const regress = useThree((state) => state.performance.regress);
-  const flight = useMemo(() => new CameraFlight(camera), [camera]);
+  const flight = useMemo(() => new CameraFlight(camera, bounds), [camera, bounds]);
   const pressedActions = useRef(new Set<FieldCameraAction>());
 
   useEffect(() => {
