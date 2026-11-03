@@ -13,7 +13,8 @@
       minmax(0, 1fr);
   }
   .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr); padding-inline: 10px; }
-  .topbar-context > strong { display: none; }
+  .demo-toggle { gap: 6px; }
+  .demo-toggle-state { display: none; }
   .view-tab { gap: 0; padding-inline: 7px; font-size: 13px; }
   .view-tab svg { display: none; }
   .robot-link { padding-inline: 7px; font-size: 9px; }
@@ -32,7 +33,6 @@
       min(var(--sidebar-width, 292px), 210px)
       minmax(0, 1fr);
   }
-  .topbar-context { visibility: hidden; }
   .field-mode-selector { gap: 1px; padding: 2px; }
   .field-mode-option { min-width: 34px; height: 27px; padding-inline: 5px; font-size: 10px; }
   .controller-mode-selector { gap: 1px; padding: 2px; }

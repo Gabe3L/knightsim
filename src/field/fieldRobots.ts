@@ -1,4 +1,5 @@
-import { REPLAY_DURATION_S, telemetryAt } from '../telemetry/mockReplay';
+import { REPLAY_DURATION_S } from '../telemetry/mockReplay';
+import { robotStateAt } from '../telemetry/robotState';
 import type { FieldMode, RobotId, RobotTelemetry } from '../types';
 
 export const FIELD_ROBOT_IDS: Readonly<Record<FieldMode, readonly RobotId[]>> = {
@@ -20,8 +21,8 @@ const routes: Readonly<Record<string, readonly Waypoint[]>> = {
     [70, 0.8, 0.094, 0.5], [84, 0.8, 0.094, 0.5]],
 };
 
-export function fieldRobotsAt(timeS: number, mode: FieldMode): readonly RobotTelemetry[] {
-  const time = Math.max(0, Math.min(REPLAY_DURATION_S, Number.isFinite(timeS) ? timeS : 0));
+export function fieldRobotsAt(timeS: number, mode: FieldMode, demoEnabled = true): readonly RobotTelemetry[] {
+  const time = demoEnabled ? Math.max(0, Math.min(REPLAY_DURATION_S, Number.isFinite(timeS) ? timeS : 0)) : 0;
   return FIELD_ROBOT_IDS[mode].map((id) => {
     const route = routes[mode === 'sentry' ? 'infantry' : id]!;
     const endIndex = Math.max(1, route.findIndex((point) => point[0] >= time));
@@ -29,7 +30,7 @@ export function fieldRobotsAt(timeS: number, mode: FieldMode): readonly RobotTel
     const t = (time - start[0]) / (end[0] - start[0]);
     const lerp = (a: number, b: number) => a + (b - a) * t;
     return {
-      ...telemetryAt(time, id),
+      ...robotStateAt(time, id, demoEnabled),
       xM: lerp(start[1], end[1]), yM: lerp(start[2], end[2]), zM: lerp(start[3], end[3]),
       yawDeg: Math.atan2(end[2] - start[2], end[1] - start[1]) * 180 / Math.PI,
     };

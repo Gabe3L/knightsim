@@ -10,6 +10,7 @@ import { XboxController } from './XboxController';
 import { KeyboardGraphic } from './KeyboardGraphic';
 
 interface ControllerViewProps {
+  readonly demoEnabled: boolean;
   readonly controllerMode: ControllerMode;
   readonly currentTimeS: number;
   readonly selectedInputIds: readonly string[];
@@ -76,19 +77,19 @@ function GamepadController({
   return <XboxController {...{ inputClass, leftActive, leftMapped, leftX, leftY, mapped, rightActive, rightMapped, rightX, rightY }} />;
 }
 
-export function ControllerView({ controllerMode, currentTimeS, selectedInputIds }: ControllerViewProps) {
+export function ControllerView({ demoEnabled, controllerMode, currentTimeS, selectedInputIds }: ControllerViewProps) {
   const inputs = useMemo(() => selectedInputIds
     .map(controllerInputById)
     .filter((input): input is ControllerInputDescriptor => Boolean(input)), [selectedInputIds]);
   const byControl = useMemo(() => new Map(inputs.map((input) => [input.control, input])), [inputs]);
 
-  const value = (control: ControllerControl): number => byControl.get(control)?.sampleAt(currentTimeS) ?? 0;
+  const value = (control: ControllerControl): number => demoEnabled ? byControl.get(control)?.sampleAt(currentTimeS) ?? 0 : 0;
   const mapped = (...controls: readonly ControllerControl[]): boolean => controls.some((control) => byControl.has(control));
   const pressed = (control: ControllerControl): boolean => mapped(control) && value(control) >= 0.5;
   const inputClass = (control: ControllerControl, active = pressed(control)): string => classNames(
     'remote-input',
     mapped(control) && 'remote-input-mapped',
-    active && 'remote-input-active',
+    demoEnabled && active && 'remote-input-active',
   );
 
   const leftX = value('left-stick-x');
@@ -211,7 +212,7 @@ export function ControllerView({ controllerMode, currentTimeS, selectedInputIds 
             <text className="remote-small-label" x="151" y="303" textAnchor="middle">DIAL</text>
           </g>
 
-          <g className={classNames('remote-input', mapped('flight-mode') && 'remote-input-mapped', mapped('flight-mode') && 'remote-input-active')} aria-label="Flight mode switch">
+          <g className={classNames('remote-input', mapped('flight-mode') && 'remote-input-mapped', demoEnabled && mapped('flight-mode') && 'remote-input-active')} aria-label="Flight mode switch">
             <rect className="remote-side-control" x="551" y="216" width="37" height="72" rx="15" />
             <path className="remote-switch-track" d="M569 231 V273" />
             <g transform={`translate(0 ${flightMode * 18})`}>

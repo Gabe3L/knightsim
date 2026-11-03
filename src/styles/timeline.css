@@ -30,3 +30,10 @@
 .speed-control select { width: 55px; padding: 6px 5px; border: 1px solid #312d38; border-radius: 6px; color: #d1cfd5; outline: 0; background: #0d0b11; font: 650 12px/1 var(--font-ui); cursor: pointer; transition: color .15s ease, border-color .15s ease, background .15s ease; }
 .speed-control select:hover { color: #fff; border-color: #46404d; background: #15121a; }
 .speed-control select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.timeline-disabled .transport-controls,
+.timeline-disabled .timeline-clock,
+.timeline-disabled .scrubber-wrap,
+.timeline-disabled .speed-control { opacity: .4; }
+.timeline-disabled button,
+.timeline-disabled input,
+.timeline-disabled select { cursor: default; }

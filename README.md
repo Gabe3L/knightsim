@@ -25,7 +25,7 @@ Tailwind scans `src/` and `index.html` for classes instead of the entire project
 
 ## Robot profiles
 
-Choose a robot from the **Field** dropdown. Preferences open on that robot; each profile has its own model assignment and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry values are illustrative, not manufacturer specifications.
+Choose a field format from the top bar. Preferences open on a robot in that format; use the robot picker in Preferences to edit any profile. Each profile has its own model assignment and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry values are illustrative, not manufacturer specifications.
 
 The shared registry is [`electron/robotProfiles.json`](electron/robotProfiles.json). To add a robot or another instance of the same chassis:
 
@@ -55,8 +55,10 @@ Field specifications in [`src/field/fieldSpec.ts`](src/field/fieldSpec.ts) recor
 
 ## Current scope
 
-This is a visualization/replay workbench with **synthetic demonstration data**. Selecting a robot changes its active telemetry profile and model preferences. Each field uses its own preview routes: ground robots follow clear corridors, and the drone takes off from and returns to its starting zone. Connectivity settings store preferences only; SSH connections and hardware control are not implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
+This is a visualization/replay workbench with **synthetic demonstration data**. The **Demo** switch in the top bar controls the sample data in every view. It starts on for a new installation and remembers its last setting across restarts. With Demo off, all robots show offline, field robots remain at their starting positions, telemetry values are unavailable, graphs wait for a connection, controller inputs are neutral, and sample replay controls are disabled. Turning Demo back on restores the sample data and replay position, with playback paused.
 
-Real robot integration should provide timestamped `RobotTelemetry` samples through the replay hook and signal descriptors, with explicit units and stable robot IDs. Extend the overlay registry and sampling adapter for additional localization sources. The field previews the lineup for its format (Infantry for 1v1, Sentry, the three 3v3 robots, Drone, or Dart); the selector chooses the active telemetry profile. The Dart preview follows an illustrative flight from its starting zone toward the base; ballistics and hit scoring are not implemented.
+Each field uses its own preview routes: ground robots follow clear corridors, and the drone takes off from and returns to its starting zone. Connectivity settings store preferences only; SSH connections and hardware control are not implemented, so robots remain offline with Demo off until a live telemetry source is implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
+
+Real robot integration should provide timestamped `RobotTelemetry` samples through the robot-state adapter, replay hook, and signal descriptors, with explicit units and stable robot IDs. Extend the overlay registry and sampling adapter for additional localization sources. The field previews the lineup for its format (Infantry for 1v1, Sentry, the three 3v3 robots, Drone, or Dart). The Dart preview follows an illustrative flight from its starting zone toward the base; ballistics and hit scoring are not implemented.
 
 Rendering avoids replay updates in the hidden field and unmounts hidden graph/controller views. Graph curves are cached independently of the moving cursor. Playback ignores non-finite seeks/speeds and caps elapsed frame time after suspension to avoid jumping to the end of a recording.

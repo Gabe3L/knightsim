@@ -1,7 +1,5 @@
-import { robotProfile } from '../robots/profiles';
-import { FIELD_ROBOT_IDS } from '../field/fieldRobots';
 import { Box, ChartLine, Gamepad2 } from 'lucide-react';
-import type { ControllerMode, FieldMode, RobotId, ViewMode } from '../types';
+import type { ControllerMode, FieldMode, ViewMode } from '../types';
 
 const FIELD_MODE_LABELS: Readonly<Record<FieldMode, string>> = {
   '1v1': '1v1', sentry: 'Sentry', '3v3': '3v3', drone: 'Drone', dart: 'Dart',
@@ -14,67 +12,42 @@ const CONTROLLER_MODE_OPTIONS = [
   { mode: 'dji', label: 'DJI' },
 ] as const satisfies readonly { readonly mode: ControllerMode; readonly label: string }[];
 
-const CONTROLLER_MODE_TITLES: Readonly<Record<ControllerMode, string>> = {
-  kbm: 'Keyboard + Mouse',
-  xbox: 'Xbox Controller',
-  ps5: 'PS5 Controller',
-  dji: 'DJI Controller',
-};
-
 interface TopBarProps {
-  readonly robotId: RobotId;
-  readonly onRobotChange: (id: RobotId) => void;
   readonly activeView: ViewMode;
-  readonly connected: boolean;
-  readonly controllerInputCount: number;
+  readonly demoEnabled: boolean;
   readonly controllerMode: ControllerMode;
   readonly fieldMode: FieldMode;
-  readonly graphSignalCount: number;
-  readonly playing: boolean;
+  readonly onDemoChange: (enabled: boolean) => void;
   readonly onControllerModeChange: (mode: ControllerMode) => void;
   readonly onFieldModeChange: (mode: FieldMode) => void;
   readonly onViewChange: (view: ViewMode) => void;
 }
 
 export function TopBar({
-  robotId,
-  onRobotChange,
   activeView,
-  connected,
-  controllerInputCount,
+  demoEnabled,
   controllerMode,
   fieldMode,
-  graphSignalCount,
-  playing,
+  onDemoChange,
   onControllerModeChange,
   onFieldModeChange,
   onViewChange,
 }: TopBarProps) {
-  const context = activeView === 'field'
-    ? { eyebrow: 'Field', label: `${FIELD_MODE_LABELS[fieldMode]} ${fieldMode === 'drone' || fieldMode === 'dart' ? 'Challenge' : 'Battlefield'}` }
-    : activeView === 'graph'
-      ? {
-        eyebrow: 'Line Graph',
-        label: graphSignalCount === 0
-          ? 'No signals selected'
-          : `${graphSignalCount} signal${graphSignalCount === 1 ? '' : 's'} plotted`,
-      }
-      : {
-        eyebrow: 'Controller',
-        label: CONTROLLER_MODE_TITLES[controllerMode],
-      };
-
   return (
     <header className="topbar">
-      <div className="topbar-context" aria-label={`${context.eyebrow}, ${context.label}`}>
-        <span>{context.eyebrow}</span>
-        {activeView === 'field' ? (
-          <select className="robot-preview-select" value={robotId} aria-label="Preview robot"
-            onChange={(event) => onRobotChange(event.currentTarget.value)}>
-            {FIELD_ROBOT_IDS[fieldMode].map(robotProfile).map((profile) => <option key={profile.id} value={profile.id}>{profile.name} · Demo</option>)}
-          </select>
-        ) : <strong>{context.label}</strong>}
-      </div>
+      <button
+        className="demo-toggle"
+        type="button"
+        role="switch"
+        aria-label="Demo"
+        aria-checked={demoEnabled}
+        title="Use demonstration telemetry"
+        onClick={() => onDemoChange(!demoEnabled)}
+      >
+        <span>Demo</span>
+        <span className="demo-toggle-track" aria-hidden="true"><span /></span>
+        <span className="demo-toggle-state" aria-hidden="true">{demoEnabled ? 'On' : 'Off'}</span>
+      </button>
 
       <nav className="view-tabs" aria-label="Workspace views">
         <button

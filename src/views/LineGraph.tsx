@@ -20,6 +20,7 @@ import type { ReplayState } from '../types';
 import { readTelemetryTopicDrag } from '../telemetry/topicDrag';
 
 interface LineGraphProps {
+  readonly demoEnabled: boolean;
   readonly replay: ReplayState;
   readonly signals: readonly GraphSignalConfig[];
   readonly onAddSignal: (id: string) => void;
@@ -99,6 +100,7 @@ function pathFor(
 }
 
 export function LineGraph({
+  demoEnabled,
   replay,
   signals,
   onAddSignal,
@@ -146,6 +148,7 @@ export function LineGraph({
   }, [replay.durationS]);
 
   const lanes = useMemo<readonly UnitLane[]>(() => {
+    if (!demoEnabled) return [];
     const grouped = new Map<string, SignalSeries[]>();
     selectedSignals.forEach((descriptor) => {
       const series: SignalSeries = {
@@ -161,7 +164,7 @@ export function LineGraph({
       const [min, max] = paddedRange(series.flatMap((item) => item.values));
       return { unit, series, min, max };
     });
-  }, [selectedSignals, times]);
+  }, [selectedSignals, times, demoEnabled]);
 
   const width = chartSize.width;
   const height = chartSize.height;
@@ -226,7 +229,13 @@ export function LineGraph({
       onDrop={handleDrop}
     >
       <div className="line-graph-chart" ref={chartRef}>
-        {selectedSignals.length === 0 ? (
+        {!demoEnabled ? (
+          <div className="line-graph-empty" role="status">
+            <span aria-hidden="true"><LineChart size={27} /></span>
+            <strong>Waiting for robot connection</strong>
+            <p>Connect a robot to receive telemetry, or turn on Demo to explore sample data.</p>
+          </div>
+        ) : selectedSignals.length === 0 ? (
           <div className="line-graph-empty" role="status">
             <span aria-hidden="true"><LineChart size={27} /></span>
             <strong>Select a telemetry signal</strong>

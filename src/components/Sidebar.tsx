@@ -10,6 +10,7 @@ interface SidebarProps {
   readonly maxWidth: number;
   readonly minWidth: number;
   readonly robot: RobotTelemetry;
+  readonly demoEnabled: boolean;
   readonly currentTimeS: number;
   readonly width: number;
   readonly controllerInputIds: readonly string[];
@@ -31,6 +32,7 @@ export function Sidebar({
   maxWidth,
   minWidth,
   robot,
+  demoEnabled,
   width,
   controllerInputIds,
   graphSignalIds,
@@ -87,6 +89,7 @@ export function Sidebar({
       <div className="sidebar-body">
         <Inspector
           robot={robot}
+          demoEnabled={demoEnabled}
           currentTimeS={currentTimeS}
           collapsed={compact}
           controllerInputIds={controllerInputIds}

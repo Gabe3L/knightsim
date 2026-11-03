@@ -1,5 +1,5 @@
 import { ROBOT_PROFILES, robotProfile } from '../robots/profiles';
-import { telemetryAt } from '../telemetry/mockReplay';
+import { robotStateAt } from '../telemetry/robotState';
 import { useMemo, useState, type DragEvent } from 'react';
 import {
   Bot,
@@ -27,6 +27,7 @@ import type { RobotId, RobotTelemetry } from '../types';
 
 interface InspectorProps {
   readonly robot: RobotTelemetry;
+  readonly demoEnabled: boolean;
   readonly currentTimeS: number;
   readonly collapsed?: boolean;
   readonly controllerInputIds: readonly string[];
@@ -94,7 +95,7 @@ function graphField(
   };
 }
 
-function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): readonly TelemetryTopic[] {
+function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number, demoEnabled: boolean): readonly TelemetryTopic[] {
   const profile = robotProfile(robotId);
   const topics: TelemetryTopic[] = [
     {
@@ -164,7 +165,7 @@ function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): re
   ];
 
   if (robotId === 'infantry') {
-    const sampleById = new Map(odometryDebugAt(timeS).map((sample) => [sample.id, sample]));
+    const sampleById = new Map((demoEnabled ? odometryDebugAt(timeS) : []).map((sample) => [sample.id, sample]));
     topics.splice(1, 0, {
       id: 'odometry',
       label: 'Odometry',
@@ -182,7 +183,14 @@ function topicsFor(snapshot: RobotSnapshot, robotId: RobotId, timeS: number): re
 
   return topics.filter((topic) => topic.fields.length > 0
     && (topic.id !== 'referee' || profile.capabilities.referee)
-    && (topic.id !== 'aim' || profile.capabilities.aim));
+    && (topic.id !== 'aim' || profile.capabilities.aim))
+    .map((topic) => demoEnabled ? topic : {
+      ...topic,
+      fields: topic.fields.map((field) => ({
+        ...field,
+        value: topic.id === 'odometry' ? 'Unavailable' : field.label === 'Signal' ? 'No link' : '—',
+      })),
+    });
 }
 
 function toggleKey(current: ReadonlySet<string>, key: string): Set<string> {
@@ -206,6 +214,7 @@ function isFieldDisplayed(
 
 export function Inspector({
   robot,
+  demoEnabled,
   currentTimeS,
   collapsed = false,
   controllerInputIds,
@@ -227,7 +236,7 @@ export function Inspector({
   ), [overlays]);
 
   const robots = useMemo<readonly RobotNode[]>(() => ROBOT_PROFILES.map((profile) => {
-    const sample = profile.id === robot.robotId ? robot : telemetryAt(currentTimeS, profile.id);
+    const sample = profile.id === robot.robotId ? robot : robotStateAt(currentTimeS, profile.id, demoEnabled);
     return {
       id: profile.id,
       name: profile.name,
@@ -239,9 +248,9 @@ export function Inspector({
         battery: '24 V', signal: sample.connected ? '-47 dBm' : 'No link',
         mode: profile.mobility, cpu: '38%', aimTarget: 'Demo target',
         yawError: '0°', pitchError: '0°', aimLocked: sample.connected,
-      }, profile.id, currentTimeS) : [],
+      }, profile.id, currentTimeS, demoEnabled) : [],
     };
-  }), [currentTimeS, robot, expandedRobots, collapsed]);
+  }), [currentTimeS, robot, demoEnabled, expandedRobots, collapsed]);
 
   const startSignalDrag = (event: DragEvent<HTMLDivElement>, graphSignalId: string): void => {
     event.dataTransfer.effectAllowed = 'copy';

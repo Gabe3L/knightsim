@@ -6,6 +6,7 @@ import { TopBar } from './components/TopBar';
 import { ARCC_2027_3V3_FIELD } from './field/fieldSpec';
 import { FIELD_ROBOT_IDS, fieldRobotsAt } from './field/fieldRobots';
 import { useReplay } from './hooks/useReplay';
+import { useDemoMode } from './hooks/useDemoMode';
 import { useFieldOverlayWorkspace } from './hooks/useFieldOverlayWorkspace';
 import { useRobotModels } from './hooks/useRobotModels';
 import {
@@ -58,10 +59,11 @@ export function App() {
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
   const [robotId, setRobotId] = useState<RobotId>('sentry');
-  const { replay, robot, seek, togglePlaying, setSpeed } = useReplay(robotId);
+  const { demoEnabled, setDemoEnabled } = useDemoMode();
+  const { replay, robot, seek, togglePlaying, setSpeed } = useReplay(robotId, demoEnabled);
   const robotModels = useRobotModels();
-  const fieldRobots = useMemo(() => fieldRobotsAt(replay.currentTimeS, fieldMode),
-    [replay.currentTimeS, fieldMode]);
+  const fieldRobots = useMemo(() => fieldRobotsAt(replay.currentTimeS, fieldMode, demoEnabled),
+    [replay.currentTimeS, fieldMode, demoEnabled]);
   const changeFieldMode = (mode: FieldMode): void => {
     setFieldMode(mode);
     setRobotId((current) => FIELD_ROBOT_IDS[mode].includes(current) ? current : FIELD_ROBOT_IDS[mode][0]!);
@@ -69,8 +71,8 @@ export function App() {
   const { state: fieldOverlayWorkspace, dispatch: dispatchFieldOverlay } = useFieldOverlayWorkspace();
   const fieldOverlays = useMemo(() => resolveFieldOverlays(
     fieldOverlayWorkspace.items,
-    odometryDebugAt(replay.currentTimeS),
-  ), [fieldOverlayWorkspace.items, replay.currentTimeS]);
+    demoEnabled ? odometryDebugAt(replay.currentTimeS) : [],
+  ), [fieldOverlayWorkspace.items, replay.currentTimeS, demoEnabled]);
 
   useEffect(() => {
     const windowState = window.knightSim?.windowState;
@@ -206,6 +208,7 @@ export function App() {
         maxWidth={MAX_SIDEBAR_WIDTH}
         minWidth={minSidebarWidth}
         robot={robot}
+        demoEnabled={demoEnabled}
         currentTimeS={replay.currentTimeS}
         width={sidebarWidth}
         controllerInputIds={controllerInputIds}
@@ -222,15 +225,11 @@ export function App() {
       />
       <div className="app-main">
         <TopBar
-          robotId={robotId}
-          onRobotChange={setRobotId}
           activeView={activeView}
-          connected={robot.connected}
-          controllerInputCount={controllerInputIds.length}
+          demoEnabled={demoEnabled}
+          onDemoChange={setDemoEnabled}
           controllerMode={controllerMode}
           fieldMode={fieldMode}
-          graphSignalCount={graphSignals.length}
-          playing={replay.playing}
           onControllerModeChange={setControllerMode}
           onFieldModeChange={changeFieldMode}
           onViewChange={setActiveView}
@@ -255,6 +254,7 @@ export function App() {
             aria-hidden={activeView !== 'graph'}
           >
             {activeView === 'graph' ? <LineGraph
+              demoEnabled={demoEnabled}
               replay={replay}
               signals={graphSignals}
               onAddSignal={addGraphSignal}
@@ -266,13 +266,14 @@ export function App() {
             aria-hidden={activeView !== 'controller'}
           >
             {activeView === 'controller' ? <ControllerView
+              demoEnabled={demoEnabled}
               controllerMode={controllerMode}
               currentTimeS={replay.currentTimeS}
               selectedInputIds={controllerInputIds}
             /> : null}
           </div>
         </main>
-        <Timeline replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
+        <Timeline disabled={!demoEnabled} replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
       </div>
       {settingsOpen ? (
         <SettingsDialog
