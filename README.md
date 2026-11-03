@@ -25,14 +25,14 @@ Tailwind scans `src/` and `index.html` for classes instead of the entire project
 
 ## Robot profiles
 
-Choose a robot from the **Field** dropdown. Preferences open on that robot; each profile has its own model assignment, tuning defaults, and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry and tuning values are illustrative, not manufacturer specifications.
+Choose a robot from the **Field** dropdown. Preferences open on that robot; each profile has its own model assignment and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry values are illustrative, not manufacturer specifications.
 
 The shared registry is [`electron/robotProfiles.json`](electron/robotProfiles.json). To add a robot or another instance of the same chassis:
 
 1. Copy a profile and choose a unique, stable lowercase `id` (for example `infantry-2`) and display `name`. Identity is independent of category and mobility.
 2. Set `mobility` to `wheeled`, `omnidirectional`, `tracked`, `legged`, or `aerial`, and set `dimensionsM` (length, width, height). Robots without a model appear as black cubes with their display name on every face; the cube side uses the largest profile dimension. Imported GLBs retain their own dimensions and explicit scale.
 3. Select an existing rendering `category`: `infantry`, `sentry`, `hero`, or `generic` (`ghost` and `enemy` are also available). Set `capabilities` and `maxHp`/`maxHeat`; use zero for unsupported referee or heat data. Keep `odometry` false unless you supply an overlay adapter—existing odometry data belongs to Infantry.
-4. Set `tuning` defaults. Distances/speeds use metres and seconds; `robotMass` is kg, `wheelRadius` is mm, angular speed is degrees/second, control frequency is Hz, and drive current is amperes. Wheel radius is hidden for legged and aerial profiles. `demoPhase` offsets the synthetic controller inputs.
+4. Set `demoPhase` to offset the synthetic controller inputs.
 5. Run tests and rebuild/restart Electron. The registry automatically supplies the field selector, settings, sidebar, graph signals, controller inputs, and IPC model-assignment allowlist.
 
 Saved preferences override changed defaults for existing IDs. Do not rename an ID to rename a robot: change its `name` instead. Model-library migration preserves existing and currently unknown robot assignments.
@@ -53,7 +53,7 @@ Field specifications in [`src/field/fieldSpec.ts`](src/field/fieldSpec.ts) recor
 
 ## Current scope
 
-This is a visualization/replay workbench with **synthetic demonstration data**. Selecting a robot changes its active telemetry profile and model preferences; it does not create a physics simulation. Each field uses its own preview routes: ground robots follow clear corridors, and the drone takes off from and returns to its starting zone. Settings store configuration only: physics, collisions, flight dynamics, SSH connections, and hardware control are not implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
+This is a visualization/replay workbench with **synthetic demonstration data**. Selecting a robot changes its active telemetry profile and model preferences. Each field uses its own preview routes: ground robots follow clear corridors, and the drone takes off from and returns to its starting zone. Connectivity settings store preferences only; SSH connections and hardware control are not implemented. Controller values are synthetic generic mappings, not robot-specific hardware protocols. Odometry overlays currently show Infantry data.
 
 Real robot integration should provide timestamped `RobotTelemetry` samples through the replay hook and signal descriptors, with explicit units and stable robot IDs. Extend the overlay registry and sampling adapter for additional localization sources. The field previews the lineup for its format (Infantry for 1v1, Sentry, the three 3v3 robots, Drone, or Dart); the selector chooses the active telemetry profile. The Dart preview follows an illustrative flight from its starting zone toward the base; ballistics and hit scoring are not implemented.
 

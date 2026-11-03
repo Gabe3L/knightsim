@@ -1,10 +1,9 @@
-import { ROBOT_PROFILES, type RobotTuning as TuningSettings } from '../robots/profiles';
+import { ROBOT_PROFILES } from '../robots/profiles';
 import {
   Bot,
   Box,
   Crosshair,
   FileKey,
-  Gauge,
   Keyboard,
   KeyRound,
   Network,
@@ -57,8 +56,6 @@ interface ConnectivitySettings {
 
 const ROBOTS = ROBOT_PROFILES;
 
-const DEFAULT_TUNING: Record<RobotId, TuningSettings> = Object.fromEntries(ROBOTS.map(({ id, tuning }) => [id, tuning]));
-
 const DEFAULT_CONNECTIVITY: Record<RobotId, ConnectivitySettings> = Object.fromEntries(ROBOTS.map(({ id }) => [id, {
   host: `${id}.local`, port: 22, username: 'ubuntu', authentication: 'key',
   privateKeyPath: '~/.ssh/id_ed25519', password: '', connectTimeout: 8, keepAlive: 15,
@@ -66,7 +63,6 @@ const DEFAULT_CONNECTIVITY: Record<RobotId, ConnectivitySettings> = Object.fromE
   remoteWorkspace: '/home/ubuntu/knightsim',
 }]));
 
-const TUNING_STORAGE_KEY = 'knightsim:tuning-settings:v1';
 const CONNECTIVITY_STORAGE_KEY = 'knightsim:connectivity-settings:v1';
 const AXES: readonly ModelAxis[] = ['x', 'y', 'z'];
 
@@ -165,23 +161,15 @@ export function SettingsDialog({
 }: SettingsDialogProps) {
   const [page, setPage] = useState<SettingsPage>('settings');
   const [selectedRobotId, setSelectedRobotId] = useState<RobotId>(initialRobotId);
-  const [tuningByRobot, setTuningByRobot] = useState(() => (
-    loadSettings(TUNING_STORAGE_KEY, DEFAULT_TUNING)
-  ));
   const [connectivityByRobot, setConnectivityByRobot] = useState(() => (
     loadSettings(CONNECTIVITY_STORAGE_KEY, DEFAULT_CONNECTIVITY)
   ));
 
   const selectedRobot = ROBOTS.find((robot) => robot.id === selectedRobotId) ?? ROBOTS[1]!;
-  const tuning = tuningByRobot[selectedRobotId]!;
   const connectivity = connectivityByRobot[selectedRobotId]!;
   const activeModel = library.models.find(
     (model) => model.id === library.modelIdByRobot[selectedRobotId],
   ) ?? null;
-
-  useEffect(() => {
-    window.localStorage.setItem(TUNING_STORAGE_KEY, JSON.stringify(tuningByRobot));
-  }, [tuningByRobot]);
 
   useEffect(() => {
     const nonSecretSettings = Object.fromEntries(ROBOTS.map(({ id }) => {
@@ -198,13 +186,6 @@ export function SettingsDialog({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [busy, onClose]);
-
-  const updateTuning = <K extends keyof TuningSettings>(key: K, value: TuningSettings[K]): void => {
-    setTuningByRobot((current) => ({
-      ...current,
-      [selectedRobotId]: { ...current[selectedRobotId]!, [key]: value },
-    }));
-  };
 
   const updateConnectivity = <K extends keyof ConnectivitySettings>(
     key: K,
@@ -280,7 +261,7 @@ export function SettingsDialog({
                     onClick={() => setSelectedRobotId(robot.id)}
                   >
                     <Bot size={15} />
-                    <span><strong>{robot.name}</strong><small>{robot.mobility}</small></span>
+                    <strong>{robot.name}</strong>
                   </button>
                 ))}
               </div>
@@ -301,7 +282,7 @@ export function SettingsDialog({
                   <Box size={16} />
                   <div>
                     <h3>Appearance</h3>
-                    <p>{selectedRobot.name} · {selectedRobot.mobility} · A black cube labeled with the robot name appears when no model is selected.</p>
+                    <p>{selectedRobot.name} · A black cube labeled with the robot name appears when no model is selected.</p>
                   </div>
                 </div>
 
@@ -398,56 +379,6 @@ export function SettingsDialog({
                     <Box size={18} /> Import a glTF 2.0 binary to view on the Field.
                   </div>
                 )}
-              </section>
-
-              <section className="settings-group">
-                <div className="settings-group-heading">
-                  <Gauge size={16} />
-                  <div>
-                    <h3>Drive simulation</h3>
-                    <p>Saved configuration for {selectedRobot.name}. Demo replay does not simulate these limits.</p>
-                  </div>
-                </div>
-                <div className="numeric-settings-grid">
-                  <label className="numeric-setting">
-                    <span>Coefficient of friction <small>CoF</small></span>
-                    <div className="number-input"><input type="number" min="0" max="2" step="0.01" value={tuning.coefficientOfFriction} onChange={(event) => updateTuning('coefficientOfFriction', Number(event.currentTarget.value))} /></div>
-                  </label>
-                  <label className="numeric-setting">
-                    <span>Max acceleration</span>
-                    <div className="number-input"><input type="number" min="0" step="0.1" value={tuning.maxAcceleration} onChange={(event) => updateTuning('maxAcceleration', Number(event.currentTarget.value))} /><small>m/s²</small></div>
-                  </label>
-                  <label className="numeric-setting">
-                    <span>Max drive speed</span>
-                    <div className="number-input"><input type="number" min="0" step="0.1" value={tuning.maxDriveSpeed} onChange={(event) => updateTuning('maxDriveSpeed', Number(event.currentTarget.value))} /><small>m/s</small></div>
-                  </label>
-                  <label className="numeric-setting">
-                    <span>Max angular speed</span>
-                    <div className="number-input"><input type="number" min="0" step="10" value={tuning.maxAngularSpeed} onChange={(event) => updateTuning('maxAngularSpeed', Number(event.currentTarget.value))} /><small>°/s</small></div>
-                  </label>
-                  <label className="numeric-setting">
-                    <span>Robot mass</span>
-                    <div className="number-input"><input type="number" min="0" step="0.5" value={tuning.robotMass} onChange={(event) => updateTuning('robotMass', Number(event.currentTarget.value))} /><small>kg</small></div>
-                  </label>
-                  {['wheeled', 'omnidirectional', 'tracked'].includes(selectedRobot.mobility) ? (<label className="numeric-setting">
-                    <span>Wheel radius</span>
-                    <div className="number-input"><input type="number" min="0" step="1" value={tuning.wheelRadius} onChange={(event) => updateTuning('wheelRadius', Number(event.currentTarget.value))} /><small>mm</small></div>
-                  </label>) : null}
-                  <label className="numeric-setting">
-                    <span>Control frequency</span>
-                    <div className="number-input"><input type="number" min="20" step="10" value={tuning.controlFrequency} onChange={(event) => updateTuning('controlFrequency', Number(event.currentTarget.value))} /><small>Hz</small></div>
-                  </label>
-                  <label className="numeric-setting">
-                    <span>Drive current limit</span>
-                    <div className="number-input"><input type="number" min="0" step="1" value={tuning.driveCurrentLimit} onChange={(event) => updateTuning('driveCurrentLimit', Number(event.currentTarget.value))} /><small>A</small></div>
-                  </label>
-                </div>
-                <SettingRow label="Simulate battery sag" description="Reduce available voltage as motor load increases.">
-                  <Toggle checked={tuning.simulateBatterySag} label="Simulate battery sag" onChange={(value) => updateTuning('simulateBatterySag', value)} />
-                </SettingRow>
-                <SettingRow label="Enable collisions" description="Resolve contacts between this robot, the field, and game pieces.">
-                  <Toggle checked={tuning.enableCollisions} label="Enable collisions" onChange={(value) => updateTuning('enableCollisions', value)} />
-                </SettingRow>
               </section>
             </div>
           ) : page === 'connectivity' ? (

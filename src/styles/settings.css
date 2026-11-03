@@ -180,12 +180,7 @@
 .robot-picker button.active { color: #fff8fa; border-color: rgba(239, 71, 100, .52); background: linear-gradient(135deg, #3a1823, #25172e); box-shadow: 0 0 0 1px rgba(239, 71, 100, .08) inset, 0 8px 24px rgba(0, 0, 0, .12); }
 .robot-picker button > svg { color: #687684; }
 .robot-picker button.active > svg { color: var(--accent); }
-.robot-picker button span,
-.robot-picker button strong,
-.robot-picker button small { display: block; min-width: 0; }
-.robot-picker button strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
-.robot-picker button small { margin-top: 3px; color: #6f7c89; font-size: 11px; font-weight: 750; letter-spacing: .08em; }
-.robot-picker button.active small { color: #c8a7b4; }
+.robot-picker button strong { display: block; min-width: 0; overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 
 .settings-page { display: grid; gap: 18px; animation: settings-page-in .16s ease-out both; }
 .settings-group {
@@ -329,11 +324,6 @@
 .reset-orientation { display: flex; height: 36px; align-items: center; gap: 6px; padding: 0 11px; border: 1px solid #34404e; border-radius: 8px; color: #8d9aa7; background: #171f29; font-size: 12px; font-weight: 680; cursor: pointer; white-space: nowrap; }
 .reset-orientation:hover:not(:disabled) { color: #e7ecf1; background: #202a36; }
 
-.numeric-settings-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; padding: 16px 18px 18px; border-bottom: 1px solid var(--settings-soft-line); }
-.numeric-setting { display: flex; min-width: 0; min-height: 94px; flex-direction: column; justify-content: space-between; gap: 10px; padding: 12px; border: 1px solid rgba(129, 147, 166, .15); border-radius: 9px; background: linear-gradient(145deg, #101821, #0d141c); transition: border-color .15s ease, transform .15s ease; }
-.numeric-setting:hover { border-color: rgba(129, 147, 166, .28); transform: translateY(-1px); }
-.numeric-setting > span { color: #b8c2cc; font-size: 13px; line-height: 1.35; }
-.numeric-setting > span small { margin-left: 4px; color: #6f7c89; font-size: 11px; font-weight: 750; text-transform: uppercase; }
 .number-input { display: flex; align-items: center; overflow: hidden; }
 .number-input.compact { width: min(180px, 100%); }
 .number-input input { width: 100%; min-width: 0; height: 38px; padding: 0 10px; border: 0; color: #e3e8ed; outline: 0; background: transparent; font-size: 14px; user-select: text; }
@@ -395,7 +385,6 @@
   .settings-page-tabs { justify-self: center; }
   .robot-picker-shell { grid-template-columns: 1fr; gap: 12px; }
   .setting-row { grid-template-columns: minmax(220px, .9fr) minmax(260px, 1.1fr); }
-  .numeric-settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 680px) {
@@ -406,7 +395,6 @@
   .robot-picker { grid-template-columns: 1fr; }
   .setting-row { grid-template-columns: 1fr; gap: 10px; padding-block: 15px; }
   .setting-row-control { justify-content: stretch; }
-  .numeric-settings-grid { grid-template-columns: 1fr; }
   .orientation-controls { grid-template-columns: 1fr 1fr; padding-left: 18px; }
   .reset-orientation { align-self: end; justify-self: start; }
   .connection-summary { grid-template-columns: 46px minmax(0, 1fr) auto; }
@@ -424,7 +412,6 @@
   .settings-dialog,
   .settings-page { animation: none; }
   .robot-picker button,
-  .numeric-setting,
   .settings-close-button { transition: none; }
 }
 

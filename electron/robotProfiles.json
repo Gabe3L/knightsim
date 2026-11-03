@@ -17,19 +17,7 @@
       "controller": true,
       "odometry": false
     },
-    "demoPhase": 1.8,
-    "tuning": {
-      "coefficientOfFriction": 0.86,
-      "maxAcceleration": 4.8,
-      "maxDriveSpeed": 4.2,
-      "maxAngularSpeed": 420,
-      "robotMass": 118,
-      "wheelRadius": 76,
-      "controlFrequency": 200,
-      "driveCurrentLimit": 60,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 1.8
   },
   {
     "id": "infantry",
@@ -49,19 +37,7 @@
       "controller": true,
       "odometry": true
     },
-    "demoPhase": 0,
-    "tuning": {
-      "coefficientOfFriction": 0.82,
-      "maxAcceleration": 6.5,
-      "maxDriveSpeed": 5.2,
-      "maxAngularSpeed": 540,
-      "robotMass": 44.5,
-      "wheelRadius": 60,
-      "controlFrequency": 250,
-      "driveCurrentLimit": 40,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 0
   },
   {
     "id": "hero",
@@ -81,19 +57,7 @@
       "controller": true,
       "odometry": false
     },
-    "demoPhase": 3.7,
-    "tuning": {
-      "coefficientOfFriction": 0.8,
-      "maxAcceleration": 5.4,
-      "maxDriveSpeed": 4.6,
-      "maxAngularSpeed": 460,
-      "robotMass": 52,
-      "wheelRadius": 76,
-      "controlFrequency": 250,
-      "driveCurrentLimit": 50,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 3.7
   },
   {
     "id": "engineer",
@@ -113,19 +77,7 @@
       "controller": true,
       "odometry": false
     },
-    "demoPhase": 2.5,
-    "tuning": {
-      "coefficientOfFriction": 0.8,
-      "maxAcceleration": 2,
-      "maxDriveSpeed": 2.5,
-      "maxAngularSpeed": 180,
-      "robotMass": 60,
-      "wheelRadius": 80,
-      "controlFrequency": 100,
-      "driveCurrentLimit": 40,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 2.5
   },
   {
     "id": "dart",
@@ -145,19 +97,7 @@
       "controller": true,
       "odometry": false
     },
-    "demoPhase": 4.5,
-    "tuning": {
-      "coefficientOfFriction": 0,
-      "maxAcceleration": 8,
-      "maxDriveSpeed": 15,
-      "maxAngularSpeed": 180,
-      "robotMass": 0.5,
-      "wheelRadius": 0,
-      "controlFrequency": 400,
-      "driveCurrentLimit": 20,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 4.5
   },
   {
     "id": "drone",
@@ -177,18 +117,6 @@
       "controller": true,
       "odometry": false
     },
-    "demoPhase": 6.5,
-    "tuning": {
-      "coefficientOfFriction": 0,
-      "maxAcceleration": 4,
-      "maxDriveSpeed": 8,
-      "maxAngularSpeed": 360,
-      "robotMass": 2,
-      "wheelRadius": 0,
-      "controlFrequency": 400,
-      "driveCurrentLimit": 20,
-      "simulateBatterySag": true,
-      "enableCollisions": true
-    }
+    "demoPhase": 6.5
   }
 ]

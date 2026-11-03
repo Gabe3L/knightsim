@@ -209,7 +209,6 @@ body { background: #09080d; }
   background: linear-gradient(135deg, #3a1823, #25172e);
   box-shadow: 0 0 0 1px rgba(197, 200, 208, .08) inset, 0 8px 24px rgba(0, 0, 0, .18);
 }
-.robot-picker button.active small { color: #c8a7b4; }
 .settings-input:focus,
 .settings-select:focus,
 .input-with-icon:focus-within,

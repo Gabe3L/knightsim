@@ -1,19 +1,6 @@
 import definitions from '../../electron/robotProfiles.json';
 import type { RobotCategory, RobotId } from '../types';
 
-export interface RobotTuning {
-  readonly coefficientOfFriction: number;
-  readonly maxAcceleration: number;
-  readonly maxDriveSpeed: number;
-  readonly maxAngularSpeed: number;
-  readonly robotMass: number;
-  readonly wheelRadius: number;
-  readonly controlFrequency: number;
-  readonly driveCurrentLimit: number;
-  readonly simulateBatterySag: boolean;
-  readonly enableCollisions: boolean;
-}
-
 export interface RobotProfile {
   readonly id: RobotId;
   readonly name: string;
@@ -29,7 +16,6 @@ export interface RobotProfile {
     readonly odometry: boolean;
   };
   readonly demoPhase: number;
-  readonly tuning: RobotTuning;
 }
 
 // Shared JSON is also consumed by Electron, so adding a profile does not require
