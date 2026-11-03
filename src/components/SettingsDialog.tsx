@@ -566,7 +566,7 @@ export function SettingsDialog({
                   <Crosshair size={16} />
                   <div>
                     <h3>Field camera</h3>
-                    <p>Flight controls available while the Field view is active.</p>
+                    <p>Drag to look, scroll to fly forward or back, and Shift-drag or middle-drag to pan. Movement is independent of the field.</p>
                   </div>
                 </div>
                 {FIELD_CAMERA_KEYBINDINGS.map((binding) => (

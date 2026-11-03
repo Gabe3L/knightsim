@@ -42,14 +42,14 @@ export const FIELD_CAMERA_KEYBINDINGS: readonly FieldCameraKeybinding[] = [
     code: 'KeyE',
     key: 'E',
     label: 'Fly camera up',
-    description: 'Raise the camera vertically above the field.',
+    description: 'Raise the camera vertically in world space.',
   },
   {
     action: 'down',
     code: 'KeyQ',
     key: 'Q',
     label: 'Fly camera down',
-    description: 'Lower the camera vertically toward the field.',
+    description: 'Lower the camera vertically in world space.',
   },
 ];
 

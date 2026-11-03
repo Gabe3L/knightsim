@@ -47,7 +47,7 @@ Models live in Electron's user-data `robot-models` directory. Library updates ar
 
 ## Game fields
 
-The 1v1, 3v3, and Drone views follow the **November 1, 2026 Season 2 manual** in [`docs/manual.pdf`](docs/manual.pdf). **Sentry** uses the same field, camera settings, and preview route as 1v1, with the Sentry robot in place of Infantry. The 3v3 model includes the new walls, high grounds, objectives, scoring areas, pipe chutes, bumpy roads, and limbo bars. The drone layout has its own base and launch zone, separated by the dimensioned 25 m and 6 m offsets. Camera framing adjusts to the field and window size.
+The 1v1, 3v3, and Drone views follow the **November 1, 2026 Season 2 manual** in [`docs/manual.pdf`](docs/manual.pdf). **Sentry** uses the same field and preview route as 1v1, with the Sentry robot in place of Infantry. The 3v3 model includes the new walls, high grounds, objectives, scoring areas, pipe chutes, bumpy roads, and limbo bars. The drone layout has its own base and launch zone, separated by the dimensioned 25 m and 6 m offsets. The camera initially frames the field, then flies independently: drag to look from the current position, use WASD to fly, Q/E to lower/raise, and scroll to move forward/back. Shift-drag or middle-drag pans in the view plane. Switching fields or resizing the window preserves the camera position and direction; movement has no field boundaries or orbit-distance limits.
 
 See [`docs/fields.md`](docs/fields.md) for the dimension audit, coordinate conventions, and the few illustrated details whose dimensions are not published in the manual.
 

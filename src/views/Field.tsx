@@ -5,26 +5,24 @@ import {
   Center,
   Html,
   Line,
-  OrbitControls,
   PerspectiveCamera,
   useGLTF,
 } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import {
   Component,
   memo,
   Suspense,
   useEffect,
   useMemo,
-  useRef,
-  type ComponentRef,
+  useState,
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { CanvasTexture, SRGBColorSpace, Vector3 } from "three";
+import { CanvasTexture, Matrix4, Quaternion, SRGBColorSpace, Vector3 } from "three";
+import { CameraFlightControls } from "../camera/CameraFlightControls";
 import { FIELD_SPECS, fieldWorldX, fieldWorldZ, fieldCameraDistance, fieldCameraDirection } from "../field/fieldSpec";
 import { FieldArena } from "../field/FieldArena";
-import { fieldCameraActionForCode, type FieldCameraAction } from "../keybindings";
 import { configureDracoLoader } from "../loaders/draco";
 import { prepareRobotModel } from "../loaders/prepareRobotModel";
 import type { ResolvedFieldOverlay } from "../overlays/fieldOverlays";
@@ -299,111 +297,26 @@ function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
   return initialDpr > 1 ? <AdaptiveDpr /> : null;
 }
 
-const CAMERA_FLIGHT_SPEED_MPS = 5;
-
-const isEditableTarget = (target: EventTarget | null): boolean => (
-  target instanceof HTMLElement
-  && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
-);
-
-function FieldCameraFlightControls({ active, camera: cameraState, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
-  const sceneCamera = useThree((state) => state.camera);
-  const invalidate = useThree((state) => state.invalidate);
-  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
-  const pressedActions = useRef(new Set<FieldCameraAction>());
-  const forward = useMemo(() => new Vector3(), []);
-  const right = useMemo(() => new Vector3(), []);
-  const movement = useMemo(() => new Vector3(), []);
-  const vertical = useMemo(() => new Vector3(0, 1, 0), []);
-
-  useEffect(() => {
-    pressedActions.current.clear();
-    if (!active) return;
-
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      const action = fieldCameraActionForCode(event.code);
-      if (!action || event.metaKey || event.ctrlKey || event.altKey || isEditableTarget(event.target)) return;
-      event.preventDefault();
-      pressedActions.current.add(action);
-      invalidate();
-    };
-    const handleKeyUp = (event: KeyboardEvent): void => {
-      const action = fieldCameraActionForCode(event.code);
-      if (action) pressedActions.current.delete(action);
-    };
-    const stopMovement = (): void => pressedActions.current.clear();
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', stopMovement);
-    return () => {
-      pressedActions.current.clear();
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', stopMovement);
-    };
-  }, [active, invalidate]);
-
-  useFrame((_state, delta) => {
-    if (!active || pressedActions.current.size === 0 || !controlsRef.current) return;
-
-    sceneCamera.getWorldDirection(forward);
-    right.set(1, 0, 0).applyQuaternion(sceneCamera.quaternion);
-    movement.set(0, 0, 0);
-
-    if (pressedActions.current.has('forward')) movement.add(forward);
-    if (pressedActions.current.has('back')) movement.sub(forward);
-    if (pressedActions.current.has('right')) movement.add(right);
-    if (pressedActions.current.has('left')) movement.sub(right);
-    if (pressedActions.current.has('up')) movement.add(vertical);
-    if (pressedActions.current.has('down')) movement.sub(vertical);
-
-    if (movement.lengthSq() === 0) return;
-    movement.normalize().multiplyScalar(CAMERA_FLIGHT_SPEED_MPS * Math.min(delta, 0.1));
-    sceneCamera.position.add(movement);
-    controlsRef.current.target.add(movement);
-    controlsRef.current.update();
-    invalidate();
-  });
-
-  return (
-    <OrbitControls
-      key={mode}
-      ref={controlsRef}
-      makeDefault
-      target={[
-        modeWorldX(mode === '3v3' ? cameraState.targetXM : FIELD_SPECS[mode].size.lengthM / 2, mode),
-        0,
-        modeWorldZ(mode === '3v3' ? cameraState.targetYM : FIELD_SPECS[mode].size.widthM / 2, mode),
-      ]}
-      minDistance={mode === '1v1' || mode === 'sentry' ? 3 : 4.5}
-      maxDistance={mode === 'drone' ? 150 : 40}
-      maxPolarAngle={Math.PI / 2.05}
-      enableDamping
-      regress
-      dampingFactor={0.08}
-    />
-  );
-}
-
 function FieldPerspectiveCamera({ camera, mode }: Pick<FieldProps, 'camera' | 'mode'>) {
   const aspect = useThree((state) => state.size.width / state.size.height);
-  const targetXM = mode === '3v3' ? camera.targetXM : FIELD_SPECS[mode].size.lengthM / 2;
-  const targetYM = mode === '3v3' ? camera.targetYM : FIELD_SPECS[mode].size.widthM / 2;
-  const distance = fieldCameraDistance(mode, aspect) / Math.max(0.7, camera.zoom);
-  const direction = fieldCameraDirection(mode);
-  const directionLength = Math.hypot(...direction);
-  return <PerspectiveCamera makeDefault fov={43} near={0.05} far={250} position={[
-    modeWorldX(targetXM, mode) + distance * direction[0] / directionLength, distance * direction[1] / directionLength,
-    modeWorldZ(targetYM, mode) + distance * direction[2] / directionLength,
-  ]} />;
+  // Frame the field once; later field and viewport changes must preserve the flight pose.
+  const [initialView] = useState(() => {
+    const targetXM = mode === '3v3' ? camera.targetXM : FIELD_SPECS[mode].size.lengthM / 2;
+    const targetYM = mode === '3v3' ? camera.targetYM : FIELD_SPECS[mode].size.widthM / 2;
+    const target = new Vector3(modeWorldX(targetXM, mode), 0, modeWorldZ(targetYM, mode));
+    const distance = fieldCameraDistance(mode, aspect) / Math.max(0.7, camera.zoom);
+    const position = new Vector3(...fieldCameraDirection(mode)).normalize().multiplyScalar(distance).add(target);
+    const quaternion = new Quaternion().setFromRotationMatrix(new Matrix4().lookAt(position, target, new Vector3(0, 1, 0)));
+    return { position, quaternion };
+  });
+  return <PerspectiveCamera makeDefault fov={43} near={0.05} far={250}
+    position={initialView.position} quaternion={initialView.quaternion} />;
 }
 
 export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {
   return (
     <div className="field-stage">
       <Canvas
-        key={mode}
         shadows
         frameloop="demand"
         dpr={[1, 1.5]}
@@ -423,7 +336,7 @@ export const Field = memo(function Field({ active, robot, robots, camera, mode, 
         ))}
         <FieldOverlays overlays={overlays} mode={mode} />
         <AdaptiveReplayQuality robot={robot} />
-        <FieldCameraFlightControls active={active} camera={camera} mode={mode} />
+        <CameraFlightControls active={active} />
       </Canvas>
     </div>
   );
