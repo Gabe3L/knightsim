@@ -1,14 +1,13 @@
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { robotProfile } from '../robots/profiles';
 import {
-  AdaptiveDpr,
   Center,
   Html,
   Line,
   PerspectiveCamera,
   useGLTF,
 } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type Dpr } from "@react-three/fiber";
 import {
   Component,
   memo,
@@ -18,6 +17,7 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
+  useState,
   type ErrorInfo,
   type ReactNode,
 } from "react";
@@ -291,18 +291,27 @@ function FieldOverlays({ overlays, mode }: Pick<FieldProps, 'overlays' | 'mode'>
   ));
 }
 
-function AdaptiveReplayQuality({ robot }: Pick<FieldProps, "robot">) {
+function AdaptiveReplayQuality({ robot, onDprChange }: Pick<FieldProps, "robot"> & {
+  readonly onDprChange: (dpr: number) => void;
+}) {
   const regress = useThree((state) => state.performance.regress);
   const initialDpr = useThree((state) => state.viewport.initialDpr);
+  const current = useThree((state) => state.performance.current);
 
   useEffect(() => {
     regress();
   }, [regress, robot.xM, robot.yM, robot.yawDeg]);
 
-  return initialDpr > 1 ? <AdaptiveDpr /> : null;
+  // Keep Canvas's configured resolution in sync with adaptive quality. Otherwise
+  // each replay render restores full resolution and can stall camera movement.
+  useEffect(() => {
+    onDprChange(initialDpr > 1 ? initialDpr * current : initialDpr);
+  }, [current, initialDpr, onDprChange]);
+
+  return null;
 }
 
-function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
+const FieldPerspectiveCamera = memo(function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'active' | 'camera' | 'mode'>) {
   const size = useThree((state) => state.size);
   const bounds = useMemo(
     () => fieldCameraBounds(mode, defaultFieldCameraPose(mode, size.width, size.height, camera).position),
@@ -329,15 +338,16 @@ function FieldPerspectiveCamera({ active, camera, mode }: Pick<FieldProps, 'acti
     <CameraFlightControls active={active} bounds={bounds} onInteraction={cancelTransition} />
     <CameraFlightBarrier bounds={bounds} />
   </>;
-}
+});
 
 export const Field = memo(function Field({ active, robot, robots, camera, mode, modelForRobot, overlays }: FieldProps) {
+  const [dpr, setDpr] = useState<Dpr>([1, 1.5]);
   return (
     <div className="field-stage">
       <Canvas
         shadows
         frameloop="demand"
-        dpr={[1, 1.5]}
+        dpr={dpr}
         performance={{ min: 0.7, debounce: 250 }}
         gl={{
           antialias: true,
@@ -353,7 +363,7 @@ export const Field = memo(function Field({ active, robot, robots, camera, mode, 
           <Robot key={fieldRobot.robotId} robot={fieldRobot} model={modelForRobot(fieldRobot.robotId)} mode={mode} />
         ))}
         <FieldOverlays overlays={overlays} mode={mode} />
-        <AdaptiveReplayQuality robot={robot} />
+        <AdaptiveReplayQuality robot={robot} onDprChange={setDpr} />
       </Canvas>
     </div>
   );

@@ -7,7 +7,7 @@ const { defaultFieldCameraPose, FIELD_CAMERA_FOV, FIELD_CAMERA_TRANSITION_MS, Fi
   new URL('../src/camera/FieldCameraViews.ts', import.meta.url),
 );
 const { FIELD_SPECS, fieldWorldX, fieldWorldZ } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
-const { fieldCameraBounds, CAMERA_BARRIER_WARNING_M } = await loadTypeScript(new URL('../src/camera/CameraFlightBounds.ts', import.meta.url));
+const { fieldCameraBounds, cameraMovementBounds, CAMERA_BARRIER_WARNING_M } = await loadTypeScript(new URL('../src/camera/CameraFlightBounds.ts', import.meta.url));
 const { CameraFlight } = await loadTypeScript(new URL('../src/camera/CameraFlight.ts', import.meta.url));
 const state = { targetXM: 6, targetYM: 4, zoom: 1 };
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} != ${b}`);
@@ -214,6 +214,26 @@ test('manual takeover stops the transition and preserves the new flight pose', (
   assert.ok(camera.quaternion.equals(rotation));
 });
 
+test('interrupting a transition outside the destination recovers immediately, without movement input', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const { camera, views, advance } = createViews();
+    views.select(mode === 'drone' ? 'dart' : 'drone', 150, 1200, state);
+    views.select(mode, 1440, 800, state);
+    advance(FIELD_CAMERA_TRANSITION_MS / 4);
+    const bounds = cameraMovementBounds(fieldCameraBounds(mode,
+      defaultFieldCameraPose(mode, 1440, 800, state).position));
+    assert.ok(!bounds.containsPoint(camera.position), `${mode}: transition starts beyond the barrier`);
+    const orientation = camera.quaternion.clone();
+    views.cancelTransition();
+    assert.ok(bounds.containsPoint(camera.position), `${mode}: manual takeover recovers inside the barrier`);
+    assert.ok(camera.quaternion.equals(orientation));
+    const position = camera.position.clone();
+    assert.equal(advance(FIELD_CAMERA_TRANSITION_MS), false);
+    assert.ok(camera.position.equals(position));
+    camera.position.toArray().forEach((value, index) => close(camera.matrixWorld.elements[12 + index], value));
+  }
+});
+
 test('transitions use elapsed time independently of frame rate or prior idle time', () => {
   const run = (steps) => {
     const { camera, views, advance } = createViews();
@@ -244,7 +264,7 @@ test('rerendering during a transition preserves its timing and respects tighter 
   assert.ok(camera.quaternion.equals(rotation));
   assert.equal(advance(FIELD_CAMERA_TRANSITION_MS * 3 / 4), false);
   const target = defaultFieldCameraPose('dart', 1440, 800, state);
-  const bounds = fieldCameraBounds('dart', defaultFieldCameraPose('dart', 700, 1000, nextState).position);
+  const bounds = cameraMovementBounds(fieldCameraBounds('dart', defaultFieldCameraPose('dart', 700, 1000, nextState).position));
   target.position.clamp(bounds.min, bounds.max);
   assert.ok(camera.position.equals(target.position));
   assert.ok(camera.quaternion.equals(target.quaternion));
@@ -271,4 +291,24 @@ test('widening the viewport brings a distant portrait pose back within the tight
   assert.equal(views.select('3v3', 1440, 800, state), true);
   assert.ok(bounds.containsPoint(camera.position));
   assert.ok(camera.quaternion.equals(orientation));
+});
+
+test('resizing at a corner preserves clearance and still allows flight toward the field', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const { camera, views } = createViews();
+    views.select(mode, 400, 1000, state);
+    const portrait = fieldCameraBounds(mode, defaultFieldCameraPose(mode, 400, 1000, state).position);
+    camera.position.copy(portrait.max);
+    const orientation = camera.quaternion.clone();
+    assert.equal(views.select(mode, 1440, 800, state), true);
+    const barrierBounds = fieldCameraBounds(mode, defaultFieldCameraPose(mode, 1440, 800, state).position);
+    const bounds = cameraMovementBounds(barrierBounds);
+    assert.ok(bounds.containsPoint(camera.position), `${mode}: resize recovers clear of the barrier`);
+    assert.ok(camera.quaternion.equals(orientation));
+    const center = bounds.getCenter(new Vector3());
+    const start = camera.position.clone();
+    camera.lookAt(center);
+    assert.equal(new CameraFlight(camera, barrierBounds).move(new Set(['forward']), 0.1), true);
+    assert.ok(camera.position.distanceTo(center) < start.distanceTo(center));
+  }
 });

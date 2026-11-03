@@ -4,7 +4,7 @@ import { PerspectiveCamera, Vector3 } from 'three';
 import { loadTypeScript } from './loadTypeScript.mjs';
 
 const { CameraFlight } = await loadTypeScript(new URL('../src/camera/CameraFlight.ts', import.meta.url));
-const { fieldCameraBounds, cameraBarrierOpacity, CAMERA_BARRIER_WARNING_M, CAMERA_FLOOR_CLEARANCE_M } = await loadTypeScript(
+const { fieldCameraBounds, cameraMovementBounds, cameraBarrierOpacity, CAMERA_BARRIER_CLEARANCE_M, CAMERA_BARRIER_WARNING_M, CAMERA_FLOOR_CLEARANCE_M } = await loadTypeScript(
   new URL('../src/camera/CameraFlightBounds.ts', import.meta.url),
 );
 const { FIELD_SPECS } = await loadTypeScript(new URL('../src/field/fieldSpec.ts', import.meta.url));
@@ -24,11 +24,12 @@ test('mouse look rotates in place and flight follows the new direction', () => {
   vectorClose(camera.position, [4.5, 3, -4.5]);
 });
 
-test('keyboard flight stops at the floor, ceiling and every outer wall on each field', () => {
+test('keyboard flight leaves clearance at every barrier and can always retreat', () => {
   for (const mode of Object.keys(FIELD_SPECS)) {
     const camera = new PerspectiveCamera();
-    const bounds = fieldCameraBounds(mode);
-    const flight = new CameraFlight(camera, bounds);
+    const barrierBounds = fieldCameraBounds(mode);
+    const bounds = cameraMovementBounds(barrierBounds);
+    const flight = new CameraFlight(camera, barrierBounds);
     const orientation = camera.quaternion.clone();
     for (const [action, axis, limit, retreat] of [
       ['down', 'y', bounds.min.y, 'up'], ['up', 'y', bounds.max.y, 'down'],
@@ -41,6 +42,10 @@ test('keyboard flight stops at the floor, ceiling and every outer wall on each f
       close(camera.position[axis], limit);
       assert.equal(flight.move(new Set([action]), 0.1), false, `${mode}: stops at ${action} limit`);
       assert.ok(bounds.containsPoint(camera.position));
+      if (action !== 'down') {
+        const barrier = ['left', 'forward'].includes(action) ? barrierBounds.min[axis] : barrierBounds.max[axis];
+        close(Math.abs(camera.position[axis] - barrier), CAMERA_BARRIER_CLEARANCE_M);
+      }
       assert.ok(camera.quaternion.equals(orientation));
       assert.equal(flight.move(new Set([retreat]), 0.1), true, `${mode}: can fly back from ${action} limit`);
       assert.ok(Math.abs(camera.position[axis] - limit) > 0.49);
@@ -100,8 +105,9 @@ test('scroll crosses the old orbit target and pan stays in the view plane inside
 test('panning and large scroll inputs cannot bypass the floor or any outer boundary', () => {
   for (const mode of Object.keys(FIELD_SPECS)) {
     const camera = new PerspectiveCamera();
-    const bounds = fieldCameraBounds(mode);
-    const flight = new CameraFlight(camera, bounds);
+    const barrierBounds = fieldCameraBounds(mode);
+    const bounds = cameraMovementBounds(barrierBounds);
+    const flight = new CameraFlight(camera, barrierBounds);
     camera.position.set(0, 2, 0);
     flight.pan(1e6, -1e6);
     vectorClose(camera.position, [bounds.min.x, CAMERA_FLOOR_CLEARANCE_M, 0]);
@@ -124,8 +130,9 @@ test('panning and large scroll inputs cannot bypass the floor or any outer bound
 
 test('pitched flight cannot dive under the field and can slide along a wall', () => {
   const camera = new PerspectiveCamera();
-  const bounds = fieldCameraBounds('1v1');
-  const flight = new CameraFlight(camera, bounds);
+  const barrierBounds = fieldCameraBounds('1v1');
+  const bounds = cameraMovementBounds(barrierBounds);
+  const flight = new CameraFlight(camera, barrierBounds);
   camera.position.set(0, 0.2, 0);
   flight.look(0, Math.PI / 4 / 0.003);
   flight.move(new Set(['forward']), 0.1);
@@ -137,6 +144,37 @@ test('pitched flight cannot dive under the field and can slide along a wall', ()
   flight.move(new Set(['right', 'forward']), 0.1);
   close(camera.position.x, bounds.max.x);
   assert.ok(camera.position.z < -0.3);
+});
+
+test('looking around recovers a camera stranded beyond any barrier, floor or corner', () => {
+  for (const mode of Object.keys(FIELD_SPECS)) {
+    const camera = new PerspectiveCamera();
+    const barrierBounds = fieldCameraBounds(mode);
+    const bounds = cameraMovementBounds(barrierBounds);
+    const flight = new CameraFlight(camera, barrierBounds);
+    const center = bounds.getCenter(new Vector3());
+    for (const axis of ['x', 'y', 'z']) {
+      for (const side of ['min', 'max']) {
+        camera.position.copy(center);
+        camera.position[axis] = barrierBounds[side][axis] + (side === 'min' ? -10 : 10);
+        flight.look(5, -5);
+        assert.ok(bounds.containsPoint(camera.position), `${mode}: recovers past ${side}.${axis}`);
+      }
+    }
+    for (const x of [barrierBounds.min.x, barrierBounds.max.x]) {
+      for (const y of [barrierBounds.min.y, barrierBounds.max.y]) {
+        for (const z of [barrierBounds.min.z, barrierBounds.max.z]) {
+          camera.position.set(x, y, z);
+          flight.look(0, 0);
+          assert.ok(bounds.containsPoint(camera.position), `${mode}: recovers at corners`);
+          const start = camera.position.clone();
+          camera.lookAt(center);
+          assert.equal(flight.move(new Set(['forward']), 0.1), true);
+          assert.ok(camera.position.distanceTo(center) < start.distanceTo(center), `${mode}: escapes the corner`);
+        }
+      }
+    }
+  }
 });
 
 test('the red barrier fades in only within the warning distance and disappears on retreat', () => {

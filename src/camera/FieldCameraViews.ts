@@ -1,7 +1,7 @@
-import { Camera, Matrix4, Quaternion, Vector3 } from 'three';
+import { Box3, Camera, Matrix4, Quaternion, Vector3 } from 'three';
 import { FIELD_SPECS, fieldWorldX, fieldWorldZ } from '../field/fieldSpec';
 import type { CameraState, FieldMode } from '../types';
-import { fieldCameraBounds } from './CameraFlightBounds';
+import { cameraMovementBounds, fieldCameraBounds } from './CameraFlightBounds';
 
 export const FIELD_CAMERA_FOV = 43;
 export const FIELD_CAMERA_TRANSITION_MS = 800;
@@ -91,6 +91,7 @@ export class FieldCameraViews {
   private readonly poses = new Map<FieldMode, CameraPose>();
   private currentMode: FieldMode | null = null;
   private transition: CameraTransition | null = null;
+  private bounds: Box3 | null = null;
 
   constructor(
     private readonly camera: Camera,
@@ -99,7 +100,8 @@ export class FieldCameraViews {
 
   select(mode: FieldMode, width: number, height: number, state: CameraState): boolean {
     const overview = defaultFieldCameraPose(mode, width, height, state);
-    const bounds = fieldCameraBounds(mode, overview.position);
+    const bounds = cameraMovementBounds(fieldCameraBounds(mode, overview.position));
+    this.bounds = bounds;
     if (mode === this.currentMode) {
       if (this.transition) {
         this.transition.to.position.clamp(bounds.min, bounds.max);
@@ -152,6 +154,12 @@ export class FieldCameraViews {
   /** Manual flight takes over from the current interpolated pose. */
   cancelTransition(): void {
     this.transition = null;
+    // A transition may still be outside the smaller destination field. Recover
+    // immediately even when manual takeover only rotates the camera.
+    if (this.bounds) {
+      this.camera.position.clamp(this.bounds.min, this.bounds.max);
+      this.camera.updateMatrixWorld();
+    }
   }
 
   private applyPose(pose: CameraPose): void {

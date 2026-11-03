@@ -4,6 +4,7 @@ import type { FieldMode } from '../types';
 
 export const CAMERA_FLOOR_CLEARANCE_M = 0.15;
 export const CAMERA_BARRIER_WARNING_M = 1.5;
+export const CAMERA_BARRIER_CLEARANCE_M = 0.35;
 const EXTRA_FLIGHT_ROOM_M = 0.5;
 
 /** Keep flight close to the field, with just enough extra room for its fitted overview. */
@@ -27,6 +28,14 @@ export function fieldCameraBounds(mode: FieldMode, overviewPosition?: Vector3): 
     bounds.max.z = Math.max(bounds.max.z, Math.abs(overviewPosition.z) + clearance);
     bounds.max.y = Math.max(bounds.max.y, overviewPosition.y + clearance);
   }
+  return bounds;
+}
+
+/** Stop short of the barrier so the camera never sits against its surface. */
+export function cameraMovementBounds(barrierBounds: Box3): Box3 {
+  const bounds = barrierBounds.clone().expandByScalar(-CAMERA_BARRIER_CLEARANCE_M);
+  // The floor already includes its own clearance.
+  bounds.min.y = barrierBounds.min.y;
   return bounds;
 }
 
