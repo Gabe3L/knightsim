@@ -29,13 +29,20 @@ function cameraAtSpawn(mode, width, height) {
   return camera;
 }
 
-test('each spawn shows the actual floor, walls and flight envelope above the timeline', () => {
+test('end-corner starting views use a low angle and fit the field above the timeline', () => {
   for (const [mode, spec] of Object.entries(FIELD_SPECS)) {
     for (const [width, height] of [[700, 1000], [1000, 1000], [1440, 800], [1920, 800], [1280, 520]]) {
       const camera = cameraAtSpawn(mode, width, height);
       const pad = spec.wall?.thicknessM ?? 0;
       const top = mode === 'drone' ? 2.5 : mode === 'dart' ? 2.7 : mode === '3v3' ? 1.5 : 1.2;
       assert.ok(camera.position.y > top, `${mode} should start above the scenery`);
+      const direction = camera.getWorldDirection(new Vector3());
+      const elevation = Math.asin(-direction.y) * 180 / Math.PI;
+      assert.ok(elevation >= 18 && elevation <= 25, `${mode}: a flatter starting angle`);
+      const end = mode === 'drone' || mode === 'dart' ? -1 : 1;
+      assert.ok(camera.position.x * end > spec.size.lengthM / 2, `${mode}: beyond the field end`);
+      assert.ok(camera.position.z * -end > spec.size.widthM / 2, `${mode}: outside the corner`);
+      assert.ok(direction.x * end < 0 && direction.z * end > 0, `${mode}: looks into the field`);
       for (const x of [spec.floor.xM - pad, spec.floor.xM + spec.floor.widthM + pad]) {
         for (const y of [spec.floor.yM - pad, spec.floor.yM + spec.floor.depthM + pad]) {
           for (const altitude of [0, top]) {
@@ -52,14 +59,14 @@ test('each spawn shows the actual floor, walls and flight envelope above the tim
   }
 });
 
-test('challenge views place the launch zone and base at equal depth', () => {
+test('challenge views look from the launch end toward the base', () => {
   for (const mode of ['drone', 'dart']) {
     const spec = FIELD_SPECS[mode], zone = spec.zones[0];
     const camera = cameraAtSpawn(mode, 1440, 800);
     const base = new Vector3(fieldWorldX(spec.base.xM, mode), 0, fieldWorldZ(spec.base.yM, mode)).applyMatrix4(camera.matrixWorldInverse);
     const launch = new Vector3(fieldWorldX(zone.xM + zone.widthM / 2, mode), 0,
       fieldWorldZ(zone.yM + zone.depthM / 2, mode)).applyMatrix4(camera.matrixWorldInverse);
-    close(base.z, launch.z);
+    assert.ok(launch.z > base.z, `${mode}: the launch zone is closer than the base`);
   }
 });
 
@@ -196,7 +203,7 @@ test('transitions use elapsed time independently of frame rate or prior idle tim
   const singleFrame = run([FIELD_CAMERA_TRANSITION_MS / 2]);
   const manyFrames = run(Array(40).fill(FIELD_CAMERA_TRANSITION_MS / 80));
   close(singleFrame.position.distanceTo(manyFrames.position), 0);
-  close(singleFrame.quaternion.angleTo(manyFrames.quaternion), 0);
+  assert.ok(singleFrame.quaternion.angleTo(manyFrames.quaternion) < 1e-7);
 });
 
 test('rerendering during a transition preserves its destination and completion time', () => {

@@ -4,6 +4,7 @@ import type { CameraState, FieldMode } from '../types';
 
 export const FIELD_CAMERA_FOV = 43;
 export const FIELD_CAMERA_TRANSITION_MS = 800;
+const STARTING_ELEVATION_DEG = 22;
 const TIMELINE_CLEARANCE_PX = 84;
 const WORLD_UP = new Vector3(0, 1, 0);
 
@@ -41,15 +42,18 @@ function fitCenter(corners: readonly ProjectedCorner[], axis: 'x' | 'y', distanc
   return (min + max) / 2;
 }
 
-/** A padded overview of the actual floor, walls and preview flight height. */
+/** An end-corner view of the floor, walls and preview flight height. */
 export function defaultFieldCameraPose(mode: FieldMode, width: number, height: number, state: CameraState): CameraPose {
   const spec = FIELD_SPECS[mode];
   const challenge = mode === 'drone' || mode === 'dart';
-  // Look across the challenge course so the base and launch zone have similar
-  // depth. Arena views are higher to see over the perimeter and central wall.
-  const back = new Vector3(...(challenge
-    ? [-spec.size.widthM / spec.size.lengthM, 0.85, -1] as const
-    : mode === '3v3' ? [0.35, 1.2, -1] as const : [0.65, 1.3, -1] as const)).normalize();
+  // Follow the field diagonal from an end corner. Challenges start at the
+  // launch end, looking toward the base along the length of the course.
+  const cornerX = challenge ? -spec.size.lengthM : spec.size.lengthM;
+  // Keep a side angle on long, narrow courses instead of lining up with the end.
+  const sideOffset = Math.max(spec.size.widthM, spec.size.lengthM * 0.5);
+  const cornerZ = challenge ? sideOffset : -sideOffset;
+  const back = new Vector3(cornerX,
+    Math.hypot(cornerX, cornerZ) * Math.tan(STARTING_ELEVATION_DEG * Math.PI / 180), cornerZ).normalize();
   const right = new Vector3().crossVectors(WORLD_UP, back).normalize();
   const up = new Vector3().crossVectors(back, right);
   const pad = spec.wall?.thicknessM ?? 0;
