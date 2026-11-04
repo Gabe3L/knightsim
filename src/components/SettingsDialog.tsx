@@ -20,6 +20,7 @@ import { FIELD_CAMERA_KEYBINDINGS } from '../keybindings';
 import type { ModelAxis, RobotId, RobotModelLibrary, RobotModelOrientation } from '../types';
 import '../styles/settings.css';
 import { ModelScaleControls } from './ModelScaleControls';
+import { RobotModelPreview } from './RobotModelPreview';
 
 interface SettingsDialogProps {
   readonly initialRobotId: RobotId;
@@ -335,66 +336,72 @@ export function SettingsDialog({
 
                 {loading ? (
                   <div className="model-inline-empty"><span className="model-loading-dot" />Loading models from folder…</div>
-                ) : activeModel ? (
-                  <div className="model-transform">
-                    <div className="model-file-summary">
-                      <Box size={17} />
-                      <span>
-                        <strong>{activeModel.name}</strong>
-                        <small>{activeModel.sourceFileName} · {formatFileSize(activeModel.sizeBytes)}</small>
-                      </span>
-                    </div>
-                    <ModelScaleControls key={activeModel.id} model={activeModel} busy={busy} onUpdate={onUpdateOrientation} />
-                    <div className="orientation-controls" aria-label={`${activeModel.name} orientation`}>
-                      <div className="orientation-group">
-                        <span>Rotate 90°</span>
-                        <div className="segmented-controls">
-                          {AXES.map((axis) => (
-                            <button
-                              type="button"
-                              key={axis}
-                              disabled={busy}
-                              onClick={() => onUpdateOrientation(activeModel.id, rotate(activeModel.orientation, axis))}
-                              title={`Rotate ${axis.toUpperCase()} axis by 90 degrees`}
-                            >
-                              {axis.toUpperCase()} <small>{activeModel.orientation.rotationDeg[axis]}°</small>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="orientation-group">
-                        <span>Flip axis</span>
-                        <div className="segmented-controls">
-                          {AXES.map((axis) => (
-                            <button
-                              className={activeModel.orientation.flipped[axis] ? 'pressed' : ''}
-                              type="button"
-                              key={axis}
-                              disabled={busy}
-                              aria-pressed={activeModel.orientation.flipped[axis]}
-                              onClick={() => onUpdateOrientation(activeModel.id, flip(activeModel.orientation, axis))}
-                            >
-                              {axis.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <button
-                        className="reset-orientation"
-                        title="Reset rotation and flips (keep scale)"
-                        type="button"
-                        disabled={busy}
-                        onClick={() => onUpdateOrientation(activeModel.id, { ...RESET_ORIENTATION, scale: activeModel.orientation.scale })}
-                      >
-                        <RotateCcw size={13} /> Reset
-                      </button>
-                    </div>
-                  </div>
                 ) : (
-                  <div className="model-inline-empty">
-                    <Box size={18} /> {library.models.length === 0
-                      ? 'No GLB models found. Add .glb files to the model folder, then Refresh.'
-                      : 'Select a model from the folder to view it on the Field.'}
+                  <div className="model-workspace">
+                    <RobotModelPreview robotId={selectedRobotId} model={activeModel} />
+                    {activeModel ? (
+                      <div className="model-transform">
+                        <div className="model-file-summary">
+                          <Box size={17} />
+                          <span>
+                            <strong>{activeModel.name}</strong>
+                            <small>{activeModel.sourceFileName} · {formatFileSize(activeModel.sizeBytes)}</small>
+                          </span>
+                        </div>
+                        <ModelScaleControls key={activeModel.id} model={activeModel} busy={busy} onUpdate={onUpdateOrientation} />
+                        <div className="orientation-controls" aria-label={`${activeModel.name} orientation`}>
+                          <div className="orientation-group">
+                            <span>Rotate 90°</span>
+                            <div className="segmented-controls">
+                              {AXES.map((axis) => (
+                                <button
+                                  type="button"
+                                  key={axis}
+                                  disabled={busy}
+                                  onClick={() => onUpdateOrientation(activeModel.id, rotate(activeModel.orientation, axis))}
+                                  title={`Rotate ${axis.toUpperCase()} axis by 90 degrees`}
+                                >
+                                  {axis.toUpperCase()} <small>{activeModel.orientation.rotationDeg[axis]}°</small>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="orientation-group">
+                            <span>Flip axis</span>
+                            <div className="segmented-controls">
+                              {AXES.map((axis) => (
+                                <button
+                                  className={activeModel.orientation.flipped[axis] ? 'pressed' : ''}
+                                  type="button"
+                                  key={axis}
+                                  disabled={busy}
+                                  aria-pressed={activeModel.orientation.flipped[axis]}
+                                  aria-label={`Flip ${axis.toUpperCase()} axis`}
+                                  onClick={() => onUpdateOrientation(activeModel.id, flip(activeModel.orientation, axis))}
+                                >
+                                  {axis.toUpperCase()}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <button
+                            className="reset-orientation"
+                            title="Reset rotation and flips (keep scale)"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => onUpdateOrientation(activeModel.id, { ...RESET_ORIENTATION, scale: activeModel.orientation.scale })}
+                          >
+                            <RotateCcw size={13} /> Reset
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="model-inline-empty">
+                        <Box size={18} /> {library.models.length === 0
+                          ? 'No GLB models found. Add .glb files to the model folder, then Refresh.'
+                          : 'Select a model to preview it here and on the Field.'}
+                      </div>
+                    )}
                   </div>
                 )}
               </section>

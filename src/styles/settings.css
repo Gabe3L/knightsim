@@ -430,3 +430,30 @@
 .model-scale-controls > small { display: block; margin-top: 8px; color: #8896a4; }
 .model-current-size { margin-top: 10px; color: #aebbc8; font-size: 12px; }
 .model-current-size strong { color: #e7ecf1; font-variant-numeric: tabular-nums; }
+
+.model-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 16px 18px;
+}
+.model-preview { min-width: 0; overflow: hidden; border: 1px solid var(--settings-line); border-radius: 10px; background: var(--settings-input); }
+.model-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--settings-soft-line); }
+.model-preview-heading strong { color: #dfe5eb; font-size: 13px; }
+.model-preview-heading .secondary-button { height: 30px; padding: 0 9px; font-size: 12px; }
+.model-preview-stage { height: 290px; }
+.model-preview-stage canvas { cursor: grab; touch-action: none; }
+.model-preview-stage canvas:active { cursor: grabbing; }
+.model-preview-status { display: block; padding: 10px 14px; border: 1px solid var(--settings-line); border-radius: 8px; color: #bcc8d4; background: #141119; font-size: 12px; white-space: nowrap; }
+.model-preview-unavailable { display: grid; height: 100%; place-items: center; padding: 24px; color: #9aa7b4; font-size: 13px; text-align: center; }
+.model-preview-hint { margin: 0; padding: 10px 12px; border-top: 1px solid var(--settings-soft-line); color: #8896a4; font-size: 11px; line-height: 1.5; }
+.model-workspace .model-transform { min-width: 0; border: 1px solid var(--settings-line); border-radius: 10px; overflow: hidden; background: var(--settings-input); }
+.model-workspace .orientation-controls { grid-template-columns: 1fr; align-items: start; gap: 14px; padding: 16px 18px; }
+.model-workspace .reset-orientation { justify-self: start; }
+.model-workspace > .model-inline-empty { align-self: center; }
+
+@media (max-width: 680px) {
+  .model-workspace { grid-template-columns: minmax(0, 1fr); padding: 14px; }
+  .model-preview-stage { height: 250px; }
+}
