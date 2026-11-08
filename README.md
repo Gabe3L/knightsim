@@ -27,7 +27,7 @@ Tailwind scans `src/` and `index.html` for classes instead of the entire project
 
 ## Distribute and update
 
-The sidebar above **Settings** shows the installed version and its publication timestamp in the user's local time zone. Installed apps check public GitHub Releases at startup. **Check for updates** checks again; **Update & restart** downloads the newer version, shows progress, and installs it before relaunching. Downloads and restarts happen only after that click. Failed checks/downloads can be retried. Source/development runs show a disabled update button.
+The sidebar above **Settings** shows the installed version and its publication timestamp in the user's local time zone. Installed apps automatically check public GitHub Releases at startup and every hour. A small badge above the update icon shows the number of available updates (one cumulative app update, even when several versions were skipped). Click the icon to download the newer version, show progress, and install it before relaunching. Downloads and restarts happen only after that click. Failed checks retry automatically; failed downloads can be retried from the icon. Source/development runs show a disabled update icon.
 
 The timestamp is GitHub's `published_at` for the installed version's exact `v<version>` release tag. It is cached in the app's user-data `release-metadata.json` for offline use. A first launch without access to that release shows **Publish date unavailable** until a later successful check. A newer release's date never replaces the installed version's date.
 
@@ -50,7 +50,7 @@ To publish an update:
 
 macOS automatic updates require a Developer ID signed app. Configure electron-builder's `CSC_LINK` / `CSC_KEY_PASSWORD` signing credentials and Apple notarization credentials (`APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, or the supported Apple ID credentials) in the release environment before shipping. See [electron-builder's signing instructions](https://www.electron.build/v26/docs/features/code-signing/) and [update requirements](https://www.electron.build/v26/docs/features/auto-update/). An unsigned local package can be used to inspect the layout, but cannot validate a macOS update.
 
-Before distributing publicly, test two published versions on each target OS: install the older version, click **Update & restart**, and verify that the relaunched app reports the new version and its release timestamp. This requires actual hosted release artifacts and signing credentials; the regression tests use an injected updater to verify the download/restart sequence without installing software.
+Before distributing publicly, test two published versions on each target OS: install the older version, wait for the update badge, click the update icon, and verify that the relaunched app reports the new version and its release timestamp. This requires actual hosted release artifacts and signing credentials; the regression tests use an injected updater to verify the download/restart sequence without installing software.
 
 ## Robot profiles
 

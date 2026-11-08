@@ -34,27 +34,31 @@ export function AppUpdate() {
 
   const busy = ['checking', 'downloading', 'installing'].includes(state.status);
   const canInstall = state.availableVersion !== null;
+  // The updater offers one cumulative app update, even if several versions were skipped.
+  const updateCount = canInstall ? 1 : 0;
   const label = state.status === 'checking' ? 'Checking for updates…'
     : state.status === 'downloading' ? `Downloading… ${state.downloadPercent}%`
       : state.status === 'installing' ? 'Restarting…'
         : canInstall ? (state.status === 'error' ? 'Retry update & restart' : 'Update & restart')
-          : state.status === 'error' ? 'Retry update check' : 'Check for updates';
+          : state.status === 'error' ? 'Update check failed. Retrying automatically.'
+            : state.status === 'up-to-date' ? 'You’re up to date.' : 'Updates are checked automatically.';
+  const accessibleLabel = updateCount ? `${updateCount} update available. ${label}` : label;
   const publishedDate = state.publishedAt ? new Date(state.publishedAt) : null;
   const publishedLabel = publishedDate ? `Published ${publishedDate.toLocaleString(undefined, {
     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', timeZoneName: 'short',
   })}` : state.loadingPublishedAt ? 'Loading publish date…'
     : state.status === 'disabled' ? 'Development build' : 'Publish date unavailable';
   const message = connectionError ?? state.message
-    ?? (state.status === 'up-to-date' ? 'You’re up to date.'
-      : canInstall ? `Version ${state.availableVersion} available. The app will restart.` : null);
+    ?? (state.status === 'downloading' || state.status === 'installing' ? label
+      : canInstall ? `${updateCount} update available: version ${state.availableVersion}. Click to update and restart.` : null);
   const title = [`KnightSim ${state.currentVersion}`, publishedLabel, message, label].filter(Boolean).join('\n');
 
   const handleUpdate = async (): Promise<void> => {
     const api = window.knightSim?.updates;
-    if (!api) return;
+    if (!api || !canInstall || busy) return;
     setConnectionError(null);
     try {
-      acceptState(await (canInstall ? api.install() : api.check()));
+      acceptState(await api.install());
     } catch {
       setConnectionError('Unable to connect to the updater. Try again.');
     }
@@ -70,13 +74,15 @@ export function AppUpdate() {
       <button
         className={`sidebar-settings sidebar-update-button${canInstall ? ' update-available' : ''}`}
         type="button"
-        aria-label={label}
-        disabled={busy || state.status === 'disabled'}
+        aria-label={accessibleLabel}
+        disabled={busy || !canInstall}
         onClick={() => void handleUpdate()}
       >
-        {busy ? <LoaderCircle className="update-spinner" size={17} />
-          : canInstall ? <Download size={17} /> : <RefreshCw size={17} />}
-        <span>{label}</span>
+        <span className="sidebar-update-icon" aria-hidden="true">
+          {busy ? <LoaderCircle className="update-spinner" size={17} />
+            : canInstall ? <Download size={17} /> : <RefreshCw size={17} />}
+          {updateCount > 0 && <span className="sidebar-update-badge">{updateCount}</span>}
+        </span>
       </button>
       <div className={`sidebar-update-message${state.status === 'error' || connectionError ? ' update-error' : ''}`} role="status" aria-live="polite">
         {message}

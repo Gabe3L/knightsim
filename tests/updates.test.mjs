@@ -74,6 +74,29 @@ test('duplicate clicks and checks during downloads cannot start overlapping oper
   assert.equal(driver.downloads, 1);
 });
 
+test('background checks preserve a known update while pending or offline, then clear it when up to date', async () => {
+  const { driver, manager } = setup();
+  await manager.check();
+  let rejectCheck;
+  driver.checkForUpdates = () => new Promise((_resolve, reject) => { rejectCheck = reject; });
+  const pending = manager.check();
+  assert.equal(manager.getState().status, 'checking');
+  assert.equal(manager.getState().availableVersion, '0.2.0');
+  rejectCheck(new Error('offline'));
+  await pending;
+  assert.equal(manager.getState().status, 'error');
+  assert.equal(manager.getState().availableVersion, '0.2.0');
+  driver.checkForUpdates = async () => {
+    driver.emit('update-not-available', { version: '0.1.0' });
+    return {};
+  };
+  await manager.check();
+  assert.equal(manager.getState().status, 'up-to-date');
+  assert.equal(manager.getState().availableVersion, null);
+  assert.equal(driver.downloads, 0);
+  assert.equal(driver.installs.length, 0);
+});
+
 test('a download without the verified completion event cannot restart the app', async () => {
   const { driver, manager, scheduled } = setup();
   driver.downloadUpdate = async () => [];
@@ -88,6 +111,7 @@ test('offline checks, failed downloads, and failed installs can be retried', asy
   driver.checkForUpdates = async () => { throw new Error('offline'); };
   await manager.check();
   assert.equal(manager.getState().status, 'error');
+  assert.match(manager.getState().message, /Retrying automatically/);
   driver.checkForUpdates = FakeUpdater.prototype.checkForUpdates;
   await manager.check();
   driver.downloadUpdate = async () => { throw new Error('interrupted'); };
@@ -99,6 +123,10 @@ test('offline checks, failed downloads, and failed installs can be retried', asy
   driver.quitAndInstall = () => { throw new Error('installer failed'); };
   scheduled.shift()();
   assert.equal(manager.getState().status, 'error');
+  const checksBeforeRetry = driver.checks;
+  await manager.check();
+  assert.equal(driver.checks, checksBeforeRetry, 'background checks leave the verified installer available to retry');
+  assert.equal(manager.getState().availableVersion, '0.2.0');
   driver.quitAndInstall = FakeUpdater.prototype.quitAndInstall;
   await manager.install();
   scheduled.shift()();

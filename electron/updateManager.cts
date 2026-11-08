@@ -64,13 +64,16 @@ export class UpdateManager {
 
   private fail(): void {
     if (this.state.status === 'disabled') return;
-    this.setState({ status: 'error', message: 'Update failed. Check your connection and try again.' });
+    this.setState({ status: 'error', message: this.state.availableVersion
+      ? 'Update failed. Check your connection and try again.'
+      : 'Unable to check for updates. Retrying automatically.' });
   }
 
   async check(): Promise<AppUpdateState> {
-    if (this.operationActive || ['disabled', 'ready', 'installing'].includes(this.state.status)) return this.state;
+    if (this.operationActive || this.downloaded || ['disabled', 'ready', 'installing'].includes(this.state.status)) return this.state;
     this.operationActive = true;
-    this.setState({ status: 'checking', availableVersion: null, downloadPercent: 0, message: null });
+    // Keep a known update visible while a background check is pending or offline.
+    this.setState({ status: 'checking', message: null });
     try {
       if (!await this.driver.checkForUpdates()) this.fail();
     } catch {

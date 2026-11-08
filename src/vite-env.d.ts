@@ -11,7 +11,6 @@ declare global {
       readonly versions: { readonly electron: string };
       readonly updates: {
         readonly getState: () => Promise<AppUpdateState>;
-        readonly check: () => Promise<AppUpdateState>;
         readonly install: () => Promise<AppUpdateState>;
         readonly onChange: (listener: (state: AppUpdateState) => void) => () => void;
       };

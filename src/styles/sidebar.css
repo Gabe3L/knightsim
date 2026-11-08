@@ -79,7 +79,26 @@
 .sidebar-version { display: grid; gap: 4px; padding: 4px 11px 7px; color: #bfc0ca; font-size: 11px; line-height: 1.5; }
 .sidebar-version time,
 .sidebar-published-at { color: #817b8d; font-size: 10px; overflow-wrap: anywhere; }
-.sidebar-update-button { height: 34px; font-size: 12px; }
+.sidebar-update-button { width: 39px; height: 34px; justify-content: center; padding: 0; overflow: visible; }
+.sidebar-update-icon { position: relative; display: inline-flex; }
+.sidebar-update-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: inline-flex;
+  min-width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 3px;
+  border: 2px solid #0d1218;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--accent);
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1;
+}
 .sidebar-update-button.update-available { color: #f7a2b2; border-color: rgba(239, 71, 100, .24); background: rgba(239, 71, 100, .08); }
 .sidebar-update-button.update-available:hover:not(:disabled) { color: #fff5f7; border-color: var(--accent); background: rgba(239, 71, 100, .16); }
 .sidebar-update-message { padding: 4px 11px 0; color: #918a9e; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
@@ -95,7 +114,8 @@
 .sidebar-compact .sidebar-brand-copy { display: none; }
 .sidebar-compact .sidebar-footer { padding-inline: 8px; }
 .sidebar-compact .sidebar-settings { justify-content: center; padding: 0; }
-.sidebar-compact .sidebar-settings span { display: none; }
+.sidebar-compact .sidebar-settings > span:not(.sidebar-update-icon) { display: none; }
+.sidebar-compact .sidebar-update-button { margin-inline: auto; }
 
 .sidebar-resize-handle {
   position: absolute;

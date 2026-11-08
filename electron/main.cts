@@ -42,14 +42,16 @@ function registerUpdateIpc(): void {
     }
   });
   ipcMain.handle('app-updates:state', () => updates.getState());
-  ipcMain.handle('app-updates:check', () => {
-    void refreshPublishedAt();
-    return updates.check();
-  });
   ipcMain.handle('app-updates:install', () => updates.install());
   if (!disabledReason) {
-    void refreshPublishedAt();
-    void updates.check();
+    const checkForUpdates = (): void => {
+      void refreshPublishedAt();
+      void updates.check();
+    };
+    checkForUpdates();
+    const updateCheckTimer = setInterval(checkForUpdates, 60 * 60 * 1000);
+    updateCheckTimer.unref();
+    app.once('will-quit', () => clearInterval(updateCheckTimer));
   }
 }
 
