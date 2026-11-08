@@ -13,8 +13,8 @@ interface TimelineProps {
 const formatTime = (timeS: number): string => {
   const minutes = Math.floor(timeS / 60);
   const seconds = Math.floor(timeS % 60);
-  const milliseconds = Math.floor((timeS % 1) * 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  const hundredths = Math.floor((timeS % 1) * 100);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
 };
 
 export function Timeline({ disabled, replay, onSeek, onTogglePlaying, onSpeedChange }: TimelineProps) {
