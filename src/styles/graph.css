@@ -1,4 +1,4 @@
-.line-graph-stage {
+.graphs-stage {
   /* These offsets retain the chart's pre-toolbar dimensions inside the new frame. */
   position: absolute;
   inset:
@@ -18,8 +18,8 @@
   box-shadow: inset 0 1px rgba(255,255,255,.018), 0 12px 40px rgba(0,0,0,.14);
 }
 
-.line-graph-chart { position: relative; width: calc(100% - 2px); height: calc(100% - var(--graph-scale-offset, 42px)); min-width: 0; min-height: 0; place-self: center; overflow: hidden; border-radius: 8px; background: rgba(9, 13, 18, .9); }
-.line-graph-svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.graphs-chart { position: relative; width: calc(100% - 2px); height: calc(100% - var(--graph-scale-offset, 42px)); min-width: 0; min-height: 0; place-self: center; overflow: hidden; border-radius: 8px; background: rgba(9, 13, 18, .9); }
+.graphs-svg { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 .graph-plot-background { fill: #0b1118; stroke: #202a35; }
 .graph-grid-line { stroke: #202a35; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .graph-time-grid { stroke: #1a232d; }
@@ -31,11 +31,11 @@
 .graph-hover-cursor { stroke: #94a1ae; stroke-width: 1; stroke-dasharray: 4 4; opacity: .72; vector-effect: non-scaling-stroke; pointer-events: none; }
 .graph-current-point { stroke: #10080b; stroke-width: 1.5; vector-effect: non-scaling-stroke; pointer-events: none; }
 
-.line-graph-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 24px; color: #727f8d; text-align: center; pointer-events: none; }
-.line-graph-empty > span { display: grid; width: 56px; height: 56px; margin-bottom: 15px; place-items: center; border: 1px dashed #403747; border-radius: 14px; color: #e06c83; background: linear-gradient(145deg, rgba(239,71,100,.09), rgba(197,200,208,.035)); box-shadow: 0 14px 34px rgba(0,0,0,.2); }
-.line-graph-empty strong { color: #daddE3; font-size: 15px; font-weight: 680; letter-spacing: -.005em; }
-.line-graph-empty p { max-width: 430px; margin: 8px 0 0; color: #7e7785; font-size: 12px; line-height: 1.55; }
+.graphs-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 24px; color: #727f8d; text-align: center; pointer-events: none; }
+.graphs-empty > span { display: grid; width: 56px; height: 56px; margin-bottom: 15px; place-items: center; border: 1px dashed #403747; border-radius: 14px; color: #e06c83; background: linear-gradient(145deg, rgba(239,71,100,.09), rgba(197,200,208,.035)); box-shadow: 0 14px 34px rgba(0,0,0,.2); }
+.graphs-empty strong { color: #daddE3; font-size: 15px; font-weight: 680; letter-spacing: -.005em; }
+.graphs-empty p { max-width: 430px; margin: 8px 0 0; color: #7e7785; font-size: 12px; line-height: 1.55; }
 
-.line-graph-drop-active { border-color: rgba(239,71,100,.6); box-shadow: inset 0 0 0 1px rgba(239,71,100,.15), 0 0 26px rgba(239,71,100,.08); }
-.line-graph-drop-overlay { position: absolute; z-index: 5; inset: var(--graph-content-inset, 21px) 1px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px dashed rgba(239,71,100,.7); border-radius: 8px; color: #ffdce2; background: rgba(47, 17, 29, .78); backdrop-filter: blur(5px); font-size: 14px; font-weight: 650; pointer-events: none; }
-.line-graph-drop-overlay span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; color: #12070b; background: var(--accent); }
+.graphs-drop-active { border-color: rgba(239,71,100,.6); box-shadow: inset 0 0 0 1px rgba(239,71,100,.15), 0 0 26px rgba(239,71,100,.08); }
+.graphs-drop-overlay { position: absolute; z-index: 5; inset: var(--graph-content-inset, 21px) 1px; display: flex; align-items: center; justify-content: center; gap: 9px; border: 1px dashed rgba(239,71,100,.7); border-radius: 8px; color: #ffdce2; background: rgba(47, 17, 29, .78); backdrop-filter: blur(5px); font-size: 14px; font-weight: 650; pointer-events: none; }
+.graphs-drop-overlay span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; color: #12070b; background: var(--accent); }

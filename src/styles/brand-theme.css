@@ -118,13 +118,13 @@ body { background: #09080d; }
 .field-overlay,
 .field-hint { border-color: rgba(155, 148, 168, .34); background: rgba(10, 8, 14, .76); }
 
-.line-graph-stage {
+.graphs-stage {
   background:
     radial-gradient(circle at 50% -25%, rgba(239, 71, 100, .085), transparent 48%),
     #09080d;
 }
-.line-graph-stage { border-color: #2d2936; }
-.line-graph-chart { background: rgba(10, 8, 13, .94); }
+.graphs-stage { border-color: #2d2936; }
+.graphs-chart { background: rgba(10, 8, 13, .94); }
 .graph-plot-background { fill: #0d0b12; stroke: #2c2834; }
 .graph-grid-line { stroke: #292531; }
 .graph-time-grid { stroke: #211e28; }

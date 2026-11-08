@@ -66,7 +66,7 @@ export function TopBar({
           onClick={() => onViewChange('graph')}
         >
           <ChartLine size={15} />
-          Line Graph
+          Graphs
         </button>
         <button
           className={activeView === 'controller' ? 'view-tab view-tab-active' : 'view-tab'}
