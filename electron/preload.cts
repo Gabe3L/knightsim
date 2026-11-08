@@ -1,8 +1,19 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type { AppUpdateState } from './updateTypes.cjs';
 
 contextBridge.exposeInMainWorld('knightSim', {
   platform: process.platform,
   versions: Object.freeze({ electron: process.versions.electron }),
+  updates: Object.freeze({
+    getState: () => ipcRenderer.invoke('app-updates:state'),
+    check: () => ipcRenderer.invoke('app-updates:check'),
+    install: () => ipcRenderer.invoke('app-updates:install'),
+    onChange: (listener: (state: AppUpdateState) => void) => {
+      const handleChange = (_event: Electron.IpcRendererEvent, state: AppUpdateState): void => listener(state);
+      ipcRenderer.on('app-updates:changed', handleChange);
+      return () => ipcRenderer.removeListener('app-updates:changed', handleChange);
+    },
+  }),
   windowState: Object.freeze({
     isFullScreen: () => ipcRenderer.invoke('window-state:is-full-screen'),
     onFullScreenChange: (listener: (isFullScreen: boolean) => void) => {

@@ -60,6 +60,23 @@ test('startup discovers models in ./models and serves source files without copyi
   assert.deepEqual(await readFile(sourcePath), source);
 });
 
+test('bundled model preferences survive changed install paths and AppImage mounts', async (t) => {
+  const { defaultDirectory, customDirectory, settingsPath } = await fixture(t);
+  await writeFile(path.join(defaultDirectory, 'Robot.glb'), glb());
+  await writeFile(path.join(customDirectory, 'Robot.glb'), glb());
+  const original = new RobotModelStore(defaultDirectory, settingsPath, 'bundled-models');
+  const model = (await original.list()).models[0];
+  await original.setForRobot('sentry', model.id);
+  const orientation = { scale: 0.01, rotationDeg: { x: 0, y: 90, z: 0 }, flipped: { x: true, y: false, z: false } };
+  await original.updateOrientation(model.id, orientation);
+  const moved = new RobotModelStore(customDirectory, settingsPath, 'bundled-models');
+  const restored = await moved.list();
+  assert.equal(restored.directory, customDirectory);
+  assert.equal(restored.modelIdByRobot.sentry, restored.models[0].id);
+  assert.notEqual(restored.models[0].id, model.id);
+  assert.deepEqual(restored.models[0].orientation, orientation);
+});
+
 test('chosen folders persist, isolate identical filenames, and restore assignments and transforms on return', async (t) => {
   const { store, defaultDirectory, customDirectory, createStore } = await fixture(t);
   await writeFile(path.join(defaultDirectory, 'Robot.glb'), glb('Default'));

@@ -1,8 +1,11 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, dialog, ipcMain, Menu, net, protocol, shell } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { MODEL_ID_PATTERN, serializeModelOperation } from './modelLibrary.cjs';
 import { RobotModelStore } from './modelStore.cjs';
+import { loadPublishedAt } from './releaseMetadata.cjs';
+import { UpdateManager } from './updateManager.cjs';
 
 // Prefer the discrete GPU on hybrid Windows/macOS systems. Hardware acceleration
 // remains enabled by Electron, and the WebGL context also requests this preference.
@@ -28,6 +31,43 @@ const isWindows = process.platform === 'win32';
 const appIcon = path.join(__dirname, '../src/assets/app-icon.png');
 
 let modelStore: RobotModelStore;
+let updates: UpdateManager;
+
+function registerUpdateIpc(): void {
+  const disabledReason = !app.isPackaged ? 'Updates are available in the installed app.'
+    : process.platform === 'linux' && !process.env.APPIMAGE ? 'Install the AppImage to enable updates.' : null;
+  updates = new UpdateManager(autoUpdater, app.getVersion(), disabledReason, (state) => {
+    for (const window of BrowserWindow.getAllWindows()) {
+      if (!window.isDestroyed()) window.webContents.send('app-updates:changed', state);
+    }
+  });
+  ipcMain.handle('app-updates:state', () => updates.getState());
+  ipcMain.handle('app-updates:check', () => {
+    void refreshPublishedAt();
+    return updates.check();
+  });
+  ipcMain.handle('app-updates:install', () => updates.install());
+  if (!disabledReason) {
+    void refreshPublishedAt();
+    void updates.check();
+  }
+}
+
+let publicationRequest: Promise<void> | null = null;
+function refreshPublishedAt(): Promise<void> {
+  if (!app.isPackaged || updates.getState().publishedAt) return Promise.resolve();
+  if (publicationRequest) return publicationRequest;
+  publicationRequest = loadPublishedAt(
+    app.getVersion(),
+    path.join(app.getPath('userData'), 'release-metadata.json'),
+    (url) => net.fetch(url, {
+      headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'KnightSim' },
+      signal: AbortSignal.timeout(10_000),
+    }),
+  ).then((publishedAt) => updates.setPublishedAt(publishedAt))
+    .finally(() => { publicationRequest = null; });
+  return publicationRequest;
+}
 
 function registerRobotModelIpc(): void {
   ipcMain.handle('robot-models:list', () => serializeModelOperation(() => modelStore.list()));
@@ -130,11 +170,13 @@ app.whenReady().then(() => {
     BrowserWindow.fromWebContents(event.sender)?.isFullScreen() ?? false
   ));
   modelStore = new RobotModelStore(
-    path.join(app.getAppPath(), 'models'),
+    path.join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'models'),
     path.join(app.getPath('userData'), 'robot-models', 'library.json'),
+    app.isPackaged ? 'bundled-models' : undefined,
   );
   registerRobotModelIpc();
   registerRobotModelProtocol();
+  registerUpdateIpc();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

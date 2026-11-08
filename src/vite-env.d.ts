@@ -1,12 +1,20 @@
 /// <reference types="vite/client" />
 
 import type { RobotId, RobotModelLibrary, RobotModelOrientation } from './types';
+import type { AppUpdateState } from '../electron/updateTypes.cjs';
 
 declare global {
+  const __APP_VERSION__: string;
   interface Window {
     readonly knightSim?: {
       readonly platform: string;
       readonly versions: { readonly electron: string };
+      readonly updates: {
+        readonly getState: () => Promise<AppUpdateState>;
+        readonly check: () => Promise<AppUpdateState>;
+        readonly install: () => Promise<AppUpdateState>;
+        readonly onChange: (listener: (state: AppUpdateState) => void) => () => void;
+      };
       readonly windowState: {
         readonly isFullScreen: () => Promise<boolean>;
         readonly onFullScreenChange: (listener: (isFullScreen: boolean) => void) => () => void;

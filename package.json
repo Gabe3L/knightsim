@@ -9,6 +9,10 @@
   "scripts": {
     "dev": "concurrently -k \"vite\" \"tsc -p electron/tsconfig.json --watch\" \"wait-on tcp:5173 file:dist-electron/main.cjs && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
     "build": "concurrently --kill-others-on-fail --names types,renderer \"npm run typecheck\" \"vite build\"",
+    "predist": "npm run build",
+    "dist": "electron-builder --publish never",
+    "prerelease": "npm run build",
+    "release": "electron-builder --publish always",
     "test": "node --test",
     "test:models": "node --test src/loaders/modelDimensions.test.mjs tests/prepareRobotModel.test.mjs tests/modelLibrary.test.mjs tests/modelSources.test.mjs tests/modelStore.test.mjs",
     "preview": "vite preview",
@@ -19,6 +23,7 @@
   "dependencies": {
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.3.0",
+    "electron-updater": "^6.8.11",
     "lucide-react": "^0.468.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -34,6 +39,7 @@
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
     "electron": "^43.2.0",
+    "electron-builder": "^26.18.0",
     "tailwindcss": "^4.1.12",
     "typescript": "^5.8.3",
     "vite": "^7.1.3",

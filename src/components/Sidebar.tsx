@@ -4,6 +4,7 @@ import logo from '../assets/logo.png';
 import type { ResolvedFieldOverlay } from '../overlays/fieldOverlays';
 import type { RobotTelemetry } from '../types';
 import { Inspector } from './Inspector';
+import { AppUpdate } from './AppUpdate';
 
 interface SidebarProps {
   readonly compact: boolean;
@@ -102,6 +103,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
+        <AppUpdate />
         <button className="sidebar-settings" type="button" aria-label="Settings" title="Settings" onClick={onOpenSettings}>
           <Settings2 size={18} />
           <span>Settings</span>

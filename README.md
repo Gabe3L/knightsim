@@ -23,6 +23,33 @@ The production build runs Vite alongside the renderer/configuration type checks 
 
 Tailwind scans `src/` and `index.html` for classes instead of the entire project, keeping large model binaries out of CSS generation. If UI templates are added elsewhere, register their paths with `@source` in `src/styles.css`.
 
+## Distribute and update
+
+The sidebar above **Settings** shows the installed version and its publication timestamp in the user's local time zone. Installed apps check public GitHub Releases at startup. **Check for updates** checks again; **Update & restart** downloads the newer version, shows progress, and installs it before relaunching. Downloads and restarts happen only after that click. Failed checks/downloads can be retried. Source/development runs show a disabled update button.
+
+The timestamp is GitHub's `published_at` for the installed version's exact `v<version>` release tag. It is cached in the app's user-data `release-metadata.json` for offline use. A first launch without access to that release shows **Publish date unavailable** until a later successful check. A newer release's date never replaces the installed version's date.
+
+Build installers on their target operating systems:
+
+```sh
+npm run dist -- --win
+npm run dist -- --mac
+npm run dist -- --linux
+```
+
+Each command rebuilds and writes installers and update metadata to `release/`, without uploading anything. Windows uses NSIS, macOS produces DMG + ZIP, and Linux uses AppImage. Default robot models are bundled in the installed app's resources; user-selected folders and saved preferences remain in user data. Bundled model preferences use a stable key so they survive app moves, upgrades, and changing AppImage mount paths.
+
+To publish an update:
+
+1. Set a higher semantic version with `npm version patch --no-git-tag-version` (or `minor`/`major`), then run `npm test`.
+2. Make the release repository public and anonymously readable. The default is `Gabe3L/knightsim`; edit `electron/releaseConfig.json` to use a separate public releases repository if the source repository stays private. The updater and packaging share this configuration. Do not put GitHub tokens in the app.
+3. On each supported OS, set `GH_TOKEN` in your build environment with permission to publish releases, then run `npm run release -- --win`, `--mac`, or `--linux`. This uploads installers and metadata into the same **draft** `v<version>` GitHub Release. Build for the architectures you distribute (for example `--mac --x64 --arm64`).
+4. Once every platform's assets are uploaded, publish the draft as a normal, non-prerelease GitHub Release. Keep the generated `latest*.yml`, ZIPs, installers/AppImages, and blockmaps together on that release. Users can then install the update from the sidebar.
+
+macOS automatic updates require a Developer ID signed app. Configure electron-builder's `CSC_LINK` / `CSC_KEY_PASSWORD` signing credentials and Apple notarization credentials (`APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`, or the supported Apple ID credentials) in the release environment before shipping. See [electron-builder's signing instructions](https://www.electron.build/v26/docs/features/code-signing/) and [update requirements](https://www.electron.build/v26/docs/features/auto-update/). An unsigned local package can be used to inspect the layout, but cannot validate a macOS update.
+
+Before distributing publicly, test two published versions on each target OS: install the older version, click **Update & restart**, and verify that the relaunched app reports the new version and its release timestamp. This requires actual hosted release artifacts and signing credentials; the regression tests use an injected updater to verify the download/restart sequence without installing software.
+
 ## Robot profiles
 
 Choose a field format from the top bar. Preferences open on a robot in that format; use the robot picker in Preferences to edit any profile. Each profile has its own model assignment and saved connectivity preferences. Examples include Sentry, Infantry, Hero, Engineer, Dart, and Drone. Geometry values are illustrative, not manufacturer specifications.

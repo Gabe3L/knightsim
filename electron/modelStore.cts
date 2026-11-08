@@ -15,7 +15,7 @@ export class RobotModelStore {
   private library: RobotModelLibrary | undefined;
   readonly defaultDirectory: string;
 
-  constructor(defaultDirectory: string, private readonly settingsPath: string) {
+  constructor(defaultDirectory: string, private readonly settingsPath: string, private readonly defaultFolderKey?: string) {
     this.defaultDirectory = path.resolve(defaultDirectory);
   }
 
@@ -33,11 +33,12 @@ export class RobotModelStore {
   }
 
   private folder(settings: RobotModelSettings): RobotModelFolderSettings {
-    return settings.folders[settings.directory ?? this.defaultDirectory] ?? EMPTY_FOLDER_SETTINGS;
+    return settings.folders[settings.directory ?? this.defaultFolderKey ?? this.defaultDirectory]
+      ?? settings.folders[settings.directory ?? this.defaultDirectory] ?? EMPTY_FOLDER_SETTINGS;
   }
 
   private withFolder(settings: RobotModelSettings, folder: RobotModelFolderSettings): RobotModelSettings {
-    return { ...settings, folders: { ...settings.folders, [settings.directory ?? this.defaultDirectory]: folder } };
+    return { ...settings, folders: { ...settings.folders, [settings.directory ?? this.defaultFolderKey ?? this.defaultDirectory]: folder } };
   }
 
   private async scan(settings: RobotModelSettings): Promise<RobotModelLibrary> {
