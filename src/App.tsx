@@ -15,6 +15,7 @@ import {
 } from './overlays/fieldOverlays';
 import { odometryDebugAt } from './telemetry/odometryDebug';
 import { controllerInputById } from './telemetry/controllerInputs';
+import { handleReplayShortcut } from './replayShortcuts';
 import {
   defaultGraphColorCategory,
   graphSignalById,
@@ -149,6 +150,22 @@ export function App() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
+
+  useEffect(() => {
+    if (settingsOpen) return;
+    const handleKey = (event: KeyboardEvent): void => handleReplayShortcut(event, {
+      disabled: !demoEnabled,
+      replay,
+      onSeek: seek,
+      onTogglePlaying: togglePlaying,
+    });
+    window.addEventListener('keydown', handleKey, true);
+    window.addEventListener('keyup', handleKey, true);
+    return () => {
+      window.removeEventListener('keydown', handleKey, true);
+      window.removeEventListener('keyup', handleKey, true);
+    };
+  }, [demoEnabled, replay, seek, settingsOpen, togglePlaying]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));

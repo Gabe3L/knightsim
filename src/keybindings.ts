@@ -1,3 +1,37 @@
+export type ReplayAction = 'back' | 'forward' | 'toggle-playing';
+
+interface ReplayKeybinding {
+  readonly action: ReplayAction;
+  readonly codes: readonly string[];
+  readonly keys: readonly string[];
+  readonly label: string;
+  readonly description: string;
+}
+
+export const REPLAY_KEYBINDINGS: readonly ReplayKeybinding[] = [
+  {
+    action: 'back',
+    codes: ['ArrowLeft', 'ArrowDown'],
+    keys: ['←', '↓'],
+    label: 'Scrub backward',
+    description: 'Left rewinds five seconds; Down rewinds half a second.',
+  },
+  {
+    action: 'forward',
+    codes: ['ArrowRight', 'ArrowUp'],
+    keys: ['→', '↑'],
+    label: 'Scrub forward',
+    description: 'Right advances five seconds; Up advances half a second.',
+  },
+  {
+    action: 'toggle-playing',
+    codes: ['Space'],
+    keys: ['Space'],
+    label: 'Play / pause',
+    description: 'Toggle replay playback.',
+  },
+];
+
 export type FieldCameraAction = 'forward' | 'back' | 'left' | 'right' | 'up' | 'down';
 
 export interface FieldCameraKeybinding {

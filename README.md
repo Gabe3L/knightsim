@@ -21,6 +21,8 @@ npm start
 
 The production build runs Vite alongside the renderer/configuration type checks and Electron compilation. Both tasks must succeed; a failure stops the other task. Renderer and Vite-configuration checks reuse incremental state in `node_modules/.tmp`; `npx tsc -b --force` forces a fresh check. The shared robot-profile JSON is an explicit renderer input so edits invalidate that cache.
 
+Across the workspace, Left/Right scrub the play bar backward/forward five seconds, Down/Up scrub backward/forward half a second, and Space plays or pauses. These keys control replay even when a button, the sidebar resize handle, scrubber, or speed selector has focus. Holding an arrow repeats the seek; holding Space toggles playback only once. Replay shortcuts are inactive in Preferences and text inputs, and replay remains disabled with Demo off.
+
 Tailwind scans `src/` and `index.html` for classes instead of the entire project, keeping large model binaries out of CSS generation. If UI templates are added elsewhere, register their paths with `@source` in `src/styles.css`.
 
 ## Distribute and update

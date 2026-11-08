@@ -16,7 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { FIELD_CAMERA_KEYBINDINGS } from '../keybindings';
+import { FIELD_CAMERA_KEYBINDINGS, REPLAY_KEYBINDINGS } from '../keybindings';
 import type { ModelAxis, RobotId, RobotModelLibrary, RobotModelOrientation } from '../types';
 import '../styles/settings.css';
 import { ModelScaleControls } from './ModelScaleControls';
@@ -516,6 +516,26 @@ export function SettingsDialog({
                     <kbd>B</kbd>
                   </div>
                 </div>
+              </section>
+              <section className="settings-group">
+                <div className="settings-group-heading">
+                  <Keyboard size={16} />
+                  <div>
+                    <h3>Play bar</h3>
+                    <p>Arrow keys and Space control replay throughout the workspace. Shortcuts pause while Preferences are open.</p>
+                  </div>
+                </div>
+                {REPLAY_KEYBINDINGS.map((binding) => (
+                  <div className="keybinding-row" key={binding.action}>
+                    <div className="keybinding-copy">
+                      <strong>{binding.label}</strong>
+                      <span>{binding.description}</span>
+                    </div>
+                    <div className="keybinding-keys" aria-label={binding.codes.join(' or ')}>
+                      {binding.keys.map((key) => <kbd key={key}>{key}</kbd>)}
+                    </div>
+                  </div>
+                ))}
               </section>
               <section className="settings-group">
                 <div className="settings-group-heading">

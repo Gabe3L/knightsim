@@ -66,10 +66,7 @@ export function Sidebar({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    const step = event.shiftKey ? 32 : 8;
-    if (event.key === 'ArrowLeft') onResizeKeyboard(width - step);
-    else if (event.key === 'ArrowRight') onResizeKeyboard(width + step);
-    else if (event.key === 'Home') onResizeKeyboard(minWidth);
+    if (event.key === 'Home') onResizeKeyboard(minWidth);
     else if (event.key === 'End') onResizeKeyboard(maxWidth);
     else return;
     event.preventDefault();
