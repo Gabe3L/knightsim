@@ -53,29 +53,35 @@ export function TopBar({
         <button
           className={activeView === 'field' ? 'view-tab view-tab-active' : 'view-tab'}
           type="button"
+          aria-label="Field"
+          title="Field"
           aria-current={activeView === 'field' ? 'page' : undefined}
           onClick={() => onViewChange('field')}
         >
-          <Box size={15} />
-          Field
+          <Box size={15} aria-hidden="true" />
+          <span className="view-tab-label">Field</span>
         </button>
         <button
           className={activeView === 'graph' ? 'view-tab view-tab-active' : 'view-tab'}
           type="button"
+          aria-label="Graphs"
+          title="Graphs"
           aria-current={activeView === 'graph' ? 'page' : undefined}
           onClick={() => onViewChange('graph')}
         >
-          <ChartLine size={15} />
-          Graphs
+          <ChartLine size={15} aria-hidden="true" />
+          <span className="view-tab-label">Graphs</span>
         </button>
         <button
           className={activeView === 'controller' ? 'view-tab view-tab-active' : 'view-tab'}
           type="button"
+          aria-label="Controller"
+          title="Controller"
           aria-current={activeView === 'controller' ? 'page' : undefined}
           onClick={() => onViewChange('controller')}
         >
-          <Gamepad2 size={15} />
-          Controller
+          <Gamepad2 size={15} aria-hidden="true" />
+          <span className="view-tab-label">Controller</span>
         </button>
       </nav>
 

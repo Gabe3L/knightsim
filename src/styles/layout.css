@@ -1,4 +1,5 @@
 .app-shell {
+  --window-controls-height: 42px;
   display: grid;
   grid-template-columns: var(--sidebar-width, 292px) minmax(0, 1fr);
   width: 100%;
@@ -17,6 +18,10 @@
   grid-template-rows: 64px minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
+}
+
+.app-shell-mac-windowed .app-main {
+  grid-template-rows: var(--window-controls-height) minmax(0, 1fr);
 }
 
 .workspace {

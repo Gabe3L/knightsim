@@ -214,6 +214,7 @@ export function App() {
       className={[
         'app-shell',
         usesWindowsSidebarLayout && 'app-shell-windows',
+        isMac && !isFullScreen && 'app-shell-mac-windowed',
         sidebarResizing && 'sidebar-is-resizing',
       ].filter(Boolean).join(' ')}
       style={{

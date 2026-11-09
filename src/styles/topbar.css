@@ -47,6 +47,38 @@
 .controller-mode-option:active { transform: translateY(1px); }
 .controller-mode-option-active { color: #f5f2f7; background: #2a2531; box-shadow: inset 0 1px rgba(255,255,255,.055), 0 2px 7px rgba(0,0,0,.32); }
 
+/* Fit the windowed macOS toolbar into the native traffic-light strip. */
+.app-shell-mac-windowed .view-tab { position: relative; width: 32px; height: 28px; min-height: 28px; justify-content: center; gap: 0; padding: 0; border-radius: 0; }
+.app-shell-mac-windowed .view-tab-label { display: none; }
+.app-shell-mac-windowed .view-tab svg { display: block; }
+.app-shell-mac-windowed .view-tab-active { background: transparent !important; box-shadow: none; }
+
+.app-shell-mac-windowed .view-tabs,
+.app-shell-mac-windowed .field-mode-selector,
+.app-shell-mac-windowed .controller-mode-selector { gap: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.app-shell-mac-windowed .field-mode-option,
+.app-shell-mac-windowed .controller-mode-option { position: relative; border-radius: 0; transition: color .16s ease, text-shadow .16s ease; }
+.app-shell-mac-windowed .view-tab + .view-tab::before,
+.app-shell-mac-windowed .field-mode-option + .field-mode-option::before,
+.app-shell-mac-windowed .controller-mode-option + .controller-mode-option::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 1px;
+  height: 14px;
+  background: var(--line);
+  content: '';
+  transform: translateY(-50%);
+}
+.app-shell-mac-windowed .view-tab:hover,
+.app-shell-mac-windowed .field-mode-option:hover,
+.app-shell-mac-windowed .controller-mode-option:hover { color: #d8d9df; background: transparent; }
+.app-shell-mac-windowed .view-tab:active,
+.app-shell-mac-windowed .field-mode-option:active,
+.app-shell-mac-windowed .controller-mode-option:active { transform: none; }
+.app-shell-mac-windowed .field-mode-option-active,
+.app-shell-mac-windowed .controller-mode-option-active { color: #ff91a4; background: transparent; box-shadow: none; text-shadow: 0 0 12px rgba(239, 71, 100, .6); }
+
 .topbar-status { display: flex; min-width: 0; align-items: center; gap: 7px; justify-self: end; }
 .robot-link,
 .playback-state { display: inline-flex; height: 27px; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid #2e2a35; border-radius: 7px; color: #8f8996; background: rgba(19, 17, 24, .72); font-size: 10px; font-weight: 710; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
