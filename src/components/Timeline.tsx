@@ -1,13 +1,17 @@
-import { Pause, Play, RotateCcw, SkipBack } from 'lucide-react';
-import type { CSSProperties } from 'react';
+import { PanelBottomOpen, PanelLeftClose, Pause, Play, RotateCcw, SkipBack } from 'lucide-react';
+import type { CSSProperties, Ref } from 'react';
 import type { ReplayState } from '../types';
 
 interface TimelineProps {
   readonly disabled: boolean;
   readonly replay: ReplayState;
+  readonly minimized: boolean;
+  readonly compact: boolean;
+  readonly placementButtonRef: Ref<HTMLButtonElement>;
   readonly onSeek: (timeS: number) => void;
   readonly onTogglePlaying: () => void;
   readonly onSpeedChange: (speed: number) => void;
+  readonly onToggleMinimized: () => void;
 }
 
 const formatTime = (timeS: number): string => {
@@ -17,10 +21,23 @@ const formatTime = (timeS: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
 };
 
-export function Timeline({ disabled, replay, onSeek, onTogglePlaying, onSpeedChange }: TimelineProps) {
+export function Timeline({
+  disabled, replay, minimized, compact, placementButtonRef,
+  onSeek, onTogglePlaying, onSpeedChange, onToggleMinimized,
+}: TimelineProps) {
   const progress = (replay.currentTimeS / replay.durationS) * 100;
+  const placementLabel = minimized ? 'Restore playbar' : 'Minimize playbar to sidebar';
   return (
-    <footer className={disabled ? 'timeline timeline-disabled' : 'timeline'} title={disabled ? 'Turn on Demo to use replay' : undefined}>
+    <footer
+      className={[
+        'timeline',
+        disabled && 'timeline-disabled',
+        minimized && 'timeline-minimized',
+        minimized && compact && 'timeline-compact',
+      ].filter(Boolean).join(' ')}
+      aria-label="Replay controls"
+      title={disabled ? 'Turn on Demo to use replay' : undefined}
+    >
       <div className="transport-controls">
         <button className="transport-secondary" type="button" disabled={disabled} onClick={() => onSeek(0)} aria-label="Restart replay" title="Restart replay">
           <RotateCcw size={15} />
@@ -66,6 +83,17 @@ export function Timeline({ disabled, replay, onSeek, onTogglePlaying, onSpeedCha
           {[0.25, 0.5, 1, 1.5, 2].map((speed) => <option key={speed} value={speed}>{speed}×</option>)}
         </select>
       </label>
+
+      <button
+        ref={placementButtonRef}
+        className="timeline-placement-toggle"
+        type="button"
+        aria-label={placementLabel}
+        title={placementLabel}
+        onClick={onToggleMinimized}
+      >
+        {minimized ? <PanelBottomOpen size={16} aria-hidden="true" /> : <PanelLeftClose size={16} aria-hidden="true" />}
+      </button>
     </footer>
   );
 }

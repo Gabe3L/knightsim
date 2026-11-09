@@ -1,4 +1,4 @@
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent, ReactNode } from 'react';
 import { Settings2 } from 'lucide-react';
 import logo from '../assets/logo.png';
 import type { ResolvedFieldOverlay } from '../overlays/fieldOverlays';
@@ -17,6 +17,7 @@ interface SidebarProps {
   readonly controllerInputIds: readonly string[];
   readonly graphSignalIds: readonly string[];
   readonly overlays: readonly ResolvedFieldOverlay[];
+  readonly playbar: ReactNode;
   readonly onToggleControllerInput: (id: string) => void;
   readonly onToggleFieldOverlay: (id: string) => void;
   readonly onToggleGraphSignal: (id: string) => void;
@@ -38,6 +39,7 @@ export function Sidebar({
   controllerInputIds,
   graphSignalIds,
   overlays,
+  playbar,
   onToggleControllerInput,
   onToggleFieldOverlay,
   onToggleGraphSignal,
@@ -100,6 +102,7 @@ export function Sidebar({
       </div>
 
       <div className="sidebar-footer">
+        {playbar}
         <AppUpdate />
         <button className="sidebar-settings" type="button" aria-label="Settings" title="Settings" onClick={onOpenSettings}>
           <Settings2 size={18} />

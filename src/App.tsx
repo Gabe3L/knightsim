@@ -56,6 +56,9 @@ export function App() {
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
   const [sidebarResizing, setSidebarResizing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [playbarMinimized, setPlaybarMinimized] = useState(false);
+  const playbarPlacementButtonRef = useRef<HTMLButtonElement>(null);
+  const previousPlaybarMinimizedRef = useRef(playbarMinimized);
   const sidebarResizingRef = useRef(false);
   const sidebarDragStart = useRef({ pointerX: 0, width: DEFAULT_SIDEBAR_WIDTH });
   const expandedSidebarWidthRef = useRef(DEFAULT_SIDEBAR_WIDTH);
@@ -172,6 +175,12 @@ export function App() {
     return () => window.cancelAnimationFrame(frame);
   }, [activeView, sidebarWidth]);
 
+  useEffect(() => {
+    if (previousPlaybarMinimizedRef.current === playbarMinimized) return;
+    previousPlaybarMinimizedRef.current = playbarMinimized;
+    playbarPlacementButtonRef.current?.focus();
+  }, [playbarMinimized]);
+
   const resizeSidebarByKeyboard = useCallback((nextWidth: number) => {
     setSidebarWidth(clamp(nextWidth, minSidebarWidth, MAX_SIDEBAR_WIDTH));
   }, [minSidebarWidth]);
@@ -209,6 +218,20 @@ export function App() {
     setActiveView('field');
   }, []);
 
+  const playbar = (
+    <Timeline
+      disabled={!demoEnabled}
+      replay={replay}
+      minimized={playbarMinimized}
+      compact={sidebarWidth < COMPACT_SIDEBAR_WIDTH}
+      placementButtonRef={playbarPlacementButtonRef}
+      onSeek={seek}
+      onTogglePlaying={togglePlaying}
+      onSpeedChange={setSpeed}
+      onToggleMinimized={() => setPlaybarMinimized((current) => !current)}
+    />
+  );
+
   return (
     <div
       className={[
@@ -232,6 +255,7 @@ export function App() {
         controllerInputIds={controllerInputIds}
         graphSignalIds={graphSignals.map((signal) => signal.id)}
         overlays={fieldOverlays}
+        playbar={playbarMinimized ? playbar : null}
         onToggleControllerInput={toggleControllerInput}
         onToggleGraphSignal={toggleGraphSignal}
         onToggleFieldOverlay={toggleFieldOverlay}
@@ -252,7 +276,7 @@ export function App() {
           onFieldModeChange={changeFieldMode}
           onViewChange={setActiveView}
         />
-        <main className="workspace">
+        <main className={playbarMinimized ? 'workspace workspace-playbar-minimized' : 'workspace'}>
           <div
             className={activeView === 'field' ? 'workspace-view workspace-view-active' : 'workspace-view'}
             aria-hidden={activeView !== 'field'}
@@ -291,7 +315,7 @@ export function App() {
             /> : null}
           </div>
         </main>
-        <Timeline disabled={!demoEnabled} replay={replay} onSeek={seek} onTogglePlaying={togglePlaying} onSpeedChange={setSpeed} />
+        {playbarMinimized ? null : playbar}
       </div>
       {settingsOpen ? (
         <SettingsDialog

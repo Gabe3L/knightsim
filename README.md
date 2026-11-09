@@ -23,6 +23,8 @@ The production build runs Vite alongside the renderer/configuration type checks 
 
 Across the workspace, Left/Right scrub the play bar backward/forward five seconds, Down/Up scrub backward/forward half a second, and Space plays or pauses. These keys control replay even when a button, the sidebar resize handle, scrubber, or speed selector has focus. Holding an arrow repeats the seek; holding Space toggles playback only once. Replay shortcuts are inactive in Preferences and text inputs, and replay remains disabled with Demo off.
 
+Use the button at the right end of the play bar to minimize it into the left sidebar above Settings. Replay controls remain available there, and the restore button returns the bar to the bottom of the workspace. A collapsed sidebar keeps play/pause and restore accessible. Playback position and speed carry across both layouts.
+
 Tailwind scans `src/` and `index.html` for classes instead of the entire project, keeping large model binaries out of CSS generation. If UI templates are added elsewhere, register their paths with `@source` in `src/styles.css`.
 
 ## Distribute and update

@@ -32,6 +32,7 @@
   min-height: 0;
   overflow: hidden;
 }
+.workspace.workspace-playbar-minimized { --timeline-overlap: 0px; }
 .workspace-view {
   position: absolute;
   inset: 0;

@@ -1,4 +1,4 @@
-.timeline { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; display: grid; min-height: 62px; grid-template-columns: auto 142px minmax(200px, 1fr) 98px; align-items: center; gap: 14px; margin: 10px; padding: 0 15px; overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: linear-gradient(180deg, #111720, #0d1118); box-shadow: 0 12px 38px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.025); }
+.timeline { position: absolute; z-index: 2; right: 0; bottom: 0; left: 0; display: grid; min-height: 62px; grid-template-columns: auto 142px minmax(0, 1fr) 98px 30px; align-items: center; gap: 14px; margin: 10px; padding: 0 15px; overflow: hidden; border: 1px solid var(--line); border-radius: 11px; background: linear-gradient(180deg, #111720, #0d1118); box-shadow: 0 12px 38px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.025); }
 .timeline::before { position: absolute; top: -1px; right: 12%; left: 12%; height: 1px; background: linear-gradient(90deg, transparent, rgba(239,71,100,.52), rgba(197,200,208,.26), transparent); content: ''; pointer-events: none; }
 .transport-controls { display: flex; align-items: center; gap: 5px; }
 .transport-controls button { display: grid; flex: 0 0 auto; place-items: center; border-radius: 7px; cursor: pointer; transition: color .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .15s ease; }
@@ -9,7 +9,7 @@
 .play-button { width: 35px; height: 35px; border: 1px solid rgba(239,71,100,.35); color: #1b070d; background: var(--accent); box-shadow: 0 0 18px rgba(239,71,100,.15); }
 .play-button svg { transform: translateX(.5px); }
 .play-button:hover { box-shadow: 0 0 24px rgba(239,71,100,.28); }
-.timeline-clock { display: flex; min-height: 19px; align-items: baseline; gap: 5px; white-space: nowrap; }
+.timeline-clock { display: flex; min-height: 19px; flex-wrap: wrap; align-items: baseline; gap: 2px 5px; white-space: nowrap; }
 .timeline-clock strong { color: #eeecf0; font: 650 16px/1.15 var(--font-ui); font-variant-numeric: tabular-nums; letter-spacing: -.015em; }
 .timeline-clock span { color: #716b79; font: 550 12px/1.15 var(--font-ui); font-variant-numeric: tabular-nums; }
 .scrubber-wrap { position: relative; height: 30px; }
@@ -34,6 +34,27 @@
 .timeline-disabled .timeline-clock,
 .timeline-disabled .scrubber-wrap,
 .timeline-disabled .speed-control { opacity: .4; }
-.timeline-disabled button,
-.timeline-disabled input,
-.timeline-disabled select { cursor: default; }
+.timeline-disabled :disabled { cursor: default; }
+
+.timeline-placement-toggle { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border: 1px solid #312d38; border-radius: 7px; color: #96909e; background: #100e15; cursor: pointer; }
+.timeline-placement-toggle:hover { color: #f2edf5; border-color: #514454; background: #241923; }
+.timeline-placement-toggle:active { transform: translateY(1px); }
+
+.timeline.timeline-minimized { position: relative; inset: auto; min-height: 0; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'clock placement' 'transport speed' 'scrubber scrubber'; gap: 8px; margin: 0 0 10px; padding: 8px; border-radius: 9px; }
+.timeline-minimized .transport-controls { grid-area: transport; gap: 3px; }
+.timeline-minimized .transport-secondary { width: 24px; height: 28px; }
+.timeline-minimized .play-button { width: 30px; height: 30px; }
+.timeline-minimized .timeline-clock { grid-area: clock; gap: 2px 4px; }
+.timeline-minimized .timeline-clock strong { font-size: 13px; }
+.timeline-minimized .timeline-clock span { font-size: 10px; }
+.timeline-minimized .scrubber-wrap { grid-area: scrubber; }
+.timeline-minimized .speed-control { grid-area: speed; }
+.timeline-minimized .speed-control span { display: none; }
+.timeline-minimized .timeline-placement-toggle { grid-area: placement; justify-self: end; }
+
+.timeline.timeline-compact { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'placement' 'transport'; justify-items: center; gap: 8px; padding: 6px; }
+.timeline-compact .timeline-clock,
+.timeline-compact .scrubber-wrap,
+.timeline-compact .speed-control,
+.timeline-compact .transport-secondary { display: none; }
+.timeline-compact .timeline-placement-toggle { justify-self: center; }
